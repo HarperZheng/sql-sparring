@@ -1,6 +1,0 @@
--- table[0] 缴库明细按到账对账状态分布（reconcile_status：1 成功 / 0 未对账）
-SELECT "fiscal_treasury__reconcile_status" "fiscal_treasury_view__reconcile_status", sum("fiscal_treasury__count") "fiscal_treasury_view__count", sum("fiscal_treasury__amt") "fiscal_treasury_view__amt" 
-FROM  dev_pre_aggregations.fiscal_treasury_main  AS "fiscal_treasury__main"
-GROUP BY 1
-ORDER BY  3  DESC
-LIMIT 100

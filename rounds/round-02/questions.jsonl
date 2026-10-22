@@ -1,30 +1,30 @@
-{"id": "q01", "question": "非税收入收缴业务里，“缴款人”指的是什么样的单位和个人？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
-{"id": "q02", "question": "一笔非税收入收缴业务，是从哪个动作开始的？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B01", "B02"]}
-{"id": "q03", "question": "非税收入收缴业务中的“代理银行”指的是什么银行？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
-{"id": "q04", "question": "财政汇缴专户在日终时对账户余额有什么管理要求？", "round": "round-02", "type": "事实", "category": "账户", "syllabus_ref": ["B02"]}
-{"id": "q05", "question": "清算银行在非税收入款项流转中负责什么工作？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
-{"id": "q06", "question": "非税收入资金流转的终点是哪里？", "round": "round-02", "type": "事实", "category": "资金流向", "syllabus_ref": ["B01", "B02", "B14"]}
-{"id": "q07", "question": "这套财政系统把用户分为哪两类角色？", "round": "round-02", "type": "事实", "category": "系统角色", "syllabus_ref": ["B03"]}
-{"id": "q08", "question": "非税收入的直接缴款（直缴）是怎么缴的？", "round": "round-02", "type": "事实", "category": "缴款", "syllabus_ref": ["B06"]}
-{"id": "q09", "question": "非税收入的集中汇缴（汇缴）是怎么缴的？", "round": "round-02", "type": "事实", "category": "缴款", "syllabus_ref": ["B07"]}
-{"id": "q10", "question": "财政电子票据是在哪个环节完成后开具的？", "round": "round-02", "type": "事实", "category": "票据", "syllabus_ref": ["B17"]}
-{"id": "q11", "question": "非税收入收缴业务中，资金流和票据流是什么关系？", "round": "round-02", "type": "关联", "category": "票据", "syllabus_ref": ["B01", "B17"]}
-{"id": "q12", "question": "非税收入缴款资金从缴款到最终缴入国库，中间要依次经过哪些环节？", "round": "round-02", "type": "关联", "category": "资金流向", "syllabus_ref": ["B10"]}
-{"id": "q13", "question": "直缴和汇缴两种缴款方式，分别对应使用哪种通知书？", "round": "round-02", "type": "关联", "category": "缴款", "syllabus_ref": ["B05", "B06", "B07"]}
-{"id": "q14", "question": "非税收入收缴中，为执收单位收缴和代理银行清算分别设立了什么专用账户或科目？", "round": "round-02", "type": "关联", "category": "账户", "syllabus_ref": ["B02"]}
-{"id": "q15", "question": "代收上来的非税收入，是按什么确定它归中央、省、市还是县的？", "round": "round-02", "type": "关联", "category": "清分", "syllabus_ref": ["B10", "B11"]}
-{"id": "q16", "question": "资金在划拨之前，是按什么维度汇总形成待划拨批次的？", "round": "round-02", "type": "关联", "category": "汇总划拨", "syllabus_ref": ["B10", "B12"]}
-{"id": "q17", "question": "资金划拨环节，除了拨付指令，还有什么信息用来反映银行的划转结果？", "round": "round-02", "type": "关联", "category": "汇总划拨", "syllabus_ref": ["B13", "B18"]}
-{"id": "q18", "question": "想在系统里追踪一笔资金从清分、划拨到缴库的实际流动过程，应该靠什么把各环节的记录串起来？", "round": "round-02", "type": "关联", "category": "关联关系", "syllabus_ref": ["B22"]}
-{"id": "q19", "question": "财政电子票据和它对应的缴款记录，是靠什么建立起同源关联的？", "round": "round-02", "type": "关联", "category": "票据", "syllabus_ref": ["B17", "B22"]}
-{"id": "q20", "question": "执收单位应缴的非税收入没有按时上缴时，财政方面会采取什么动作？", "round": "round-02", "type": "关联", "category": "催缴", "syllabus_ref": ["B10", "B16"]}
-{"id": "q21", "question": "预算单位和执收单位是同一个概念吗？两者是什么关系？", "round": "round-02", "type": "辨析", "category": "易混概念", "syllabus_ref": ["B04", "B20"]}
-{"id": "q22", "question": "缴款通知书和汇缴通知书，两者的资金方向有什么不同？", "round": "round-02", "type": "辨析", "category": "易混概念", "syllabus_ref": ["B05"]}
-{"id": "q23", "question": "财政专户和财政汇缴专户都是财政部门在代理银行开设的账户，两者的用途有什么区别？", "round": "round-02", "type": "辨析", "category": "易混概念", "syllabus_ref": ["B02"]}
-{"id": "q24", "question": "统计一笔缴款的金额，应该以缴款通知书票面上的总金额为准，还是按征收项目的金额明细来算？", "round": "round-02", "type": "辨析", "category": "口径", "syllabus_ref": ["B21"]}
-{"id": "q25", "question": "按“缴款人”做统计时，缴款通知书和汇缴通知书两个口径能混在一起用吗？", "round": "round-02", "type": "辨析", "category": "口径", "syllabus_ref": ["B19"]}
-{"id": "q26", "question": "财政票据要办理作废，必须满足什么条件？", "round": "round-02", "type": "边界", "category": "票据异常", "syllabus_ref": ["B08"]}
-{"id": "q27", "question": "财政电子票据开错了，能不能直接作废？", "round": "round-02", "type": "边界", "category": "票据异常", "syllabus_ref": ["B08", "B09"]}
-{"id": "q28", "question": "票据已经跨月、对方也已认证记账，这时发现开错该怎么处理？", "round": "round-02", "type": "边界", "category": "票据异常", "syllabus_ref": ["B09"]}
-{"id": "q29", "question": "开具红字发票冲减收入后，这笔冲减的入账通常计入哪个会计期间？", "round": "round-02", "type": "边界", "category": "口径", "syllabus_ref": ["B09", "B24"]}
-{"id": "q30", "question": "目前系统里能查到非税收入对账和财政记账环节的数据吗？", "round": "round-02", "type": "边界", "category": "数据空缺", "syllabus_ref": ["B15", "B18", "B23"]}
+{"id": "q01", "question": "非税收入收缴业务涉及哪几方参与？", "round": "round-02", "type": "事实", "category": "缴款", "syllabus_ref": ["B01"]}
+{"id": "q02", "question": "非税收入的缴款人指的是谁？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
+{"id": "q03", "question": "执收单位指的是哪类单位？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
+{"id": "q04", "question": "财政汇缴专户在余额管理上有什么要求？", "round": "round-02", "type": "事实", "category": "账户", "syllabus_ref": ["B02"]}
+{"id": "q05", "question": "清算银行在非税收入收缴中负责什么？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B02"]}
+{"id": "q06", "question": "财政系统里的用户角色分为哪两类？", "round": "round-02", "type": "事实", "category": "角色", "syllabus_ref": ["B03"]}
+{"id": "q07", "question": "资金在汇总环节是按什么维度汇总的？", "round": "round-02", "type": "事实", "category": "清分", "syllabus_ref": ["B12"]}
+{"id": "q08", "question": "资金缴入国库之后，还有哪些收尾环节？", "round": "round-02", "type": "事实", "category": "缴款", "syllabus_ref": ["B15"]}
+{"id": "q09", "question": "财政电子票据是在什么时候开具的？", "round": "round-02", "type": "事实", "category": "票据", "syllabus_ref": ["B17"]}
+{"id": "q10", "question": "财政专户是用来做什么的？", "round": "round-02", "type": "事实", "category": "账户", "syllabus_ref": ["B02"]}
+{"id": "q11", "question": "一笔非税收入从缴款到最终入库，要依次经过哪些环节？", "round": "round-02", "type": "关联", "category": "清分", "syllabus_ref": ["B10"]}
+{"id": "q12", "question": "缴款通知书在整个收缴流程里起什么作用？", "round": "round-02", "type": "关联", "category": "缴款", "syllabus_ref": ["B10"]}
+{"id": "q13", "question": "一笔非税收入收到之后，怎么确定它归中央、省、市还是县？", "round": "round-02", "type": "关联", "category": "清分", "syllabus_ref": ["B11"]}
+{"id": "q14", "question": "直缴和汇缴两种缴款方式，分别对应哪种通知书？", "round": "round-02", "type": "关联", "category": "缴款", "syllabus_ref": ["B05", "B06", "B07"]}
+{"id": "q15", "question": "直缴的情况下，缴款人的钱是怎么流转的？", "round": "round-02", "type": "关联", "category": "缴款", "syllabus_ref": ["B06", "B10"]}
+{"id": "q16", "question": "执收单位出现欠缴时，财政部门会怎么做？", "round": "round-02", "type": "关联", "category": "缴款", "syllabus_ref": ["B16", "B10"]}
+{"id": "q17", "question": "财政电子票据和缴款书之间是什么关系？", "round": "round-02", "type": "关联", "category": "票据", "syllabus_ref": ["B17"]}
+{"id": "q18", "question": "汇总形成的待划拨批次，资金之后是怎么进入国库的？", "round": "round-02", "type": "关联", "category": "清分", "syllabus_ref": ["B12", "B13", "B14"]}
+{"id": "q19", "question": "非税收入的资金流和票据流是什么关系？", "round": "round-02", "type": "关联", "category": "票据", "syllabus_ref": ["B01", "B17"]}
+{"id": "q20", "question": "财政用户和单位用户，各自负责哪些环节？", "round": "round-02", "type": "关联", "category": "角色", "syllabus_ref": ["B03", "B10"]}
+{"id": "q21", "question": "执收单位和预算单位是一回事吗？", "round": "round-02", "type": "辨析", "category": "角色", "syllabus_ref": ["B04", "B19"]}
+{"id": "q22", "question": "统计一笔缴款的金额，应该以缴款通知书票面的总金额为准，还是以各征收项目的金额明细为准？", "round": "round-02", "type": "辨析", "category": "口径", "syllabus_ref": ["B20"]}
+{"id": "q23", "question": "缴款通知书和汇缴通知书上写的“缴款人”，是同一类对象吗？", "round": "round-02", "type": "辨析", "category": "口径", "syllabus_ref": ["B18", "B05"]}
+{"id": "q24", "question": "财政专户和财政汇缴专户是同一个账户吗？", "round": "round-02", "type": "辨析", "category": "账户", "syllabus_ref": ["B02"]}
+{"id": "q25", "question": "直缴和汇缴的区别在哪里？", "round": "round-02", "type": "辨析", "category": "缴款", "syllabus_ref": ["B06", "B07"]}
+{"id": "q26", "question": "财政票据作废需要满足什么条件？", "round": "round-02", "type": "边界", "category": "票据", "syllabus_ref": ["B08"]}
+{"id": "q27", "question": "哪些情况下票据不能作废、只能冲红？", "round": "round-02", "type": "边界", "category": "票据", "syllabus_ref": ["B08", "B09"]}
+{"id": "q28", "question": "财政电子票据可以作废吗？", "round": "round-02", "type": "边界", "category": "票据", "syllabus_ref": ["B08", "B17"]}
+{"id": "q29", "question": "按期间统计收入时，红字发票冲减的金额应该算在哪一个期间？", "round": "round-02", "type": "边界", "category": "口径", "syllabus_ref": ["B21", "B09"]}
+{"id": "q30", "question": "已经作废的票据对应的缴款，统计收入时应该怎么处理？", "round": "round-02", "type": "边界", "category": "口径", "syllabus_ref": ["B21", "B08"]}
