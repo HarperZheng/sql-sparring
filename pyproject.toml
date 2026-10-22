@@ -7,6 +7,7 @@ dependencies = [
     "httpx>=0.27",
     "jsonschema>=4.23",
     "pydantic>=2.9",
+    "pyyaml>=6.0.3",
 ]
 
 # 纯脚本仓：不做包安装，uv run 从仓库根取模块路径
