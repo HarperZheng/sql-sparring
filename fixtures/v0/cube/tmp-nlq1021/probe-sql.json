@@ -1,1 +1,0 @@
-{"query":{"measures":["fiscal_collection_view.count"],"timeDimensions":[{"dimension":"fiscal_collection_view.fill_date","dateRange":["2022-01-01","2022-12-31"]}],"limit":2}}

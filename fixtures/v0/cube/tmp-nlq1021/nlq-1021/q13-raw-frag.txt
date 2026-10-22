@@ -1,2 +1,0 @@
-len=1737
-[270:340]='单独查询取全量总数，占比在表内计算"],"assumption":"问句四类收入与 meta 成员 income_sort_name（收入类'

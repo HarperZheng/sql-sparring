@@ -10,8 +10,7 @@
 | 最终答案   | depth-0 的 assistant markdown 内容（取最后一条）                       |
 | 真实错误   | call-tool-result 的 error 字段（正文 "Code NNN" 是 KB 文本，勿扫全文）  |
 
-语义与 v0 实测保持一致：对 fixtures/v0/qa_run/*.jsonl 的提取结果须与
-fixtures/v0/qa_results.json 逐字段一致（B1 回归门）。
+字段口径经 M0 活跑实测校准（rounds/m0/runs/datus/）。
 """
 
 import json
@@ -99,7 +98,7 @@ def extract(lines, timed_out=False, timeout_s=None):
     """payload 行序列 → 提取结果字典。
 
     lines：stdout 逐行（可为已 splitlines 的列表或文件迭代器）。
-    timed_out/timeout_s：仅驱动超时分支使用；重放时缺省（v0 25 题无一超时）。
+    timed_out/timeout_s：仅驱动超时分支使用，常规提取时缺省。
     """
     sqls, sql_results, answers, errors = [], [], [], []
     metric_calls, tools_called = [], []

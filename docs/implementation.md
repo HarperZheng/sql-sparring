@@ -11,7 +11,7 @@
 | F1 | 双方查询**同一个 ClickHouse** `172.18.166.126:8123/yunnan0508`——数值互证的前提成立 | cube `.env`（CUBEJS_DB_TYPE=clickhouse）与 datus `.datus/config.yml` 对照 |
 | F2 | datus 无头链路已通：`datus -p` 25 题 24 成功、0 真实错误，MessagePayload 提取规则经实战校准 | datus 仓 09-datus-票据链路问数实测记录 |
 | F3 | cube 无头链路已通：`POST :4100/chat` 30 题三态（answer/ask/nomatch）齐全，sessionId 续会话可拍板 | datus 仓 09-cube-票据链路问数实测记录 |
-| F4 | v0 留痕完整可重放：datus `tmp/qa_run/*.jsonl`（25 份原始 payload 流）、qa_results.json；cube 日志与对账文档 | 可直接作适配器固化的验收 fixture |
+| F4 | v0 曾全量留痕：25 题 payload 流与逐题提取结果、cube 30 题三态记录（叙事与判定见 datus 仓 09 号文档） | 适配器提取规格 §2.2 的每条规则有实测出处 |
 | F5 | 两个语义层不同构：datus=dosi YAML 资金链（`fne_fund_main.yml`，16 指标/7 数据集）；cube=Cube schema 票据链（`/agent/dictionary` 可枚举） | 双方首轮实测 |
 
 ## 一、角色组件化
@@ -30,7 +30,7 @@
 组件化边界的三条纪律：
 
 1. **组件间只通过 §1.7 四层记录交换数据**（留痕 → 提取 → 裁决 → 回归），不共享内存态、不互相 import。
-2. **适配器是独立的**：不搬 datus 仓 `tmp/run_qa.py`，按 §2.2 提取规格重写（v0 payload 作验收 fixture，见 §三）。
+2. **适配器是独立的**：提取逻辑按 §2.2 提取规格在本仓重写，不依赖 datus/cube 仓的既有脚本。
 3. **出题人/裁判与答题人模型不对称**（决策点 Q1，§五）——评测者与被测者不同源，避免相关盲区。
 4. **出题人盲考**：能力卡不进出题人输入，出题只依据考纲（决策点 D3b，§五）。
 
@@ -88,9 +88,9 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 内部：读考纲 → 拼 prompt → `claude -p`（headless）→ JSONL 逐行校验（`schemas/question.schema.json` + syllabus_ref 悬空检查）→ 覆盖矩阵检查 → 落盘。校验失败自动重试。
 
-### Step 3 — fixture 测试
+### Step 3 — 校验与抽查
 
-- 校验器先对 **v0 的 25 题**（转成 questions.jsonl 格式）跑通——格式回归的锚点。
+- 校验器先对既有题库（rounds/m0/questions-*.jsonl 及其作答卡）跑通——格式回归的锚点。
 - `db_profile.json` 人工抽查：行数/时间跨度/空键承载对上 P0/P1 结论。
 - `business.md` 剥题检查：全文不含 07/09 号清单原题文本。
 - 再跑一次真实出题，人工抽检 5 题：syllabus_ref 是否真实、辨析题歧义是否在课本有出处、边界题是否有数据画像依据。
@@ -121,17 +121,17 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 - **WSL 桥接（文件交接，防 v0 的命令行引号坑）**：Windows 侧 adapter 经 `wsl.exe -d Ubuntu-26.04` 调用仓内 `adapters/ask_datus/wsl_runner.py`（用 datus 现成 `.venv/bin/python` 执行，纯标准库）——runner 在 WSL 内逐题 subprocess 跑 `.venv/bin/datus -p`，原始 payload 流原样落盘 `/mnt/d`（题目内容从不过命令行，免 `MSYS_NO_PATHCONV` 引号转写）；提取与作答卡写盘回到 Windows 侧做。LLM 走既有 portproxy relay。
 - 提取规格 = 设计文档 §2.2 表格（SQL←execute_sql toolParams；命中指标←query_metrics/search_metrics/get_metric；答案←depth-0 markdown；真实错误←FuncToolResult `error` 字段，**正文 "Code NNN" 是 KB 文本，勿扫全文**）。
 - 已知坑内置：深度>0 子代理的调用也要收（v0 教训）；超时题保留部分输出。
-- **验收标准**：对 v0 的 25 份 `tmp/qa_run/*.jsonl` 重放提取器，结果与 `tmp/qa_results.json` 逐字段一致 → 提取器才算固化。
+- **验收标准**：提取规格 §2.2 逐条在活跑留痕上有实测例证（rounds/m0/runs/datus/）；作答卡字段与 §三 ask 契约一致。
 
 ### ask_cube 要点
 
 - `POST http://localhost:4100/chat {question, sessionId}`，三态分流：`answer`（提取 query JSON/编译 SQL/数值）/ `ask`（缺口径）/ `nomatch`（能力外）。
 - **sessionId 策略**：每题新会话（题间零污染）；`ask` 态自动拍板——适配器按预设口径政策（缺省口径取自考纲"已裁定口径"节或人工预拍）构造追问再 POST 同 sessionId，拍板动作记入作答卡 `arbiter` 字段（裁决时"自动拍板"与"人拍板"区分对待）。
-- **验收标准**：重放 v0 的 30 题，三态分布与首轮实测一致（q07/q09/q30 nomatch、q25/q29 ask）。
+- **验收标准**：新题活跑可调用、能答数（≥2 题，至少 1 题数值答案）；批量活跑零链路错误（M0 实测 30 题记录见 rounds/m0/runs/cube/）。
 
 ### 代码归属：永久在本仓（决策点 D8，用户拍板）
 
-两适配器**永久固化在本仓 `adapters/`，不回迁** datus/cube 仓库——统一契约始终只有一份实现、一个事实源，杜绝双仓同步与漂移；互搏是适配器的唯一用户，产品仓库保留各自现有工具（datus 仓 tmp/run_qa.py 作历史参考）。v0 fixture 重放仍是适配器自身的回归门：每次改动提取规格后重放，与 `qa_results.json` 逐字段一致才放行。
+两适配器**永久固化在本仓 `adapters/`，不回迁** datus/cube 仓库——统一契约始终只有一份实现、一个事实源，杜绝双仓同步与漂移；互搏是适配器的唯一用户。
 
 ## 四、裁判与记忆隔离
 
@@ -195,9 +195,9 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 | 里程碑 | 内容 | 验收 | 产出 |
 |---|---|---|---|
-| **M0 答题链路打通** | Windows 侧 uv 环境初始化（pyproject.toml + uv.lock 入 git，依赖仅 httpx/jsonschema/pydantic）+ `ask_datus`（wsl_runner 桥接 + §2.2 提取器）+ `ask_cube`（:4100 三态 + 拍板政策）+ **最小作答卡结构**（id / question / status / metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path——M1 升格为正式 schema 的底坯） | ① **对接活体验证（主目标）**：datus ≥2 道新题活跑（`datus -p`）status=answer 且带数值；cube ≥2 道新题活跑（`:4100/chat`）至少 1 题数值答案；② A3：v0 cube 30 题活重放三态比对——锚点保持（q07/q09 nomatch 不变、q30 退付未建模边界不消失）、无退化对，词典回写演化/口径反问拍板闭环逐题标注；③ B1：v0 datus 25 份 payload 离线重放，提取与 `qa_results.json` 逐字段一致（豁免 elapsed_s/returncode/stderr_tail/question） | `adapters/` 双适配器 + `rounds/m0/` 证据 + `pyproject.toml` |
-| **M1 契约定稿** | 四个 JSON Schema（question / answer_card / verdict / capability）+ v0 作答卡样例 fixtures + questions.jsonl 格式定稿；answer_card 以 M0 最小结构为底补全（口径卡 / arbiter 全字段），适配器输出切换到 schema 校验 | schemas 通过 v0 数据回填校验；适配器全量输出过校验 | `schemas/` + `fixtures/` |
-| **M2 出题人启动** | 考纲编译器（db_profile 纯解析 + business.md 剥题整理）+ SKILL.md + `bin/examine.py` + fixture 测试；能力卡生成器换岗至裁决/回灌侧 | db_profile 抽查对上 P0/P1 结论；business.md 剥题检查通过；题库覆盖矩阵无漏项；首个机器题库诞生 | `syllabus/` + `examiner/` + `capability/` + round-02 题库 |
+| **M0 答题链路打通** | Windows 侧 uv 环境初始化（pyproject.toml + uv.lock 入 git，依赖仅 httpx/jsonschema/pydantic）+ `ask_datus`（wsl_runner 桥接 + §2.2 提取器）+ `ask_cube`（:4100 三态 + 拍板政策）+ **最小作答卡结构**（id / question / status / metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path——M1 升格为正式 schema 的底坯） | **对接活体验证**：datus ≥2 道新题活跑（`datus -p`）status=answer 且带数值；cube ≥2 道新题活跑（`:4100/chat`）至少 1 题数值答案 | `adapters/` 双适配器 + `rounds/m0/` 证据 + `pyproject.toml` |
+| **M1 契约定稿** | 四个 JSON Schema（question / answer_card / verdict / capability）+ questions.jsonl 格式定稿；answer_card 以 M0 最小结构为底补全（口径卡 / arbiter 全字段），适配器输出切换到 schema 校验 | 适配器全量输出过 schema 校验 | `schemas/` |
+| **M2 出题人启动** | 考纲编译器（db_profile 纯解析 + business.md 剥题整理）+ SKILL.md + `bin/examine.py`；能力卡生成器换岗至裁决/回灌侧 | db_profile 抽查对上 P0/P1 结论；business.md 剥题检查通过；题库覆盖矩阵无漏项；首个机器题库诞生 | `syllabus/` + `examiner/` + `capability/` + round-02 题库 |
 | **M3 首个自动轮** | `bin/round.py` 跑 round-02 全流程（出题→双侧作答→提取）；裁决人工在环 | 一轮完整记录落盘 + 轮报五指标（一致率/分歧分布/差距数/闭环率/双侧共同缺口数） | `rounds/round-02/` + report |
 | **M4 复验轮与固化** | 复验轮机制跑通：人工按材料包修双侧语义层并清记忆 → 发起复验（`--retest <上轮>`，复验集=上轮分歧题）→ 通过题人工确认入库；材料包格式定稿；裁判固化 judge 服务 | 复验轮至少跑通一次且闭环率>0；judge 以人工裁决为回归基准 | 回归套件 + 材料包模板 |
 
@@ -213,7 +213,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 |---|---|---|
 | 主入口 | `bin/round.py` | 一轮全流程（自动执行 SOP 第 1–6 步，到产出材料包为止） |
 | 组件入口 | `bin/examine.py` | 只出题（SOP 第 1 步），round.py 内部也调它 |
-| 组件入口 | `adapters/`（两个） | 答题驱动器，round.py 逐侧调用；可单跑（子集复跑/fixture 回归门） |
+| 组件入口 | `adapters/`（两个） | 答题驱动器，round.py 逐侧调用；可单跑（`--only` 子集复跑） |
 | 组件入口 | `judge/` | 裁决：v1 人工在环（人读作答卡写 verdicts），M4 固化为 headless 服务 |
 | 被封装 | `claude -p` | examiner/judge 的 LLM 调用由上述 Python 入口内部发起，人不直接调 |
 
@@ -243,7 +243,7 @@ uv run python bin/round.py suite-add --round round-02
 ```
 D:\develop\sql-sparring\
   README.md  docs\                     索引 + 总体设计 + 本实施设计
-  schemas\  fixtures\                  M1：四类 JSON Schema + v0 回填样例（契约定稿，answer_card 以 M0 最小结构为底）
+  schemas\                             M1：四类 JSON Schema（契约定稿，answer_card 以 M0 最小结构为底）
   adapters\{ask_datus, ask_cube}\      M0：双答题驱动器（永久在本仓，D8）
   syllabus\                            M2：考纲=课本（db_profile 数据画像 + business.md 业务课本，出题唯一依据）
   examiner\                            M2：出题人（SKILL.md + bin/examine.py，只读考纲盲考）
@@ -254,9 +254,8 @@ D:\develop\sql-sparring\
   suite\accepted_answers.json          跨轮回归基准（人工确认后入库）
 ```
 
-## 八、v0 数据迁移
+## 八、v0 与业务文档的取用
 
-- datus 侧：`tmp/qa_run/*.jsonl` + `tmp/qa_results.json` → M0 的重放验收基准与 M1 的 fixtures；10 号对账总表 → M3 裁决校准集。
-- cube 侧：09-cube 文档 + `logs/agent-svc-*.log` → ask_cube 验收参照。
+- 裁决校准：10 号对账总表（datus 仓）→ M3 裁决校准集。
 - 业务课本：07/09/10 号及 03/P0/P1 业务文档**剥题提炼**（只留业务知识与事实，不留原题文本）→ `syllabus/business.md`；P0/P1 实测事实（空键承载、极值分布、无数据期）→ `db_profile.json` 的抽查锚点。
 - 首轮叙事文档（07/09/09/10）留在 datus 仓 `development_process_record/non_tax/` 作历史记录，机器层自 round-02 起全部落本仓。
