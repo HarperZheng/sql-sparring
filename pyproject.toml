@@ -1,0 +1,14 @@
+[project]
+name = "sql-sparring"
+version = "0.1.0"
+description = "问数双智能体互搏：datus × cube 同题作答、互检、裁决"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "jsonschema>=4.23",
+    "pydantic>=2.9",
+]
+
+# 纯脚本仓：不做包安装，uv run 从仓库根取模块路径
+[tool.uv]
+package = false

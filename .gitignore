@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# uv（uv.lock 入 git，.venv 不入）
+# uv.lock
+
+# 运行时临时物
+*.log
