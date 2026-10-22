@@ -1,0 +1,785 @@
+[
+  {
+    "id": "A1",
+    "question": "2022年全年非税缴款金额和笔数是多少？",
+    "status": "成功(指标路径)",
+    "elapsed_s": 116.0,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 非税缴款笔数 全口径",
+        "names": [
+          "缴库金额_环比",
+          "缴库金额_同比",
+          "清分金额_环比",
+          "清分金额_同比",
+          "非税缴款金额_环比"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "get_metric",
+        "depth": 1,
+        "desc": "get_metric: 非税缴款金额",
+        "names": [
+          "非税缴款金额"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "get_metric",
+        "depth": 1,
+        "desc": "get_metric: 非税缴款笔数",
+        "names": [
+          "非税缴款笔数"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "query_metrics",
+        "depth": 1,
+        "desc": "query_metrics: 指标=非税缴款金额、非税缴款笔数; 时间=2022-01-01~2023-01-01",
+        "names": [
+          "非税缴款金额",
+          "非税缴款笔数"
+        ],
+        "rows": "index,sql\n0,\"SELECT\n  sum(paybook_full_high.famt) AS \"\"非税缴款金额\"\",\n  COUNT(DISTINCT paybook_full_high.fid) AS \"\"非税缴款笔数\"\"\nFROM yunnan0508.fne_paybook_full_high AS paybook_full_high\nWHERE\n  toDate(paybook_full_high.ffilldate) >= CAST('2022-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2023-01-01' AS DATE) SETTINGS join_use_nulls = 1\""
+      },
+      {
+        "tool": "query_metrics",
+        "depth": 1,
+        "desc": "query_metrics: 指标=非税缴款金额、非税缴款笔数; 时间=2022-01-01~2023-01-01",
+        "names": [
+          "非税缴款金额",
+          "非税缴款笔数"
+        ],
+        "rows": "index,非税缴款金额,非税缴款笔数\n0,18208936572.27,355"
+      }
+    ],
+    "tools_called": [
+      "search_metrics",
+      "search_semantic_objects",
+      "task",
+      "get_metric@d1",
+      "query_metrics@d1"
+    ],
+    "sql": "",
+    "sql_count": 0,
+    "sql_results": [],
+    "answer": "## 2022年全年非税缴款情况\n\n| 指标 | 结果 |\n|---|---|\n| **非税缴款金额** | **18,208,936,572.27 元 ≈ 182.09 亿元** |\n| **非税缴款笔数** | **355 笔** |\n\n**口径说明**（按语义指标 canonical 口径，dry-run 验证通过）：\n\n- **全口径**：直缴 + 汇缴合计，未加 `fbustype` 过滤\n- **金额**：`SUM(famt)`，即票面应收金额（非实缴/缴库口径）\n- **笔数**：`COUNT(DISTINCT fid)` 去重口径（表内有 147 个 fid 存在多版本重复行，去重后不等于物理行数）\n- **时间轴**：主时间轴 fill_date（填开日）落在 `[2022-01-01, 2023-01-01)`\n\n```sql\nSELECT\n  sum(famt)                     AS 非税缴款金额,\n  COUNT(DISTINCT fid)           AS 非税缴款笔数\nFROM yunnan0508.fne_paybook_full_high\nWHERE toDate(ffilldate) >= '2022-01-01'\n  AND toDate(ffilldate) <  '2023-01-01'\n```\n\n⚠️ 提示：该数据集为测试环境，约 16% 行含“测试”字样单位，数值含测试数据污染，正式对外汇报前建议先业务确认。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "A2",
+    "question": "非税缴款金额按月展示，并给出每月环比",
+    "status": "成功",
+    "elapsed_s": 216.0,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额",
+        "names": [
+          "缴库金额_环比",
+          "清分金额_环比",
+          "缴库金额_同比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 环比",
+        "names": [
+          "非税缴款金额_环比",
+          "非税缴款金额_同比",
+          "非税缴款金额",
+          "非税缴款笔数"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "list_subject_tree",
+      "search_metrics",
+      "grep",
+      "execute_sql",
+      "describe_table"
+    ],
+    "sql": "SELECT toYear(toDate(ffilldate)) AS `年份`, ROUND(SUM(famt) / 10000, 2) AS `金额_万元`\nFROM fne_paybook_full_high\nGROUP BY `年份` ORDER BY `年份`",
+    "sql_count": 12,
+    "sql_results": [],
+    "answer": "全部 53 个自然月（含 5 个无数据月）已拼齐并交叉验证。结果如下：\n\n## 口径说明\n\n- **指标**：非税缴款金额 = `SUM(paybook_full_high.famt)`（语义层已注册指标，全业务类型口径，直缴 fbustype='1'、汇缴 fbustype='2' 混合；如需直缴口径可再加过滤）\n- **物理表**：`fne_paybook_full_high`（缴款通知书明细，1,272 行），时间轴 `fill_date = toDate(ffilldate)`（通知书填开日期）\n- **金额为明细行直 SUM**（金额指标不去重；笔数才需 `uniqExact(fid)`）\n- 环比 = 与上一**自然月**比较；当月或上月金额为 0（无数据）时环比无意义，显示 \"—\"\n\n## 非税缴款金额 · 月度（2021-12 ~ 2026-08）\n\n| 月份 | 金额（元） | 环比增长率 |\n|---|---:|---:|\n| 2021-12 | 833.00 | — |\n| 2022-01 | 13,301.00 | +1,496.76% |\n| 2022-02 | 40,779.00 | +206.59% |\n| 2022-03 | 19,365.00 | −52.51% |\n| **2022-04** | **15,985,631,865.00** | +82,548,993.03% |\n| 2022-05 | 494.00 | −100.00% |\n| 2022-06 | 4,112.90 | +732.57% |\n| 2022-07 | 23.00 | −99.44% |\n| 2022-08 | 17,417.79 | +75,629.52% |\n| 2022-09 | 5,653.68 | −67.54% |\n| 2022-10 | 38,188.35 | +575.46% |\n| 2022-11 | 236,794.19 | +520.07% |\n| **2022-12** | **2,222,928,578.36** | +938,659.76% |\n| 2023-01 | 0.00（无数据） | −100.00% |\n| 2023-02 | 44,876.00 | —（上月无基数） |\n| 2023-03 | 4,086.00 | −90.89% |\n| 2023-04 | 5,819.00 | +42.41% |\n| 2023-05 | 964.00 | −83.43% |\n| 2023-06 | 43,459.45 | +4,408.24% |\n| 2023-07 | 1,171,872.00 | +2,596.47% |\n| 2023-08 | 24,457.08 | −97.91% |\n| 2023-09 | 128,914.88 | +427.11% |\n| 2023-10 | 600.00 | −99.53% |\n| 2023-11 | 37,408.60 | +6,134.77% |\n| 2023-12 | 3,353.30 | −91.04% |\n| 2024-01 | 164,244.58 | +4,798.00% |\n| **2024-02** | **46,039,171.70** | +27,930.86% |\n| 2024-03 | 3,164.62 | −99.99% |\n| **2024-04** | **28,982,824.78** | +915,739.02% |\n| 2024-05 | 22,063.00 | −99.92% |\n| 2024-06 | 5,836.24 | −73.55% |\n| 2024-07 | 1,405.28 | −75.92% |\n| 2024-08 | 610,281.59 | +43,327.76% |\n| 2024-09 | 6,846.64 | −98.88% |\n| 2024-10 | 139,444.89 | +1,936.69% |\n| 2024-11 | 9,105.86 | −93.47% |\n| 2024-12 | 140,047.64 | +1,437.99% |\n| **2025-01** | **30,695,653.30** | +21,818.01% |\n| 2025-02 | 453.00 | −100.00% |\n| 2025-03 | 27,734.88 | +6,022.49% |\n| 2025-04 | 15,413.20 | −44.43% |\n| 2025-05 | 0.00（无数据） | −100.00% |\n| 2025-06 | 5,256.29 | —（上月无基数） |\n| 2025-07 | 1,084.00 | −79.38% |\n| 2025-08 | 0.00（无数据） | −100.00% |\n| 2025-09 | 1,777.33 | —（上月无基数） |\n| 2025-10 | 4,492.36 | +152.76% |\n| 2025-11 | 1,501.00 | −66.59% |\n| 2025-12 | 1,000.02 | −33.38% |\n| 2026-01 | 4,632.00 | +363.19% |\n| 2026-02 | 0.00（无数据） | −100.00% |\n| 2026-03 | 0.00（无数据） | — |\n| 2026-04 | 1,982.32 | —（上月无基数） |\n| 2026-05 | 7,222.00 | +264.32% |\n| **2026-06** | **14,909,895.85** | +206,351.06% |\n| 2026-07 | 752.52 | −99.99% |\n| 2026-08 | 700.66 | −6.89% |\n\n## 年度小计\n\n| 年份 | 金额（万元） |\n|---|---:|\n| 2021（仅12月） | 0.08 |\n| 2022 | 1,820,893.66（≈182.09 亿） |\n| 2023 | 146.58 |\n| 2024 | 7,612.44 |\n| 2025 | 3,075.44 |\n| 2026（前8月） | 1,492.52 |\n\n**解读要点**\n- 序列呈极端尖峰分布：全期累计约 **183.3 亿元**，其中 **2022-04 单月 ≈159.86 亿（占 87%）**、2022-12 ≈22.23 亿，两月合计占 99%；其余月份多在百万以内，故大量环比出现 ±100%~千万百分比级的数值，属基数效应而非真实波动。\n- 常态月（剔除尖峰）中较高的是 2024-02（4,604 万）、2024-04（2,898 万）、2025-01（3,070 万）、2026-06（1,491 万）。\n- 2025 年下半年以来月度规模降至千~万元级；最近 3 个月（2026-06 尖峰后）连续回落（−99.99%、−6.89%）。\n- 无数据月份（2023-01、2025-05、2025-08、2026-02、2026-03）按 0 计入环比基期。\n\n## 可复现 SQL（ClickHouse 23.3）\n\n```sql\nWITH monthly AS (\n    SELECT toStartOfMonth(toDate(ffilldate)) AS ym, SUM(famt) AS amt\n    FROM fne_paybook_full_high\n    GROUP BY ym\n)\nSELECT\n    formatDateTime(a.ym, '%Y-%m')                          AS `月份`,\n    ROUND(COALESCE(b.amt, 0), 2)                           AS `非税缴款金额_元`,\n    lagInFrame(COALESCE(b.amt, 0), 1) OVER (\n        ORDER BY a.ym ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n    )                                                      AS `上月金额_元`,\n    IF(COALESCE(b.amt, 0) = 0\n       OR lagInFrame(COALESCE(b.amt, 0), 1) OVER (\n              ORDER BY a.ym ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) IN (0, NULL),\n       NULL,\n       ROUND((COALESCE(b.amt, 0) - lagInFrame(COALESCE(b.amt, 0), 1) OVER (\n              ORDER BY a.ym ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))\n             / lagInFrame(COALESCE(b.amt, 0), 1) OVER (\n              ORDER BY a.ym ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) * 100, 2)\n    )                                                      AS `环比增长率_%`\nFROM (\n    SELECT toStartOfMonth(addMonths(toDate('2021-12-01'), number)) AS ym\n    FROM numbers(57)          -- 2021-12 起共 57 个自然月，补齐无数据月份\n) a\nLEFT JOIN monthly b USING (ym)\nORDER BY a.ym\n```\n\n如需直缴（fbustype='1'）或汇缴（fbustype='2'）口径的月度环比，或想剔除 2022-04/2022-12 两个异常尖峰看常态趋势，告诉我即可。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "A3",
+    "question": "清分金额2022年对比2021年同比增长多少？",
+    "status": "成功",
+    "elapsed_s": 93.9,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分金额 clearing amount",
+        "names": [
+          "清分金额",
+          "清分率",
+          "清分金额_环比",
+          "清分金额_同比",
+          "缴库金额"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_metrics",
+      "search_semantic_objects",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT substring(ffilldate, 1, 4) AS yr, count() AS rows, min(ffilldate) AS min_d, max(ffilldate) AS max_d, round(sum(fimamt), 2) AS clear_amt FROM yunnan0508.fne_paybook_full_high GROUP BY yr ORDER BY yr",
+    "sql_count": 7,
+    "sql_results": [],
+    "answer": "数据已查清，情况比较特殊——直接给结论：\n\n## 结论：2021 年清分金额为 0，同比增长额 +159.87 亿元，增长率无法计算（基数为 0）\n\n**口径**：指标「清分金额」= `SUM(fne_paybook_full_high.fimamt)`（明细行已清分金额，元），按清分日 `fcleardate` 归年。\n\n| 年份 | 清分金额（元） | 明细行数 |\n|---|---:|---:|\n| 2021 | 0（无任何 `fcleardate` 落在 2021 年的记录） | 0 |\n| 2022 | **15,986,577,101.87（≈159.87 亿）** | 320 |\n\n- 同比增长额：**+159.87 亿元**（0 → 159.87 亿）\n- 同比增长率：**不可计算**（2021 年基数为 0，除零无意义）\n\n### 补充说明\n\n1. **换按填发日 `ffilldate` 归年口径，结论不变**：2021 年有 6 行缴款记录（2021-12-21 ~ 12-28），但其 `fimamt` 全部为空 → 清分金额仍为 0；2022 年为 15,986,579,101.87 元（≈159.87 亿，与清分日口径差 2,000 元，来自填发在 2022 年但清分日跨年的少量行）。\n2. **背景**：该数据集 `fcleardate` 最早记录为 2022-01-17，2021 年仅有缴款通知书填发、尚未发生清分，属于数据集时间覆盖范围问题，不是统计口径错误。\n\n查询 SQL（ClickHouse，可直接复用）：\n\n```sql\nSELECT substring(fcleardate, 1, 4) AS clear_year,\n       round(sum(fimamt), 2) AS clear_amount\nFROM yunnan0508.fne_paybook_full_high\nWHERE substring(fcleardate, 1, 4) IN ('2021', '2022')\nGROUP BY clear_year\nORDER BY clear_year\n```",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "A4",
+    "question": "缴库金额按年汇总，2022到2026各年是多少？",
+    "status": "成功",
+    "elapsed_s": 85.2,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=缴库金额 缴库",
+        "names": [
+          "缴库金额_环比",
+          "清分金额_环比",
+          "缴库金额_同比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_semantic_objects",
+      "search_metrics",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    toYear(toDate(fmsgdate)) AS yr,\n    count() AS bill_cnt,\n    round(SUM(ftotalamt), 2) AS treasury_amt\nFROM (\n    SELECT *, ROW_NUMBER() OVER (PARTITION BY fid) AS _rn\n    FROM yunnan0508.fne_treasury_transfer_new\n)\nWHERE _rn = 1\nGROUP BY yr\nORDER BY yr",
+    "sql_count": 1,
+    "sql_results": [],
+    "answer": "查询完成，结果与语义层对账基准（76 行 / 29,535,106.14 元）完全吻合（34+10+15+17=76 行，分年合计一致）。\n\n## 缴库金额按年汇总（口径：缴库报文去重，按 `msg_date`）\n\n| 年份 | 缴库笔数 | 缴库金额（元） |\n|------|---------|---------------|\n| 2022 | 34 | 78,449.12 |\n| 2023 | 10 | 80,659.18 |\n| 2024 | 15 | 3,763.30 |\n| 2025 | — | **无缴库报文** |\n| 2026 | 17 | 29,372,234.54 |\n| **合计** | **76** | **29,535,106.14** |\n\n**几点说明：**\n\n1. **口径**：金额 = `SUM(ftotalamt)`（缴库报文总金额），基于 `fne_treasury_transfer_new` 按 `fid` 去重后的 76 行——直接 SUM 原始表会因 462 行生命周期冗余虚增约 44 倍，故严格采用去重口径。\n2. **时间轴**：按 `msg_date = toDate(fmsgdate)`（报文日期）归年。\n3. **2025 年为空**：数据中没有任何 2025 年的缴库报文，非查询遗漏。\n4. **金额分布极不均衡**：2026 年一笔大头（2,937.2 万元，占 99.4%），2022–2024 三年合计仅 16.3 万元，这与库内“测试环境大额票集中在近年”的已知特征一致。\n\n如需按资金性质、单位或区划进一步下钻某一年，可以直接说。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "A5",
+    "question": "全库累计清分了多少金额、清分率是多少？",
+    "status": "成功",
+    "elapsed_s": 158.1,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分金额 清分率",
+        "names": [
+          "清分金额_环比",
+          "清分金额",
+          "清分金额_同比",
+          "清分率",
+          "缴库金额_环比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_metrics",
+      "search_semantic_objects",
+      "glob",
+      "grep",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n  COALESCE(SUM(fimamt), 0) AS cleared_amt,\n  COALESCE(SUM(famt), 0)   AS pay_amt,\n  COALESCE(SUM(fimamt), 0) / COALESCE(SUM(famt), 0) AS clear_rate\nFROM fne_paybook_full_high",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "## 全库累计清分金额与清分率\n\n| 指标 | 数值 |\n|---|---|\n| **清分金额**（SUM(fimamt)） | **16,016,079,467.68 元 ≈ 160.16 亿元** |\n| **非税缴款金额**（SUM(famt)，分母） | 18,332,207,203.13 元 ≈ 183.32 亿元 |\n| **清分率** = 清分 ÷ 缴款 | **0.8737 ≈ 87.37%** |\n\n执行 SQL（按语义模型 `fne_fund_main` 中「清分率」指标的固化口径）：\n\n```sql\nSELECT\n  COALESCE(SUM(fimamt), 0) AS cleared_amt,\n  COALESCE(SUM(famt), 0)   AS pay_amt,\n  COALESCE(SUM(fimamt), 0) / COALESCE(SUM(famt), 0) AS clear_rate\nFROM fne_paybook_full_high\n-- cleared_amt = 16016079467.68, pay_amt = 18332207203.132, clear_rate = 0.873657\n```\n\n**口径说明**：\n- 分子 `fimamt` = 明细行已清分金额，分母 `famt` = 非税缴款金额，两者同在 `paybook_full_high`（缴款书全生命周期宽表，1,272 行）行内，单表聚合无 JOIN，金额可直接 SUM；\n- **全业务类型口径**（含直缴 fbustype='1' + 汇缴 fbustype='2'），无时间过滤，全库累计；\n- 结果与知识库基准（q05 基准题：160.16 亿 / 0.8737）完全一致。\n\n> 备注：若要按业务类型切片（直缴 vs 汇缴清分率），需在查询中同时给分子分母加 `fbustype` 过滤——逐组比值才成立，需要的话我可以再查。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "B1",
+    "question": "2022年缴款金额排名前10的执收单位有哪些？",
+    "status": "成功",
+    "elapsed_s": 245.7,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=缴款金额 执收单位",
+        "names": [
+          "缴库金额_环比",
+          "清分金额_环比",
+          "缴库金额_同比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_semantic_objects",
+      "list_tables",
+      "search_metrics",
+      "glob",
+      "grep",
+      "read_file",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    fchgagenidcode AS agen_code,\n    groupUniqArray(fchgagenname) AS agen_names,\n    round(SUM(famt), 2) AS amt_sum,\n    uniqExact(fid) AS detail_cnt\nFROM fne_paybook_full_high\nWHERE ffilldate >= '2022-01-01' AND ffilldate < '2023-01-01'\nGROUP BY fchgagenidcode\nORDER BY amt_sum DESC\nLIMIT 10",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "查询完成，结果与既往实测记录（q06）一致。以下是答案：\n\n## 2022 年缴款金额 Top 执收单位\n\n**口径**：`fne_paybook_full_high` 缴款通知书明细金额 `famt` 直 SUM（明细行口径，含全部业务类型），时间轴 `fill_date` 限定 2022-01-01 ~ 2022-12-31，按执收单位编码 `fchgagenidcode` 分组降序。\n\n| 排名 | 执收单位编码 | 执收单位名称 | 缴款金额（元） | 缴款明细笔数 |\n|---|---|---|---|---|\n| 1 | 36299bf1...16cc588 | 测试云南测试环境(试用版) | 18,208,882,274.85（约 182.09 亿） | 272 |\n| 2 | 6e4ba023... | 云南测试单位1209 | 24,034.92 | 4 |\n| 3 | 5c18ec29... | 测试1125 | 11,763.68 | 20 |\n| 4 | 1cc48566... | 云南医疗单位0729 | 6,864.26 | 19 |\n| 5 | 62aa3631... | 测试分成测试 | 5,184.00 | 9 |\n| 6 | d5058204... | 测试云南通用测试单位0720 | 2,057.68 | 13 |\n| 7 | 57661ea5... | 测试云南医疗单位0805 | 1,915.12 | 9 |\n| 8 | 67455953... | 测试测试单位0722 | 1,377.76 | 7 |\n| 9 | ec8eb0f0... | 测试云南通用Oracle0728 | 1,100.00 | 2 |\n\n**说明**：\n1. **实际只有 9 个单位**——2022 年内有缴款数据的执收单位不足 10 个，不存在第 10 名，已如实全部返回。\n2. **金额高度集中于第 1 名**：约 182.09 亿元，占全部缴款的 99.99% 以上（该单位 272 笔明细）。\n3. **一码多名**：部分单位存在历史名称变体（如第 1 名有 3 个名称版本、第 4 名有 2 个），表中取主要名称展示；分组始终以编码 `fchgagenidcode` 为准，名称列不作准。\n4. 该库为测试环境数据，单位名称均为测试单位（如\"测试云南测试环境\"等），这是数据本身特征而非查询错误。\n\n使用的 SQL：\n\n```sql\nSELECT\n    fchgagenidcode AS agen_code,\n    groupUniqArray(fchgagenname) AS agen_names,\n    round(SUM(famt), 2) AS amt_sum,\n    uniqExact(fid) AS detail_cnt\nFROM fne_paybook_full_high\nWHERE ffilldate >= '2022-01-01' AND ffilldate < '2023-01-01'\nGROUP BY fchgagenidcode\nORDER BY amt_sum DESC\nLIMIT 10\n```\n\n如需**直缴口径**（`fbustype='1'`，区分直缴/汇缴）或改按**缴款笔数**排名，告诉我即可重查。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "B2",
+    "question": "测试云南省教育厅1直属下级单位合计缴款金额是多少？",
+    "status": "成功",
+    "elapsed_s": 110.1,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额",
+        "names": [
+          "缴库金额_环比",
+          "清分金额_环比",
+          "缴库金额_同比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 缴款金额 paybook",
+        "names": [
+          "清分金额",
+          "非税缴款金额",
+          "缴库金额_环比",
+          "缴库金额",
+          "缴库金额_同比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "describe_table",
+      "search_metrics",
+      "list_databases",
+      "list_tables",
+      "search_semantic_objects",
+      "execute_sql"
+    ],
+    "sql": "SELECT count() AS rows_, uniqExact(fid) AS pay_cnt, round(SUM(famt), 2) AS amt\nFROM yunnan0508.fne_paybook_full_high\nWHERE fchgagenidcode = 'f8e06e9474514da29117a5194bbe503d'",
+    "sql_count": 14,
+    "sql_results": [],
+    "answer": "查询完成，结果如下。\n\n## 查询结果\n\n**\"测试云南省教育厅1\"（单位编码 124）直属下级单位合计缴款金额：18,330,391,762.78 元（约 183.30 亿元）**\n\n| 项目 | 数值 |\n|---|---|\n| 直属下级单位数 | **44 家**（全部有缴款记录） |\n| 缴款笔数 | 693 笔（按 `uniqExact(fid)` 去重口径） |\n| **合计缴款金额** | **18,330,391,762.78 元** |\n| ├ 直缴（fbustype='1'） | 16,047,143,059.65 元（87.6%） |\n| └ 汇缴（fbustype='2'） | 2,283,248,703.13 元（12.4%） |\n\n补充说明：\n- 上级单位\"测试云南省教育厅1\"**本部自身无缴款记录**，所以上述合计即该教育厅口径的完整缴款总额，无遗漏。\n- 下级单位清单包含：mysqlSaaS高校（124000）、测试云南省国库处单位（124001）、测试昆明冶金高等专科学校（124043）、云南信息中心（124992）、云南体育彩票中心（124993）等 44 家。\n- 金额口径为指标 **非税缴款金额**（`SUM(paybook_full_high.famt)`，缴款通知书明细口径、全业务类型），未做直缴/汇缴收窄；如只看直缴口径则为 160.47 亿元。\n\n## 执行 SQL\n\n```sql\n-- 直属下级单位合计缴款金额（ClickHouse 23.3）\nSELECT\n    count()                                        AS pay_rows,\n    uniqExact(fid)                                 AS pay_cnt,      -- 笔数必须按 fid 去重（明细行存在生命周期多版本）\n    round(SUM(famt), 2)                            AS total_amt,\n    round(SUMIf(famt, fbustype = '1'), 2)          AS direct_amt,   -- 直缴\n    round(SUMIf(famt, fbustype = '2'), 2)          AS agg_amt       -- 汇缴\nFROM yunnan0508.fne_paybook_full_high\nWHERE fchgagenidcode IN (\n    -- dim_agen 去重维度：fab_agen 按 fagenidcode 取最新版本，再取指定单位的直接子单位\n    SELECT fagenidcode\n    FROM (\n        SELECT fagenidcode, fpidcode, fupdatetime,\n               ROW_NUMBER() OVER (PARTITION BY fagenidcode ORDER BY fupdatetime DESC) AS _rn\n        FROM yunnan0508.fab_agen\n    ) t\n    WHERE _rn = 1\n      AND fpidcode = 'f8e06e9474514da29117a5194bbe503d'  -- 测试云南省教育厅1\n);\n```\n\n要点：\n- 单位树通过 `fab_agen.fpidcode`（父编码）关联，物理表存在多版本行（295 行→去重后 218 个单位），必须先按 `fagenidcode ORDER BY fupdatetime DESC` 去重再取子单位，否则会重复计数；\n- 事实表关联键为 `fchgagenidcode = fagenidcode`（语义模型 D5/D6/D7 已实测验证的边）；\n- 明细行含生命周期多版本（785 物理行 / 693 笔），所以**金额直 SUM、笔数必须 `uniqExact(fid)`**。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "B3",
+    "question": "各执收预算单位2022年的清分金额对比",
+    "status": "成功",
+    "elapsed_s": 108.8,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分金额 清分率 清分",
+        "names": [
+          "清分金额_环比",
+          "清分率",
+          "清分金额",
+          "清分金额_同比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "list_subject_tree",
+      "search_semantic_objects",
+      "search_metrics",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "WITH\nname_cnt AS (\n    SELECT\n        fchgagenidcode AS agen_code,\n        trim(fchgagenname) AS agen_name,\n        count() AS cnt\n    FROM yunnan0508.fne_paybook_full_high\n    WHERE toYear(toDate(ffilldate)) = 2022\n    GROUP BY agen_code, agen_name\n),\ncanon AS (\n    SELECT agen_code, argMax(agen_name, cnt) AS agen_name\n    FROM name_cnt\n    GROUP BY agen_code\n)\nSELECT\n    m.fchgagenidcode AS agen_code,\n    any(c.agen_name) AS agen_name,\n    count() AS rows,\n    uniqExact(m.fid) AS bills,\n    round(sum(m.fimamt) / 1e8, 4) AS clear_amt_yi,\n    round(sum(m.famt) / 1e8, 4) AS pay_amt_yi,\n    round(if(sum(m.famt) = 0, NULL, sum(m.fimamt) / sum(m.famt) * 100), 2) AS clear_rate_pct\nFROM yunnan0508.fne_paybook_full_high m\nINNER JOIN canon c ON m.fchgagenidcode = c.agen_code\nWHERE toYear(toDate(m.ffilldate)) = 2022\nGROUP BY m.fchgagenidcode\nORDER BY clear_amt_yi DESC",
+    "sql_count": 5,
+    "sql_results": [],
+    "answer": "查询完成。以下是 2022 年各执收预算单位的清分金额对比结果：\n\n## 口径说明\n\n- **指标**：清分金额 = `SUM(fimamt)`（明细行已清分金额），与语义层「清分金额」指标口径一致\n- **数据集**：`paybook_full_high`（缴款书全生命周期宽表，明细行粒度）\n- **时间口径**：按主时间轴 `fill_date`（填单日期）取 2022 年。已实测验证：2022 年的清分金额全部落在填单年=2022 的行上（仅 4 行跨年清分到 2023 年，金额≈0），两种口径结果一致\n- **单位归并**：同一单位编码（`fchgagenidcode`）存在多个名称变体（如“(试用版)”后缀），按语义层验证过的唯一键编码归并，名称取占用行数最多的变体\n- 笔数口径 `uniqExact(fid)`（147 个 fid 存在生命周期多版本重复）\n\n## 2022 年各执收单位清分金额对比\n\n| 排名 | 执收单位 | 笔数 | 清分金额（亿元） | 占比 | 缴款金额（亿元） | 清分率 |\n|---|---|---|---|---|---|---|\n| 1 | 测试云南测试环境 | 272 | 159.8653 | ≈100% | 182.0888 | 87.80% |\n| 2 | 云南测试单位1209 | 4 | 0.0002 | <0.01% | 0.0002 | 100% |\n| 3 | 测试云南医疗单位0729 | 19 | 0.0001 | <0.01% | 0.0001 | 100% |\n| 3 | 测试1125 | 20 | 0.0001 | <0.01% | 0.0001 | 99.15% |\n| 5 | 测试云南医疗单位0805 | 9 | ~0 | — | ~0 | 100% |\n| 5 | 测试云南通用测试单位0720 | 13 | ~0 | — | ~0 | 100% |\n| 5 | 测试云南通用Oracle0728 | 2 | ~0 | — | ~0 | 100% |\n| 5 | 测试分成测试 | 9 | ~0 | — | 0.0001 | 49.02% |\n| 5 | 测试测试单位0722 | 7 | ~0 | — | ~0 | 100% |\n| **合计** | **9 个单位** | **355** | **≈159.866** | 100% | **≈182.09** | **≈87.8%** |\n\n## 关键发现\n\n1. **极度集中**：清分金额几乎全部来自「测试云南测试环境」1 个单位（159.87 亿元，占比 99.99%+），其余 8 个单位合计不足 1 万元\n2. **清分率差异**：主导单位清分率 87.80%（尚有约 22 亿元缴款未清分）；「测试分成测试」仅 49.02%，是清分率最低的单位\n3. **数据性质提示**：单位名称均为“测试”前缀（测试环境数据），其中一笔名称带“(试用版)(试用版)”双后缀，说明系统存在名称重复追加的问题\n\n⚠️ 说明：这份数据是测试环境的测试单位数据，若您需要的是生产口径的执收单位分析，建议确认数据源。需要的话我可以进一步：按月拆分对比趋势、区分直缴/汇缴（fbustype）切片、或按执收区划（fchgrgnname）归并分析。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "B4",
+    "question": "哪些非叶子单位自己直接收了款？各收了多少？",
+    "status": "有SQL无最终答案",
+    "elapsed_s": 191.8,
+    "metric_calls": [],
+    "tools_called": [
+      "describe_table",
+      "list_tables",
+      "list_subject_tree",
+      "search_semantic_objects",
+      "read_file",
+      "grep",
+      "execute_sql",
+      "bash"
+    ],
+    "sql": "SELECT t.c AS missing_codes\nFROM (\n    SELECT uniqExact(p.fchgagenidcode) AS c\n    FROM yunnan0508.fne_paybook_full_high p\n    LEFT JOIN (\n        SELECT fagenidcode, fisleaf\n        FROM (\n            SELECT fagenidcode, fisleaf, fupdatetime,\n                   ROW_NUMBER() OVER (PARTITION BY fagenidcode ORDER BY fupdatetime DESC) AS _rn\n            FROM yunnan0508.fab_agen\n        ) WHERE _rn = 1\n    ) a ON p.fchgagenidcode = a.fagenidcode\n    WHERE a.fisleaf = 0\n) t\nCROSS JOIN (\n    SELECT count() AS c\n    FROM (\n        SELECT fpidcode AS parent\n        FROM (\n            SELECT fagenidcode, fpidcode, fupdatetime,\n                   ROW_NUMBER() OVER (PARTITION BY fagenidcode ORDER BY fupdatetime DESC) AS _rn\n            FROM yunnan0508.fab_agen\n        ) WHERE _rn = 1 AND fpidcode != ''\n    ) w\n) p\nSETTINGS join_use_nulls = 1",
+    "sql_count": 31,
+    "sql_results": [],
+    "answer": "",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "B5",
+    "question": "按执收单位统计未到账的缴款笔数",
+    "status": "成功",
+    "elapsed_s": 245.3,
+    "metric_calls": [],
+    "tools_called": [
+      "glob",
+      "describe_table",
+      "list_tables",
+      "execute_sql",
+      "search_semantic_objects",
+      "grep",
+      "read_file",
+      "add_memory",
+      "edit_memory"
+    ],
+    "sql": "SELECT\n    fchgagencode,\n    arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS agen_names,\n    count(DISTINCT fpaycode) AS unpaid_book_cnt,\n    count() AS detail_rows\nFROM yunnan0508.fne_paybook_full_high\nWHERE fstate = '1'\n  AND toDateOrNull(feffdate) < '2026-10-21'\nGROUP BY fchgagencode\nORDER BY unpaid_book_cnt DESC\nLIMIT 100",
+    "sql_count": 16,
+    "sql_results": [],
+    "answer": "## 查询结果：按执收单位统计未到账（欠缴）的缴款笔数\n\n**口径**（沿用今日 q10 实测已拍板的标准）：欠缴 = 缴款书状态为**待缴款（`fstate='1'`）** 且**有效期（`feffdate`）已过期**（早于 2026-10-21）——即票已开出但缴款人尚未缴款的催缴场景；笔数按缴款书去重（`uniqExact(fpaycode)`），非明细行数。\n\n**执行 SQL**（表：`fne_paybook_full_high`，全量缴款书台账）：\n\n```sql\nSELECT\n    fchgagencode                                        AS agen_code,\n    arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS agen_name,\n    uniqExact(fpaycode)                                 AS unpaid_book_cnt,\n    count()                                             AS detail_rows\nFROM yunnan0508.fne_paybook_full_high\nWHERE fstate = '1'\n  AND toDateOrNull(feffdate) < '2026-10-21'\nGROUP BY fchgagencode\nORDER BY unpaid_book_cnt DESC\nLIMIT 100\n```\n\n**结果**（仅 1 个执收单位有欠缴）：\n\n| 执收单位编码 | 执收单位名称 | 未到账缴款笔数 | 明细行数 |\n|---|---|---|---|\n| 124045 | 测试云南测试环境 | **1** | 1 |\n\n**说明**：\n- 全库待缴款且已过期的缴款书仅这 1 笔，明细行数同为 1（一票一行）；\n- 其余执收单位均无欠缴；\n- 该结果与今早 Cube 实测记录（`10-cube-票据链路问数实测记录.md` q10）的基准一致；\n- ⚠️ 提醒：此结果为**测试环境数据**（124045 是测试单位，库内大额数据多为测试票），生产口径结论请勿直接外推。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "C1",
+    "question": "各预算科目清分金额排行，政府性基金收入103大类下哪些叶子科目收得最多？",
+    "status": "成功",
+    "elapsed_s": 191.7,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分金额 按科目排行",
+        "names": [
+          "清分金额_环比",
+          "清分金额",
+          "清分金额_同比",
+          "缴库金额_环比",
+          "清分率"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "grep",
+      "list_tables",
+      "describe_table",
+      "search_metrics",
+      "read_file",
+      "execute_sql"
+    ],
+    "sql": "WITH subject_dim AS (\n  SELECT fsubcode, fsubname, flevel, fpcode, fisleaf\n  FROM (\n    SELECT fsubcode, fsubname, fyear, flevel, fpcode, fisleaf,\n           ROW_NUMBER() OVER (PARTITION BY fsubcode ORDER BY fyear DESC) AS _rn\n    FROM yunnan0508.fab_subject\n  ) WHERE _rn = 1\n),\nagg AS (\n  SELECT fsubcode AS subject_code, SUM(fimamt) AS amt, uniqExact(fid) AS cnt\n  FROM yunnan0508.fne_paybook_full_high\n  GROUP BY subject_code\n)\nSELECT\n  a.subject_code AS subject_code,\n  s.fsubname AS subject_name,\n  toString(s.flevel) AS subject_level,\n  COALESCE(round(a.amt, 2), 0) AS clear_amount,\n  a.cnt AS clear_cnt\nFROM agg a\nINNER JOIN subject_dim s ON a.subject_code = s.fsubcode\nWHERE toString(s.fisleaf) = '1' AND startsWith(a.subject_code, '103') AND NOT startsWith(a.subject_code, '10301')\nORDER BY clear_amount DESC",
+    "sql_count": 4,
+    "sql_results": [],
+    "answer": "两份口径都跑完了，对账全部通过。结果如下：\n\n## 口径声明\n\n- **清分金额** = `SUM(fne_paybook_full_high.fimamt)`（语义指标“清分金额”，明细行口径，对账基准 160.16 亿 ✅ 实测合计完全一致）\n- **叶子科目** = `fab_subject` 按 `fyear DESC` 取最新版去重后 `fisleaf='1'`；实测守卫：1,272 行清分明细**全部落在叶子科目上**、科目连接零孤儿，层级聚合无双重计数风险\n- **重要口径修正**：实测 `103` 是一级科目“**非税收入**”，“**政府性基金收入**”是它下面的二级类 **`10301`**（语义模型 ai_context 实测确认：103 下直属 10 个二级类）。主答按 10301 前缀，另附 103 全前缀对照。\n\n## 一、政府性基金收入（10301）下叶子科目排行（主答，9 个叶子科目，合计 160.16 亿 / 1,139 笔）\n\n| 排名 | 科目编码 | 科目名称 | 层级 | 清分金额（元） | 占比 | 清分笔数 |\n|---|---|---|---|---|---|---|\n| 1 | 103010201 | 中央农网还贷资金收入 | 4 | **15,985,889,302.18** | 99.81% | 412 |\n| 2 | 1030110 | 民航发展基金收入 | 3 | 28,938,336.12 | 0.18% | 126 |\n| 3 | 1030106 | 铁路建设基金收入 | 3 | 495,345.65 | <0.01% | 66 |\n| 4 | 1030115 | 港口建设费收入 | 3 | 495,318.31 | <0.01% | 254 |\n| 5 | 1030121 | 旅游发展基金收入 | 3 | 154,995.46 | <0.01% | 95 |\n| 6 | 1030129 | 国家电影事业发展专项资金收入 | 3 | 36,668.96 | <0.01% | 23 |\n| 7 | 1030146 | 国有土地收益基金收入 | 3 | 22,488.00 | <0.01% | 5 |\n| 8 | 1030149 | 大中型水库移民后期扶持基金收入 | 3 | 60.00 | ~0 | 1 |\n| 9 | 103014899 | 其他土地出让收入 | 4 | 33.00 | ~0 | 2 |\n\n**收得最多的是 `103010201 中央农网还贷资金收入`：159.86 亿元，占该大类 99.81%**，比第二名民航发展基金收入（2,893.8 万）高出约 552 倍，一枝独秀。\n\n## 二、全部预算科目排行（对照，23 个有清分的叶子科目，合计 16,016,079,467.68 元）\n\nTop 10：中央农网还贷资金收入 159.86 亿（99.81%）＞ 民航发展基金收入 2,893.8 万 ＞ 铁路建设基金收入 49.5 万 ＞ 港口建设费收入 49.5 万 ＞ 旅游发展基金收入 15.5 万 ＞ 考试考务费(103042762) 1.71 万 ＞ 高等学校住宿费 1.66 万 ＞ 国家电影专项资金 3.67 万 ＞ 国有土地收益基金 2.25 万 ＞ 教师资格考试费 0.65 万；其余 13 个科目（教育资金、国内外捐赠、普通话测试费等）合计不足 0.8 万元。\n\n**若按你问句的字面前缀 `103`（非税收入全大类）**，还会多出 14 个 10301 之外的叶子科目（行政事业性收费 10304xx、专项收入 10302、捐赠收入 10308），其中最大的是考试考务费 17,080 元、高等学校住宿费 16,643 元——量级太小，不影响头部排名。\n\n## 备注\n\n- 笔数口径 = `uniqExact(fid)`（147 个 fid 存在生命周期多版本重复，直 COUNT 会虚高）；金额直 SUM 与语义层对账基准一致\n- 金额高度集中于 2022-04 前后的单笔大额清分（测试环境数据现状），头部科目 99.81% 的占比是数据分布使然，非计算问题",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "C2",
+    "question": "民航发展基金历年缴款金额趋势",
+    "status": "成功",
+    "elapsed_s": 878.4,
+    "metric_calls": [],
+    "tools_called": [
+      "describe_table",
+      "glob",
+      "list_tables",
+      "search_semantic_objects",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n  toYear(toDate(feffdate)) AS y,\n  count() AS rows_cnt,\n  round(sum(famt)/10000, 2) AS amt_wan,\n  round(sumIf(famt, fstate='3')/10000, 2) AS paid_wan,\n  uniqExact(fpaycode) AS pay_cnt\nFROM yunnan0508.une_paybook_high\nWHERE fitemcode = '1030110001'\nGROUP BY y\nORDER BY y",
+    "sql_count": 17,
+    "sql_results": [],
+    "answer": "数据已核实完毕。给出结论：\n\n## 民航发展基金历年缴款金额趋势\n\n### 口径说明\n- **科目口径**：收入项目 `fitemcode = '1030110001'`（民航发展基金收入，属政府性基金预算收入；科目字典中父级代码 `1030110` 亦已核验）\n- **数据源**：`une_paybook_high`（缴款书全量表）。已实测 `fne_paybook_high`（直缴表）中全部 126 笔民航记录的 `fpaycode` 均包含在 `une_paybook_high` 内，即前者是后者的子集——**单查 `une_paybook_high` 即为全口径，不会漏也不会重**\n- **金额**：`SUM(famt)`（万元）；**实缴**：`fstate='3'`；笔数：`uniqExact(fpaycode)`\n\n### 历年趋势（2022–2029）\n\n| 年份 | 笔数 | 缴款金额(万元) | 其中实缴(万元) | 趋势 |\n|------|-----:|-------------:|-------------:|------|\n| 2022 | 4 | 0.05 | — | 起步 |\n| 2023 | 84 | 0.78 | 0.29 | 平稳低位 |\n| 2024 | 261 | **2,912.22** | 2,898.67 | ⬆ 峰值（实缴率 99.5%） |\n| 2025 | 269 | 246.09 | 187.75 | ⬇ 大幅回落（-91.6%） |\n| 2026 | 199 | 15.57 | 4.25 | ⬇ 持续走低 |\n| 2027 | 234 | 60.71 | 19.36 | ⬆ 回升 |\n| 2028 | 17 | 0.83 | 0.23 | ⬇ |\n| 2029 | 8 | 0.23 | — | 边缘 |\n\n### 关键发现\n1. **趋势形态：单峰后回落**——2024 年是绝对峰值（约 2,912 万元，占历年总额的 91%），2025 年骤降九成以上，2026 年进一步缩水\n2. **实缴率分化明显**：2024 年实缴率 99.5%（缴款即入库）；2025 年起实缴率跌至 76%→27%，未缴（`fstate='1'` 待缴款）金额累计约 70 万元，欠缴集中在 2025 年（57.03 万元）\n3. **笔数与金额背离**：2024→2025 笔数基本持平（261→269），但单笔均额从 11.2 万元跌至 0.9 万元，说明不是业务量萎缩而是单笔金额骤降\n\n### ⚠️ 数据质量提示\n本库为测试环境：存在 2027–2029 年**未来日期**的缴款记录（金额均较小），以及 2025 年 4 条项目名称带后缀的测试数据（`-1123`、`1223`、`-二级项目验证` 等，编码同属 1030110001，已一并计入）。正式环境分析时建议限定 `feffdate <= 当天` 并确认测试数据清理规则。\n\n### 参考查询\n\n```sql\nSELECT\n    toYear(toDate(feffdate))                          AS stat_year,\n    uniqExact(fpaycode)                               AS pay_cnt,\n    round(sum(famt) / 10000, 2)                       AS total_amt_wan,\n    round(sumIf(famt, fstate = '3') / 10000, 2)       AS paid_amt_wan\nFROM yunnan0508.une_paybook_high\nWHERE fitemcode IN ('1030110', '1030110001')          -- 民航发展基金收入\nGROUP BY stat_year\nORDER BY stat_year\n```\n\n> 备注：官方年度统计表 `fne_stats_income_year` 中民航科目仅有 2026 年 596 元的记录，覆盖不足，故历年趋势以缴款流水表为准。如需按月份/区划/执收单位下钻趋势，或需要生成可视化报告，告诉我即可。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "C3",
+    "question": "按收入分类统计缴款金额：政府性基金收入、专项收入、行政事业性收费收入、罚没收入各占多少？",
+    "status": "成功",
+    "elapsed_s": 89.9,
+    "metric_calls": [],
+    "tools_called": [
+      "search_semantic_objects",
+      "list_tables",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    if(fincomesortname = '', '未分类', fincomesortname) AS income_category,\n    round(SUM(famt) / 10000, 2) AS amt_wan_yuan,\n    round(SUM(famt) * 100 / SUM(SUM(famt)) OVER (), 4) AS amt_pct,\n    uniqExact(fid) AS pay_cnt_fid\nFROM fne_paybook_full_high\nGROUP BY income_category\nORDER BY amt_wan_yuan DESC",
+    "sql_count": 4,
+    "sql_results": [],
+    "answer": "两项口径核对一致，与 KB 中 `income_sort` 字段的实测基线（政府性基金收入 182.85 亿元）完全吻合，口径可靠。\n\n## 按收入分类统计缴款金额\n\n**口径**：`fne_paybook_full_high`（缴款书全生命周期宽表，全表 1,272 行，含直缴+汇缴混合口径）；金额 = `SUM(famt)`（缴款通知书明细金额，元）；笔数 = `uniqExact(fid)`（147 个 fid 有生命周期多版本，禁用 COUNT(*)）。\n\n| 收入分类 | 缴款金额（亿元） | 金额占比 | 笔数（去重 fid） |\n|---|---:|---:|---:|\n| **政府性基金收入** | 182.85 | **99.74%** | 857 |\n| **专项收入** | 0.31 | 0.17% | 133 |\n| **行政事业性收费收入** | 0.16 | 0.09% | 96 |\n| **罚没收入** | 0.000003（仅 300 元） | ≈0 | 9 |\n| 未分类（fincomesortname 为空） | 0.000006（600 元） | ≈0 | 6 |\n| **合计** | **183.22** | 100% | 1,101 |\n\n**所用 SQL**：\n\n```sql\nSELECT\n    if(fincomesortname = '', '未分类', fincomesortname) AS income_category,\n    round(SUM(famt) / 10000, 2)        AS amt_wan_yuan,   -- 万元\n    round(SUM(famt) * 100 / SUM(SUM(famt)) OVER (), 4) AS amt_pct,\n    uniqExact(fid)                     AS pay_cnt_fid\nFROM fne_paybook_full_high\nGROUP BY income_category\nORDER BY amt_wan_yuan DESC\n```\n\n## 解读\n\n1. **结构极度集中**：政府性基金收入一类独占 99.74%（182.85 亿元），是绝对主体；专项收入、行政事业性收费收入合计仅 0.26%，罚没收入可忽略不计（9 笔共 300 元，笔均约 33 元，疑为测试/最小面额数据）。\n2. **金额与笔数结构不同**：笔数维度政府性基金占比 77.8%（857/1,101），专项收入和行政事业性收费在笔数上合计约 20.8%，说明后两类单笔金额远小于政府性基金（土地出让金等大额单笔拉高金额）。\n3. **口径提醒**：\n   - 本结果为**全表口径**（直缴 1=1,063 行 + 汇缴 2=209 行混合）。如需\"仅直缴\"切片，须加 `WHERE fbustype = '1'`（String 带引号），禁止把全表 SUM 表述为直缴金额。\n   - `fincomesortname` 为空串的 6 笔已归入\"未分类\"行，金额可忽略。\n   - 分类列无配套码列，分组直接用名称列即可；与 `funds_nature`（资金性质码，12=政府性基金预算收入）是两个不同维度，勿混淆。\n\n需要我进一步按\"直缴/汇缴\"拆分，或钻取政府性基金收入下的具体项目/科目明细吗？",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "C4",
+    "question": "按资金性质分组统计缴款金额",
+    "status": "成功",
+    "elapsed_s": 150.4,
+    "metric_calls": [],
+    "tools_called": [
+      "search_semantic_objects",
+      "glob",
+      "execute_sql",
+      "grep"
+    ],
+    "sql": "SELECT\n    ffundsnaturecode AS funds_nature_code,\n    ffundsnaturename AS funds_nature_name,\n    count() AS row_count,\n    round(sum(famt), 2) AS pay_amt\nFROM yunnan0508.fne_paybook_full_high\nGROUP BY ffundsnaturecode, ffundsnaturename\nORDER BY pay_amt DESC",
+    "sql_count": 3,
+    "sql_results": [],
+    "answer": "查询完成。按资金性质分组的缴款金额如下（表：`fne_paybook_full_high`，金额 = `SUM(famt)` 全口径缴款金额，全表 1,272 行）：\n\n| 资金性质码 | 资金性质 | 缴款金额（元） | 行数 | 金额占比 |\n|---|---|---:|---:|---:|\n| 12 | 政府性基金预算收入 | 18,316,046,350.64 | 1,083 | ≈99.9% |\n| 2 | 财政专户管理资金 | 14,867,151.04 | 86 | ≈0.08% |\n| 11 | 一般公共预算收入 | 1,293,101.45 | 97 | ≈0.007% |\n| 5 | 其他 | 600.00 | 6 | ≈0.000003% |\n| **合计** | | **18,332,214,203.13** | **1,272** | 100% |\n\n**口径说明**：\n- 缴款金额按指标标准取 `SUM(famt)`（非税缴款金额，全业务类型口径，未按 fbustype 过滤）；\n- 分组用中文名 `ffundsnaturename` 展示、码列 `ffundsnaturecode` 对应（String 型，100% 非空，无空码脏行）；\n- 结果与语义层实测记录完全一致（12 码 = 1,083 行 / 183.16 亿元），政府性基金预算收入占绝对主导。\n\nSQL（可直接复用）：\n\n```sql\nSELECT\n    ffundsnaturecode AS funds_nature_code,\n    ffundsnaturename AS funds_nature_name,\n    count()           AS row_count,\n    round(sum(famt), 2) AS pay_amt\nFROM yunnan0508.fne_paybook_full_high\nGROUP BY ffundsnaturecode, ffundsnaturename\nORDER BY pay_amt DESC\n```\n\n如需进一步按 **业务类型（直缴/汇缴）**、**执收单位** 或 **时间** 在资金性质内下钻，告诉我即可。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "C5",
+    "question": "缴款金额前5的收费项目，按直缴汇缴拆分展示",
+    "status": "成功",
+    "elapsed_s": 120.6,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 直缴 汇缴 口径定义",
+        "names": [
+          "非税缴款金额_环比",
+          "非税缴款金额",
+          "非税缴款金额_同比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "list_subject_tree",
+      "search_semantic_objects",
+      "describe_table",
+      "execute_sql",
+      "search_metrics"
+    ],
+    "sql": "WITH\ntop5 AS (\n    SELECT fitemidcode\n    FROM fne_paybook_full_high\n    GROUP BY fitemidcode\n    ORDER BY SUM(famt) DESC\n    LIMIT 5\n),\nnames AS (\n    SELECT\n        fitemidcode AS item_id,\n        argMax(fitemname, ffilldate) AS item_name,\n        groupUniqArray(fitemname) AS all_names\n    FROM fne_paybook_full_high\n    WHERE fitemidcode IN top5\n    GROUP BY item_id\n),\nbus AS (\n    SELECT\n        fitemidcode AS item_id,\n        fbustype AS bustype,\n        SUM(famt) AS amt,\n        uniqExact(fid) AS cnt_fid\n    FROM fne_paybook_full_high\n    WHERE fitemidcode IN top5\n    GROUP BY item_id, bustype\n)\nSELECT\n    n.item_id AS item_id,\n    n.item_name AS item_name,\n    n.all_names AS all_names,\n    round(SUM(b.amt), 2) AS amt_total,\n    round(sumIf(b.amt, b.bustype = '1'), 2) AS amt_direct,\n    round(sumIf(b.amt, b.bustype = '2'), 2) AS amt_agg,\n    sumIf(b.cnt_fid, b.bustype = '1') AS cnt_direct,\n    sumIf(b.cnt_fid, b.bustype = '2') AS cnt_agg\nFROM bus AS b\nINNER JOIN names AS n ON b.item_id = n.item_id\nGROUP BY n.item_id, n.item_name, n.all_names\nORDER BY amt_total DESC",
+    "sql_count": 6,
+    "sql_results": [],
+    "answer": "查询完成。TOP5 项目按**项目 ID** 归并，直缴/汇缴切片口径遵循指标 `非税缴款金额` 的定义(`famt` 直 SUM,`fbustype='1'`=直缴、`'2'`=汇缴),笔数按 `uniqExact(fid)` 去重生命周期版本。全表历史口径(未加时间过滤)：\n\n## 缴款金额 TOP5 收费项目(直缴/汇缴拆分)\n\n| 排名 | 收费项目 | 项目ID | 缴款金额合计(元) | 直缴金额(元) | 直缴占比 | 汇缴金额(元) | 汇缴占比 | 直缴笔数 | 汇缴笔数 |\n|---|---|---|---|---:|---:|---:|---:|---:|---:|\n| 1 | 农网还贷资金收入 | 530020000079 | 16,044,829,547.49 | 16,014,461,111.69 | 99.81% | 30,368,435.80 | 0.19% | 272 | 25 |\n| 2 | 国有重点煤炭企业生产用电、核工业铀扩散厂和堆化工厂生产用电农网还贷资金 | 530020000081 | 2,238,164,885.91 | 159,670.01 | 0.01% | 2,238,005,215.90 | 99.99% | 53 | 14 |\n| 3 | 民航发展基金收入 | 530020000503 | 30,850,779.08 | 30,758,057.70 | 99.70% | 92,721.38 | 0.30% | 87 | 39 |\n| 4 | 高等学校住宿费 | 530020000028 | 14,841,170.00 | 19,271.00 | 0.13% | 14,821,899.00 | 99.87% | 35 | 5 |\n| 5 | 公办幼儿园保教费 | 530020000823 | 1,156,320.00 | 0.00(无直缴) | — | 1,156,320.00 | 100% | 0 | 1 |\n\n### 口径说明\n\n- **金额**:`fne_paybook_full_high.famt`(缴款通知书明细金额)直 SUM,按 `fbustype` 切片，直缴+汇缴=合计，已逐项勾稽核对一致。\n- **笔数**:`uniqExact(fid)`,剔除 147 个 fid 生命周期多版本重复的影响。\n- **名称变体**：项目 `530020000079` 实测存在两个名称(旧名“农网还贷资金收入”299 行止于 2024-06-27,“农网还贷资金收入**a**”38 行自 2024-06-27 起)，同属一个项目 ID,已按 ID 归并、展示取最新名称。\n- **数据窗口**：未加时间过滤，覆盖表内全量历史(最早 2021-12-21 起)。\n\n### 复核 SQL\n\n```sql\nWITH\ntop5 AS (\n    SELECT fitemidcode FROM fne_paybook_full_high\n    GROUP BY fitemidcode ORDER BY SUM(famt) DESC LIMIT 5\n),\nnames AS (\n    SELECT fitemidcode AS item_id,\n           argMax(fitemname, ffilldate) AS item_name,\n           groupUniqArray(fitemname) AS all_names\n    FROM fne_paybook_full_high\n    WHERE fitemidcode IN top5\n    GROUP BY item_id\n),\nbus AS (\n    SELECT fitemidcode AS item_id, fbustype AS bustype,\n           SUM(famt) AS amt, uniqExact(fid) AS cnt_fid\n    FROM fne_paybook_full_high\n    WHERE fitemidcode IN top5\n    GROUP BY item_id, bustype\n)\nSELECT n.item_id, n.item_name, n.all_names,\n       round(SUM(b.amt), 2) AS amt_total,\n       round(sumIf(b.amt, b.bustype = '1'), 2) AS amt_direct,\n       round(sumIf(b.amt, b.bustype = '2'), 2) AS amt_agg,\n       sumIf(b.cnt_fid, b.bustype = '1') AS cnt_direct,\n       sumIf(b.cnt_fid, b.bustype = '2') AS cnt_agg\nFROM bus b INNER JOIN names n ON b.item_id = n.item_id\nGROUP BY n.item_id, n.item_name, n.all_names\nORDER BY amt_total DESC\n```\n\n**观察**：TOP5 内呈现两种典型模式——大额基金类(农网还贷、民航基金)以直缴为主，而行政事业性收费类(住宿费、保教费)及煤炭用电还贷资金几乎全部走汇缴；保教费全量 1 笔汇缴，样本极少。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "D1",
+    "question": "按归属区划统计清分金额",
+    "status": "成功",
+    "elapsed_s": 84.3,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分金额",
+        "names": [
+          "清分金额_环比",
+          "清分金额",
+          "清分金额_同比",
+          "清分率",
+          "缴库金额_环比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "list_subject_tree",
+      "search_metrics",
+      "search_semantic_objects",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT count() AS n, sum(fimamt) AS clear_amt, sum(famt) AS pay_amt FROM yunnan0508.fne_paybook_full_high WHERE frecrgncode = ''",
+    "sql_count": 5,
+    "sql_results": [],
+    "answer": "已核实完毕。空区划组 544 行的 `fimamt`（已清分金额）全为 NULL，金额按 0 处理即可（该组其实是**已缴款 23.14 亿但尚未清分**的明细，不是脏数据）。\n\n## 统计结果：按归属区划的清分金额\n\n| 归属区划代码 | 区划名称 | 明细行数 | 清分金额（元） |\n|---|---|---:|---:|\n| 530000 | 云南省本级 | 686 | 16,016,072,677.53 |\n| 000000 | 中央 | 31 | 4,516.12 |\n| 530100 | 昆明市本级 | 8 | 1,778.70 |\n| 530102 | 五华区 | 1 | 495.33 |\n| 532929 | 云龙县 | 2 | 0.00 |\n| （空） | 未填归属区划 | 544 | 0.00（fimamt 全 NULL） |\n\n**合计 1,272 行，清分金额总计 160.16 亿元**，几乎全部集中在云南省本级（530000）。\n\n## 可执行 SQL（ClickHouse）\n\n```sql\nSELECT\n    if(frecrgncode = '', '(未填)', frecrgncode) AS frecrgncode,\n    any(frecrgnname)                            AS frecrgnname,\n    count()                                     AS rows_cnt,\n    COALESCE(sum(fimamt), 0)                    AS clear_amt   -- 清分金额（元）\nFROM yunnan0508.fne_paybook_full_high\nGROUP BY frecrgncode\nORDER BY clear_amt DESC;\n```\n\n## 口径说明\n\n- **清分金额** = `SUM(fne_paybook_full_high.fimamt)`，与语义层指标「清分金额」完全一致（明细行已清分金额，Nullable Decimal(18,6)，NULL 视为 0）。\n- **归属区划** = `frecrgncode / frecrgnname`（资金归属区划，表内已内联名称，无需额外 join 维表）。\n- **全口径**：包含直缴/汇缴所有 `fbustype` 行；如需“直缴清分金额”，按既有硬规则分子分母同加 `fbustype = '1'` 过滤即可。\n- 空区划组是“已缴款未清分”的真实业务状态（缴款金额 23.14 亿），如后续要做**清分率**分析，这组是重点漏斗观察对象。\n\n需要我进一步展开（例如按月份趋势 × 区划，或补一列清分率 = fimamt/famt）吗？",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "D2",
+    "question": "按执收区划名称统计缴款金额",
+    "status": "成功",
+    "elapsed_s": 88.5,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 缴款金额",
+        "names": [
+          "缴库金额_环比",
+          "缴库金额_同比",
+          "清分金额_环比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "list_tables",
+      "search_semantic_objects",
+      "search_metrics",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    fchgrgnname AS collect_region_name,\n    ROUND(SUM(famt), 2) AS pay_amt,\n    uniqExact(fid) AS pay_cnt,\n    ROUND(SUM(famt) / uniqExact(fid), 2) AS avg_amt\nFROM yunnan0508.fne_paybook_full_high\nGROUP BY fchgrgnname\nORDER BY pay_amt DESC",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "查询完成。按执收单位所在区划（`fne_paybook_full_high.fchgrgnname`）汇总的缴款情况如下：\n\n## 按执收区划统计缴款金额\n\n| 执收区划名称 | 缴款金额（元） | 缴款笔数（去重 fid） | 笔均金额（元） |\n|---|---:|---:|---:|\n| 云南省本级 | 18,330,965,893.01 | 1,081 | 16,957,415.26 |\n| 云龙县 | 1,156,320.00 | 1 | 1,156,320.00 |\n| 五华区 | 79,406.12 | 6 | 13,234.35 |\n| 昆明市本级 | 5,184.00 | 9 | 576.00 |\n| 官渡区 | 400.00 | 4 | 100.00 |\n| **合计** | **18,332,205,003.13** | **1,101** | — |\n\n**口径说明**\n\n- **表**：`fne_paybook_full_high`（缴款书全生命周期宽表，明细行粒度，共 1,272 行）\n- **执收区划**：取内联列 `fchgrgnname`（执收单位所在区划名称），与 `fchgrgncode` 一一对应，语义层明确\"分组展示优先用本列\"；实测 5 个区划 100% 非空\n- **缴款金额**：`SUM(famt)`，缴款通知书明细金额（元），明细行口径可直 SUM\n- **缴款笔数**：`uniqExact(fid)`，因 147 个 fid 存在生命周期多版本重复，不能用行数直接当笔数\n- 全量口径，未按 `fbustype`（直缴/汇缴）、`fstate` 等条件过滤，也未限定时间范围\n\n**值得注意**：云南省本级占绝对主导（18,330.97 亿元，笔均约 1,696 万元），其余 4 个区划合计仅约 124 万元，笔均差异极大（官渡区笔均仅 100 元）——若您关注的是州市/区县级的收入分布，可能需要改按**资金归属区划 `frecrgnname`**（州市/区县维度）统计，但该列与执收区划实测有 584 行不一致，跨区归因口径需业务确认。需要我按归属区划再出一版，或按时间/业务类型（直缴、汇缴）切片吗？",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "D3",
+    "question": "五华区的执收单位有哪些、各收了多少钱？",
+    "status": "成功",
+    "elapsed_s": 98.3,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款金额 实缴金额",
+        "names": [
+          "缴库金额_环比",
+          "缴库金额_同比",
+          "清分金额_环比",
+          "清分金额_同比",
+          "清分金额"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_semantic_objects",
+      "search_metrics",
+      "describe_table",
+      "list_tables",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    fchgrgnname AS agen_rgn,\n    count() AS row_cnt,\n    uniqExact(fid) AS bill_cnt,\n    round(sum(famt), 2) AS amt\nFROM fne_paybook_full_high\nGROUP BY fchgrgnname\nORDER BY amt DESC",
+    "sql_count": 6,
+    "sql_results": [],
+    "answer": "查询完成。结果如下（口径：`fne_paybook_full_high` 缴款书宽表，按执收单位区划 `fchgrgnname='五华区'` 过滤；金额 = SUM(famt) 缴款明细金额，笔数 = uniqExact(fid) 去重）：\n\n## 五华区执收单位及缴款情况\n\n| 执收单位 | 缴款笔数 | 缴款金额（元） |\n|---|---:|---:|\n| 智能核销五华区测试单位开票点 | 4 | 77,324.80 |\n| 李思维 | 1 | 1,981.32 |\n| 开票点001 | 1 | 100.00 |\n| **合计** | **6** | **79,406.12** |\n\n## 说明\n\n1. **数据特征**：当前库为测试环境，五华区的执收单位均为测试单位（全表五华区仅 7 行明细 / 6 笔缴款 / 79,406.12 元，对比云南省本级 183.3 亿元），金额量级很小属正常。\n\n2. **对照口径**——若按“资金归属五华区”（`frecrgnname='五华区'`）统计，结果明显不同：仅 **李思维 1 笔 / 990.66 元**。原因是执收单位区划与资金归属区划在测试数据中大量不一致（全表 1,272 行中 584 行两者不匹配），例如同一执收单位的不同明细行可归属不同区划。\n\n3. 两个口径验证自洽：按执收区划分组的三家单位金额之和 = 79,406.12 元，与全表区划分布中五华区行完全一致。\n\n**日常回答“某区的执收单位收了多少钱”建议用第一种口径（执收单位区划）**，即“五华区下辖单位征收的款项”；若您关心的是“缴入五华区财政的资金”，则用第二种口径。需要按缴款方式（直缴/汇缴）或缴款项目进一步拆分的话可以继续查。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "D4",
+    "question": "各收款银行2022年各收了多少笔、多少钱？",
+    "status": "成功",
+    "elapsed_s": 75.4,
+    "metric_calls": [],
+    "tools_called": [
+      "describe_table",
+      "search_semantic_objects",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    trim(frecbankname) AS bank_name,\n    uniqExact(fid) AS bill_cnt,\n    round(sum(famt), 2) AS total_amt\nFROM fne_paybook_full_high\nWHERE toYear(toDate(ffilldate)) = 2022\nGROUP BY bank_name\nORDER BY total_amt DESC",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "## 各收款银行 2022 年收款统计\n\n数据源：`fne_paybook_full_high`（缴款书全生命周期宽表），时间轴 `fill_date = toDate(ffilldate)` = 2022 年。\n\n| 收款银行 | 笔数 | 金额（元） | 金额（亿元） |\n|---|---:|---:|---:|\n| 中国建设银行 | 226 | 18,208,121,939.04 | ≈182.08 |\n| 中国银行 | 107 | 800,419.02 | ≈80.04 万 |\n| 中国邮政储蓄银行 | 7 | 7,778.00 | 0.78 万 |\n| 中国工商银行 | 11 | 5,426.21 | 0.54 万 |\n| 中国农业银行 | 3 | 510.00 | 510 元 |\n| 中国光大银行 | 1 | 500.00 | 500 元 |\n| **合计** | **355** | **18,208,936,572.27** | **≈182.09 亿** |\n\n**口径说明：**\n- **笔数**用 `uniqExact(fid)`：该表 147 个 fid 存在生命周期多版本重复（1,272 行物理记录），直接 `count()` 会虚增；分组笔数合计 355 笔与 2022 年度总笔数校验一致。\n- **金额**为 `SUM(famt)`（缴款通知书明细金额），全额口径；建行以 226 笔 / 182.08 亿元占绝对主导（≈99.99%），其余银行单笔金额都很小。\n- 银行名称字段 `frecbankname` 实测带尾部空格，已做 `trim()` 归组；2022 年无“人民银行/支付宝/云南省农村信用社联合社”的记录（这三家出现在其他年份）。\n\n```sql\nSELECT\n    trim(frecbankname) AS bank_name,\n    uniqExact(fid)             AS bill_cnt,\n    round(sum(famt), 2)        AS total_amt\nFROM fne_paybook_full_high\nWHERE toYear(toDate(ffilldate)) = 2022\nGROUP BY bank_name\nORDER BY total_amt DESC\n```",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "D5",
+    "question": "归属区划在云南省本级以外的缴款金额有多少？",
+    "status": "成功",
+    "elapsed_s": 151.3,
+    "metric_calls": [],
+    "tools_called": [
+      "describe_table",
+      "search_semantic_objects",
+      "glob",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    round(sumIf(famt, frecrgnname = '云南省本级'), 2)                                    AS prov_amt,\n    round(sumIf(famt, frecrgnname != '云南省本级'), 2)                                   AS non_prov_amt_incl_blank,\n    uniqExactIf(fid, frecrgnname != '云南省本级')                                        AS non_prov_bill_cnt,\n    round(sumIf(famt, frecrgnname != '云南省本级' AND frecrgnname != ''), 2)             AS non_prov_amt_named,\n    round(sumIf(famt, frecrgnname = ''), 2)                                             AS blank_amt\nFROM fne_paybook_full_high",
+    "sql_count": 3,
+    "sql_results": [],
+    "answer": "## 结论\n\n按缴款书宽表 `fne_paybook_full_high` 的**资金归属区划（frecrgnname）**统计，缴款金额（famt，票面应收口径）分布如下：\n\n| 口径 | 金额（元） | 笔数 |\n|---|---|---|\n| **省本级以外（区划有明确值）** | **1,169,469.34（约 116.9 万）** | 41 笔 |\n| 归属区划为空（未落值） | 2,314,603,154.58（约 23.15 亿） | 544 笔 |\n| 合计（含空串宽口径） | 2,315,772,623.92（约 23.16 亿） | 585 笔 |\n\n**省本级以外的明细构成**（明确非省本级的 41 笔）：\n\n| 归属区划 | 代码 | 金额（元） | 笔数 |\n|---|---|---|---|\n| 云龙县 | 532929 | 1,156,320.00 | 1 |\n| 中央 | 000000 | 9,617.68 | 31 |\n| 昆明市本级 | 530100 | 2,541.00 | 8 |\n| 五华区 | 530102 | 990.66 | 1 |\n\n对比：云南省本级 = 16,016,434,579.21 元（554 笔），占绝对主体。\n\n## 口径说明（需注意）\n\n1. **两套答案取决于如何对待空值**：若问的是“区划明确标注为非省本级”的缴款，答案是 **约 116.9 万元**；若把归属区划为空的 544 笔（23.15 亿，占全表 43%）也视为“非省本级”，则合计约 23.16 亿元。空串这批资金归属区划未落值，按建模备注（fchgrgnname 描述），跨区归因口径需业务确认，建议先向业务方核实这批数据的归属。\n2. 笔数按 `uniqExact(fid)` 去重（fid 存在生命周期多版本重复，非唯一键）；金额为票面应收金额（famt），不等于实缴/清分金额。\n3. 另外“中央”000000 这 31 笔虽非省本级，但也不属于任何地方区划，是否计入“省本级以外”可按业务需要取舍（剔除后为 116.85 万）。\n\n## 查询 SQL\n\n```sql\n-- 省本级以外（区划有明确值）\nSELECT\n    round(sum(famt), 2)          AS non_prov_amt,\n    uniqExact(fid)               AS non_prov_bill_cnt\nFROM fne_paybook_full_high\nWHERE frecrgnname != '' AND frecrgnname != '云南省本级';\n```",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "E1",
+    "question": "已划拨和未划拨的金额各是多少？",
+    "status": "成功",
+    "elapsed_s": 188.0,
+    "metric_calls": [],
+    "tools_called": [
+      "search_semantic_objects",
+      "bash",
+      "execute_sql",
+      "describe_table",
+      "add_memory",
+      "edit_memory"
+    ],
+    "sql": "SELECT\n  multiIf(istransfer_grp = '1', '已划拨', '未划拨') AS status,\n  uniqExact(fcollectid) AS batches,\n  round(sum(batch_amt), 2) AS amount\nFROM (\n  SELECT\n    fcollectid,\n    max(fistransfer) AS istransfer_grp,\n    max(ftransamt) AS batch_amt\n  FROM fne_funddivide_transfer\n  WHERE fistransfer IN ('0', '1') AND ftransamt IS NOT NULL\n  GROUP BY fcollectid\n)\nGROUP BY istransfer_grp\nORDER BY istransfer_grp",
+    "sql_count": 12,
+    "sql_results": [],
+    "answer": "## 结论\n\n**已划拨 21,024.00 元（34 个批次），未划拨 38,142.30 元（87 个批次）**，合计 59,166.30 元。\n\n| 划拨状态 | 批次数 | 划拨金额（元） |\n|---|---:|---:|\n| 已划拨（fistransfer='1'） | 34 | 21,024.00 |\n| 未划拨（fistransfer='0'） | 87 | 38,142.30 |\n| **合计** | **121** | **59,166.30** |\n\n## 口径说明（重要）\n\n数据源为 `fne_funddivide_transfer`（清分划拨批次明细，728 行），按语义模型权威口径 `fistransfer='1'`/`!=1'` 收窄。本次实测发现一个金额重复计数陷阱：\n\n- **批次头行（fid=fcollectid）与明细行都携带整批金额**：直 SUM 会得到 72,507.62 元，虚增约 22%。实测 0 个批次内出现多个不同金额，说明每行都是整批总额的拷贝。\n- 因此金额必须**先按 fcollectid 去重（取 max）再汇总**。\n- 另有 568 行 `fistransfer=''`（尚未进入划拨流程的清分明细，ftransamt 全 NULL，fimamt 约 160.16 亿），不在本口径内。\n\n## 验证 SQL\n\n```sql\nSELECT\n  multiIf(istransfer_grp = '1', '已划拨', '未划拨') AS status,\n  uniqExact(fcollectid) AS batches,\n  round(sum(batch_amt), 2) AS amount\nFROM (\n  SELECT\n    fcollectid,\n    max(fistransfer) AS istransfer_grp,\n    max(ftransamt)   AS batch_amt\n  FROM fne_funddivide_transfer\n  WHERE fistransfer IN ('0', '1') AND ftransamt IS NOT NULL\n  GROUP BY fcollectid\n)\nGROUP BY istransfer_grp\nORDER BY istransfer_grp\n```\n\n测试数据金额量级较小（万元级），如需看占比或按执收单位/科目下钻，随时说。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "E2",
+    "question": "缴库报文里已确认入库和待国库确认的金额各是多少？",
+    "status": "成功",
+    "elapsed_s": 91.6,
+    "metric_calls": [],
+    "tools_called": [
+      "list_tables",
+      "search_semantic_objects",
+      "grep",
+      "read_file",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    fstatus AS jiaoku_status,\n    toString(fincomestatus) AS income_status,\n    uniqExact(fid) AS fid_cnt,\n    round(SUM(ftotalamt), 2) AS total_amt\nFROM (\n    SELECT *, ROW_NUMBER() OVER (PARTITION BY fid) AS _rn\n    FROM yunnan0508.fne_treasury_transfer_new\n)\nWHERE _rn = 1\nGROUP BY fstatus, income_status\nORDER BY jiaoku_status, income_status",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "两个口径的金额已算出，且与语义模型的对账基准完全吻合（76 笔合计 29,535,106.14 = 三组之和 ✓）。\n\n## 缴库报文状态金额（按 fid 去重口径，物理表 `fne_treasury_transfer_new` 505 行去重后 76 行）\n\n| 缴库状态 | 入库确认状态 | 笔数（fid） | 金额（元） |\n|---|---|---:|---:|\n| **已缴库 + 已确认入库** | `fstatus='9'` & `fincomestatus='1'` | **23** | **11,064.00** |\n| **已缴库 + 待国库确认** | `fstatus='9'` & `fincomestatus='0'` | **3** | **35,240.09** |\n\n- **已确认入库：11,064.00 元**（23 笔，23 个缴库批次）\n- **待国库确认：35,240.09 元**（3 笔，3 个缴库批次）\n\n几点口径说明：\n\n1. **去重必须先于求和**：物理表 505 行含 33 个重复 `fid` 组（多版本重复报文），直接 SUM 会虚增约 44 倍；本次用 `ROW_NUMBER() OVER (PARTITION BY fid)=1` 去重，与建模时的对账指纹一致。\n2. **状态取值形态**：`fincomestatus` 为 String 型，过滤值必须带引号（'0'/'1'）；`fstatus='9'` 表示已缴库。语义层实测确认 `fincomestatus` 与 `fid` 完全绑定，去重后状态稳定，可安全按 fid 口径过滤。\n3. **易混淆项**：语义层提到的“415.5 万待确认中间态”是 505 行**未去重**的行数口径；去重后真实的已缴库待确认金额就是上表的 35,240.09 元。\n4. 其余 50 笔（29,488,802.05 元）为 `fstatus='0'` 的未缴库报文，不属于“已缴库”两种状态，故未计入。\n\n本次统计 SQL（去重口径，可复用）：\n\n```sql\nSELECT\n    fstatus,\n    toString(fincomestatus) AS income_status,\n    uniqExact(fid) AS fid_cnt,\n    round(SUM(ftotalamt), 2) AS total_amt\nFROM (\n    SELECT *, ROW_NUMBER() OVER (PARTITION BY fid) AS _rn\n    FROM yunnan0508.fne_treasury_transfer_new\n)\nWHERE _rn = 1\nGROUP BY fstatus, income_status;\n```",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "E3",
+    "question": "汇总批次一共多少个？",
+    "status": "成功",
+    "elapsed_s": 94.6,
+    "metric_calls": [],
+    "tools_called": [
+      "list_tables",
+      "search_semantic_objects",
+      "describe_table",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n  'funddivide_transfer' AS tbl,\n  round(sum(fimamt), 2) AS sum_imamt,\n  uniqExact(fcollectid) AS batches_all_incl_empty,\n  uniqExact(fid) AS uniq_fid\nFROM yunnan0508.fne_funddivide_transfer\nUNION ALL\nSELECT\n  'funddivide_new',\n  round(sum(fimamt), 2),\n  uniqExact(fcollectid),\n  uniqExact(fid)\nFROM yunnan0508.fne_funddivide_new",
+    "sql_count": 4,
+    "sql_results": [],
+    "answer": "## 汇总批次数：428 个\n\n**口径说明**：汇总批次 = 清分汇总批次，批次 ID 为 `fcollectid`（在 `fne_funddivide_transfer` / `fne_funddivide_new`，两表为同一份数据，均 728 行）。按建模时的硬规则，批次数口径 = `uniqExact(fcollectid)`。\n\n### 实测结果\n\n| 口径 | 数量 |\n|---|---|\n| **有效汇总批次（`fcollectid != ''` 去重）** | **428 个** |\n| 其中：有批次头行的批次（`fid = fcollectid`） | 425 个 |\n| 其中：仅有明细行、无头行的批次 | 3 个 |\n| 未汇总入批次的清分明细行（`fcollectid = ''`，共 178 行） | 不计为批次 |\n| 若把空串也算一个“值” | 429（无效口径，不建议） |\n\n批次覆盖时间范围：`fcleardate` 2022-01-25 ~ 2026-08-03。\n\n### 验证 SQL\n\n```sql\nSELECT\n  count()                                        AS total_rows,\n  uniqExactIf(fcollectid, fcollectid != '')      AS batches_nonempty,\n  countIf(fcollectid = '')                       AS rows_empty_key,\n  countIf(fcollectid != '' AND fid = fcollectid) AS header_rows   -- 批次头行数\nFROM yunnan0508.fne_funddivide_transfer;\n```\n\n### 补充（结合此前实测结论）\n\n- `fcollectid` 因生命周期多版本在表内非唯一（550 行非空键明细对应 428 个批次），所以必须用 `uniqExact` 去重计数，**不能 count(distinct 之外的行数)**。\n- 若你关心的是“已划拨”的批次：按 `ftransamt` 按 `fcollectid` 去重取 max 的口径，**已划拨('1') 34 批次、未划拨('0') 87 批次**（有划拨金额的共 121 批次），其余 307 个批次尚无划拨金额记录。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "E4",
+    "question": "未清分的缴款笔数和金额是多少？",
+    "status": "成功",
+    "elapsed_s": 79.5,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=未清分 缴款笔数 缴款金额 清分金额",
+        "names": [
+          "清分金额_环比",
+          "清分金额_同比",
+          "清分金额",
+          "清分率"
+        ],
+        "rows": ""
+      },
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=非税缴款笔数 非税缴款金额 定义",
+        "names": [
+          "非税缴款金额_环比",
+          "非税缴款金额_同比",
+          "非税缴款金额",
+          "非税缴款笔数"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_semantic_objects",
+      "list_subject_tree",
+      "search_metrics",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    COUNT(DISTINCT fid) AS cnt_uncleared,\n    ROUND(SUM(famt), 2) AS amt_uncleared\nFROM yunnan0508.fne_paybook_full_high\nWHERE fisclear = '0'",
+    "sql_count": 2,
+    "sql_results": [],
+    "answer": "查询完成，结果如下：\n\n## 未清分的缴款笔数和金额\n\n| 指标 | 数值 |\n|---|---|\n| **未清分缴款笔数** | **515 笔**（按 `fid` 去重口径） |\n| **未清分缴款金额** | **2,314,588,645.58 元**（约 **23.15 亿元**） |\n\n**口径说明**（与语义层已固化的定义一致）：\n- **表**：`fne_paybook_full_high`（缴款通知书明细全量表）\n- **未清分过滤**：`fisclear = '0'`（语义字段 `is_cleared`，实测值域仅 0/1 无 NULL，515 行与行数完全吻合，说明每行 fid 唯一）\n- **笔数**：`COUNT(DISTINCT fid)` —— 与\"非税缴款笔数\"指标同口径\n- **金额**：`SUM(famt)` —— 与\"非税缴款金额\"指标同口径（缴款通知书明细金额）\n\n与已清分（`fisclear='1'`，757 行）对比，未清分约占全部缴款明细的 40.5%，可作为催缴/清分跟进的重点关注对象。",
+    "errors": [],
+    "returncode": "0"
+  },
+  {
+    "id": "E5",
+    "question": "清分率按业务类型分组对比：直缴和汇缴各是多少？",
+    "status": "成功",
+    "elapsed_s": 89.9,
+    "metric_calls": [
+      {
+        "tool": "search_metrics",
+        "depth": 0,
+        "desc": "search_metrics: 检索=清分率 清分 按业务类型",
+        "names": [
+          "清分金额_环比",
+          "清分金额_同比",
+          "清分率",
+          "清分金额",
+          "缴库金额_环比"
+        ],
+        "rows": ""
+      }
+    ],
+    "tools_called": [
+      "search_metrics",
+      "search_semantic_objects",
+      "execute_sql"
+    ],
+    "sql": "SELECT\n    count() AS detail_rows,\n    uniqExact(fpaycode) AS pay_count,\n    round(SUM(famt), 2) AS non_tax_amt,\n    round(SUM(fimamt), 2) AS clear_amt,\n    round(SUM(fimamt) / SUM(famt) * 100, 2) AS clear_rate_pct\nFROM yunnan0508.fne_paybook_full_high",
+    "sql_count": 4,
+    "sql_results": [],
+    "answer": "查询完成。基于语义模型 `fne_fund_main` 的清分率口径（清分金额 fimamt ÷ 非税缴款金额 famt，同在 `fne_paybook_full_high` 行内，按 fbustype 分组时比值逐组成立）：\n\n## 清分率按业务类型对比\n\n| 业务类型 | 明细行数 | 缴款笔数 | 非税缴款金额（元） | 清分金额（元） | 清分率 |\n|---|---|---|---|---|---|\n| **直缴**（fbustype='1'） | 1,063 | 848 | 160.47 亿 | 160.16 亿 | **99.80%** |\n| **汇缴**（fbustype='2'） | 209 | 120 | 22.85 亿 | 8.02 万 | **≈0.00%**（实际 0.0035%） |\n| 整体（全类型，对照） | 1,272 | 968 | 183.32 亿 | 160.16 亿 | 87.37% |\n\n**要点：**\n\n- **直缴基本全额清分**：1,063 行 / 848 笔，清分率 99.80%，未清分缺口仅约 3,141 万元。\n- **汇缴几乎未清分**：120 笔汇缴缴款（22.85 亿元）中仅 80,244.80 元有清分记录，占比约 0.0035%（四舍五入显示为 0.00%）——汇缴资金链基本停留在“待清分”状态。\n- **整体清分率 87.37%** 完全由直缴贡献：直缴占全部缴款金额的 87.5%（160.47/183.32），其近乎全额清分抬高了整体值；若只看汇缴，资金链滞留问题显著。\n- 口径说明：整体行是“含全类型”的比值（分子分母同表全 SUM），与分组行“组内比值”不可直接相加平均。\n\n复用 SQL（分组行）：\n\n```sql\nSELECT\n    multiIf(fbustype = '1', '直缴', fbustype = '2', '汇缴', concat('其他:', fbustype)) AS bustype_name,\n    count() AS detail_rows,\n    uniqExact(fpaycode) AS pay_count,\n    round(SUM(famt), 2) AS non_tax_amt,\n    round(SUM(fimamt), 2) AS clear_amt,\n    round(SUM(fimamt) / SUM(famt) * 100, 2) AS clear_rate_pct\nFROM yunnan0508.fne_paybook_full_high\nGROUP BY fbustype\nORDER BY fbustype\n```",
+    "errors": [],
+    "returncode": "0"
+  }
+]
