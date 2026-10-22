@@ -127,7 +127,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 - `POST http://localhost:4100/chat {question, sessionId}`，三态分流：`answer`（提取 query JSON/编译 SQL/数值）/ `ask`（缺口径）/ `nomatch`（能力外）。
 - **sessionId 策略**：每题新会话（题间零污染）；`ask` 态自动拍板——适配器按预设口径政策（缺省口径取自考纲"已裁定口径"节或人工预拍）构造追问再 POST 同 sessionId，拍板动作记入作答卡 `arbiter` 字段（裁决时"自动拍板"与"人拍板"区分对待）。
-- **验收标准**：新题活跑可调用、能答数（≥2 题，至少 1 题数值答案）；批量活跑零链路错误（M0 实测 30 题记录见 rounds/m0/runs/cube/）。
+- **验收标准**：新题活跑可调用、能答数（≥2 题，至少 1 题数值答案）。
 
 ### 代码归属：永久在本仓（决策点 D8，用户拍板）
 

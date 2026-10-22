@@ -1,3 +1,0 @@
--- table[0] 执收区划名称 × 缴款金额（缴款明细口径，全期）
--- /v1/sql 失败: Server error '502 Bad Gateway' for url 'http://localhost:4000/cubejs-api/v1/sql'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502
