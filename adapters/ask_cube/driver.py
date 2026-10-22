@@ -69,18 +69,24 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
     return {"card": card, "first_type": first_type, "raw_rel": str(raw_path)}
 
 
-def _ask_with_retry(question: str, session_id: str):
-    """首答（失败换 -r2 新会话重试一次）+ ask 态自动拍板追问。"""
+def _ask_with_retry(question: str, session_id: str, attempts: int = 3, backoff_s: float = 20.0):
+    """首答（失败换新 sessionId 重试，指数式观察上游 502）+ ask 态自动拍板追问。
+
+    上游（Claude API 代理）有间歇 502（v0 q13 同款），故比 v0 的单次重试更耐一点。
+    """
     first, followups, err = None, [], ""
-    try:
-        first = client.post_chat(question, session_id)
-    except Exception as e:
-        err = str(e)[:300]
+    for i in range(attempts):
+        sid = session_id if i == 0 else f"{session_id}-r{i + 1}"
         try:
-            first = client.post_chat(question, session_id + "-r2")
+            first = client.post_chat(question, sid)
             err = ""
-        except Exception as e2:
-            return None, [], f"{err} | {str(e2)[:300]}"
+            break
+        except Exception as e:
+            err = (err + " | " if err else "") + str(e)[:300]
+            if i < attempts - 1:
+                time.sleep(backoff_s * (i + 1))
+    if first is None:
+        return None, [], err
 
     if isinstance(first, dict) and first.get("type") == "ask":
         msg = policy.followup_message(first)

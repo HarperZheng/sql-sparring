@@ -14,6 +14,7 @@
 A3 判定纪律（v0 语义层已被自身回写改动，静止前提不成立）：
 
 - 硬锚点：q07/q09/q30 必须仍 nomatch（能力边界未动）
-- FAIL 条件：锚点失效，或退化对（answer→nomatch / answer→ask）
+- FAIL 条件：锚点失效，或退化对（answer→nomatch；answer→ask 且拍板追问未成功）
+- answer→ask 但追问出答案 = 口径反问→自动拍板闭环（行为漂移非退化，证据=raw 留痕 followups），逐题标注
 - ask→answer 翻转 = 词典回写演化（v0 拍板已落活词典），逐题标注，不算失败
 - q13 v0 为瞬时 502，翻转为 answer 属预期

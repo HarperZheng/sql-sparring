@@ -40,6 +40,7 @@ def _archive_existing(path: Path) -> str | None:
 
 def run_question(qid: str, question: str, runs_dir: Path, timeout_s: int = DEFAULT_TIMEOUT_S) -> dict:
     """跑一题，返回 {card, extracted, meta}。落盘：题目/留痕/meta 在 runs_dir。"""
+    runs_dir = Path(runs_dir).resolve()
     runs_dir.mkdir(parents=True, exist_ok=True)
     q_file = runs_dir / f"{qid}.question.txt"
     q_file.write_text(question, encoding="utf-8")

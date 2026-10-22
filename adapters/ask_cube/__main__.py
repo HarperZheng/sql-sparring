@@ -28,13 +28,25 @@ NOMATCH_ANCHORS = {"q07", "q09", "q30"}
 
 # (v0类型, 本次类型) → 判定。词典回写演化=预期内（v0 拍板已落活词典，服务不再反问）；
 # 退化对=FAIL（能力倒退）；其余差异单列待查。
+# ("answer","ask") 不在此表：首答变反问要看拍板追问是否成功（查 raw 留痕），
+# 追问出答案=口径反问闭环（行为漂移非退化），追问失败才是退化。
 _FLIP_VERDICTS = {
     ("ask", "answer"): "词典回写演化（v0 拍板已落词典，无需再反问）",
     ("nomatch", "answer"): "语义层增强（原能力外变可答）——单列待查",
     ("nomatch", "ask"): "语义层增强（可反问拍板）——单列待查",
     ("answer", "nomatch"): "退化：answer 变 nomatch",
-    ("answer", "ask"): "退化：词典词条失效变反问",
 }
+
+
+def _followup_ok(qid: str) -> bool:
+    """qid 首答变反问后，自动拍板追问是否成功出答案（证据=raw 留痕 followups）。"""
+    raw = REPO_ROOT / "rounds" / "m0" / "runs" / "cube" / f"{qid}.raw.json"
+    try:
+        data = json.loads(raw.read_text(encoding="utf-8"))
+        fus = data.get("followups") or []
+        return bool(fus) and fus[0].get("response_type") == "answer"
+    except (OSError, json.JSONDecodeError):
+        return False
 
 
 def _write_card(answers_dir: Path, card: dict) -> Path:
@@ -57,7 +69,10 @@ def _run_set(questions: list, runs_dir: Path, answers_dir: Path, session_prefix:
 
 
 def cmd_replay_v0(args):
-    """A3：30 题活重放 + 首答三态比对。sessionId 前缀带日期戳，不复用 v0 会话。"""
+    """A3：30 题活重放 + 首答三态比对。sessionId 前缀带日期戳，不复用 v0 会话。
+
+    --only 子集重跑时与既有报告合并（新结果覆盖旧值，未重跑题沿用上次结果）。
+    """
     questions = [{"id": x["id"], "question": x["q"]}
                  for x in json.loads(FIXTURE_QUESTIONS.read_text(encoding="utf-8"))]
     v0 = {e["id"]: e.get("type") for e in json.loads(FIXTURE_STATUS.read_text(encoding="utf-8"))}
@@ -68,15 +83,31 @@ def cmd_replay_v0(args):
                        session_prefix=f"a3{stamp}", only=only)
 
     got = {r["card"]["id"]: r["first_type"] for r in results}
+    report_out = m0_dir / "a3_replay_report.json"
+    prev = {}
+    if report_out.exists():
+        try:
+            prev = json.loads(report_out.read_text(encoding="utf-8")).get("per_question", {})
+        except json.JSONDecodeError:
+            prev = {}
+    for qid, entry in prev.items():
+        if qid not in got and qid not in only:
+            got[qid] = entry.get("got", "(未跑)")
+
     rows, hard_diff, evolved, pending = [], [], [], []
     for qid, v0_type in v0.items():
-        if only and qid not in only:
-            continue
         g = got.get(qid, "(未跑)")
         if g == v0_type:
             verdict = "一致"
         elif qid in EXPECTED_TRANSIENT and g != "error":
             verdict = f"预期内翻转（{EXPECTED_TRANSIENT[qid]}）"
+        elif v0_type == "answer" and g == "ask":
+            if _followup_ok(qid):
+                verdict = "口径反问→自动拍板闭环（追问已出答案，行为漂移非退化）"
+                evolved.append(qid)
+            else:
+                verdict = "退化：变反问且拍板未成功"
+                hard_diff.append(qid)
         elif (v0_type, g) in _FLIP_VERDICTS:
             verdict = _FLIP_VERDICTS[(v0_type, g)]
             if verdict.startswith("退化"):
@@ -107,7 +138,7 @@ def cmd_replay_v0(args):
     report = {"per_question": {q: {"v0": v, "got": g, "verdict": c} for q, v, g, c in rows},
               "v0_dist": dict(v0_dist), "got_dist": dict(dist),
               "expected_transient": EXPECTED_TRANSIENT, "pass": ok}
-    out = m0_dir / "a3_replay_report.json"
+    out = report_out
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"报告：{out}")
     sys.exit(0 if ok else 1)

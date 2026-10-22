@@ -13,6 +13,11 @@ CHAT_TIMEOUT_S = 660.0   # v0 实测同款：单问上限 11 分钟
 SQL_TIMEOUT_S = 60.0
 CUBE_ROOT = r"D:\develop\cube"  # 读 .env 取 CUBEJS_API_SECRET（生产现配，不动）
 
+# trust_env=False：httpx 默认会经 urllib 读 Windows 注册表系统代理，
+# 发往 localhost 的请求被代理劫持返回空 502（M0 实测 2026-10-22，11:28 后
+# 系统代理开启即复现；浏览器/curl 不读注册表代理故表现为"服务是通的"）。
+_CLIENT_KW = {"trust_env": False}
+
 
 def _cubejs_secret() -> str:
     path = None
@@ -26,7 +31,7 @@ def _cubejs_secret() -> str:
 
 def post_chat(question: str, session_id: str) -> dict:
     """一问 → 响应 dict（含 type: answer|ask|nomatch|error）。网络异常向上抛。"""
-    with httpx.Client(timeout=httpx.Timeout(CHAT_TIMEOUT_S)) as client:
+    with httpx.Client(timeout=httpx.Timeout(CHAT_TIMEOUT_S), **_CLIENT_KW) as client:
         r = client.post(CHAT_URL, json={"question": question, "sessionId": session_id})
         r.raise_for_status()
         return r.json()
@@ -35,7 +40,7 @@ def post_chat(question: str, session_id: str) -> dict:
 def fetch_compiled_sql(query: dict) -> str:
     """语义层 query JSON → Cube 编译的 ClickHouse SQL（失败返回注释说明，不抛）。"""
     try:
-        with httpx.Client(timeout=httpx.Timeout(SQL_TIMEOUT_S)) as client:
+        with httpx.Client(timeout=httpx.Timeout(SQL_TIMEOUT_S), **_CLIENT_KW) as client:
             r = client.post(
                 SQL_URL, json={"query": query},
                 headers={"Authorization": "Bearer " + _cubejs_secret()})
