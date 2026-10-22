@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "verdict（裁决书，每题一份跨双方；口径卡只在本层——M1 拍板 D10）",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "round", "cards", "comparison", "verdict", "verdict_detail",
+               "corrected", "issue", "memory_cleanup", "evidence_refs"],
+  "properties": {
+    "id": { "type": "string" },
+    "round": { "type": "string" },
+    "cards": {
+      "type": "object",
+      "required": ["datus", "cube"],
+      "properties": {
+        "datus": { "$ref": "#/$defs/caliberCard" },
+        "cube": { "$ref": "#/$defs/caliberCard" }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": ["metrics"],
+      "properties": {
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name", "caliber_same", "value_same"],
+            "properties": {
+              "name": { "type": "string" },
+              "caliber_same": { "type": ["boolean", "null"] },
+              "value_same": { "type": ["boolean", "null"] },
+              "note": { "type": "string" }
+            },
+            "description": "先比口径后比数值（D4）的机器形态；轮报一致率/分歧分布从这里数"
+          }
+        },
+        "summary": { "type": "string", "description": "人类可读的口径对照汇总（可选）" }
+      }
+    },
+    "verdict": { "enum": ["互证通过", "建模差异", "执行事故", "待人工"] },
+    "verdict_detail": { "type": "string", "description": "判词：只陈述客观差异，不预判对错" },
+    "corrected": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object", "additionalProperties": true,
+          "required": ["answer", "basis"],
+          "properties": { "answer": {}, "basis": { "type": "string" } }
+        }
+      ],
+      "description": "修正答案（分歧题才有）；人工确认后升入 suite/accepted_answers.json"
+    },
+    "issue": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object", "additionalProperties": true,
+          "required": ["side", "type", "target", "suggest"],
+          "properties": {
+            "side": { "enum": ["datus", "cube"] },
+            "type": { "type": "string" },
+            "target": { "type": "string" },
+            "suggest": { "type": "string" }
+          }
+        }
+      ],
+      "description": "非空即回灌问题单的机器形态，issues-*.md 由它渲染"
+    },
+    "memory_cleanup": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object", "additionalProperties": true,
+          "required": ["target", "note"],
+          "properties": { "target": { "type": "string" }, "note": { "type": "string" } }
+        }
+      ],
+      "description": "建模差异附的记忆清理条目（D7），材料包 §① 渲染用"
+    },
+    "evidence_refs": {
+      "type": "array", "minItems": 1, "items": { "type": "string" },
+      "description": "指向双方作答卡（及留痕）的路径"
+    },
+    "judge": {
+      "type": "object", "additionalProperties": true,
+      "properties": {
+        "mode": { "enum": ["human", "human_assisted", "service"] },
+        "model": { "type": "string" },
+        "reviewed_by": { "type": "string" }
+      },
+      "description": "裁决溯源；M4 固化后回溯'这份裁决谁做的'（可选）"
+    }
+  },
+  "$defs": {
+    "caliberCard": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["metric", "caliber", "time_axis", "values"],
+      "properties": {
+        "metric": { "type": "string" },
+        "caliber": { "type": "string", "description": "口径陈述：算什么、怎么去重、含哪些业务类型" },
+        "time_axis": { "type": "string", "description": "时间轴与窗口" },
+        "values": { "type": ["object", "null"], "description": "本侧数值；nomatch 时为 null" }
+      }
+    }
+  }
+}

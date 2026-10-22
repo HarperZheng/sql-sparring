@@ -1,0 +1,15 @@
+{
+  "examiner": {
+    "provider": "claude-cli",
+    "model_env": "",
+    "key_env": "",
+    "_note": "缺省本机 claude 现配（D9）；换接口时填 base_url_env/key_env",
+    "base_url_env": ""
+  },
+  "judge": {
+    "provider": "deepseek",
+    "base_url_env": "DEEPSEEK_BASE_URL",
+    "model": "deepseek-chat",
+    "key_env": "DEEPSEEK_API_KEY"
+  }
+}

@@ -114,7 +114,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 - **输入**：`rounds/<轮>/questions.jsonl`（题库外置，适配器零题库）。
 - **输出**：`answers/<side>/qNN.json`（统一作答卡）+ `runs/<side>/qNN.raw.*`（原始留痕：datus=payload 流，cube=/chat 响应+日志摘录）。
 - **幂等**：`--only qNN` 子集复跑；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
-- **作答卡字段**（`schemas/answer_card.schema.json`）：`id / question / status(answer|ask|nomatch|failed) / 口径卡（裁判归一化的口径陈述，v1 可空）/ metrics_hit（工具级命中指标，机器提取）/ sql / answer / elapsed_s / raw_path / arbiter（ask 自动拍板记录）`。
+- **作答卡字段**（`schemas/answer_card.schema.json`，以 rounds/m0 六张实卡为底定稿，M1 拍板 D10 不改写不迁移）：`id / question / status（六值 answer|ask|nomatch|timeout|error|failed）/ metrics_hit（命中指标，机器提取；datus={tool,depth,names}、cube={measures,dimensions} 两形态）/ sql（双侧同放 SQL 文本，cube 为编译后）/ sql_count / answer / errors / elapsed_s / arbiter（ask 自动拍板记录）/ raw_path`。**口径卡只在裁决书，作答卡不设**（D10）——写卡前适配器内联过契约校验，全量核查用 `bin/validate.py`。
 
 ### ask_datus 要点
 
@@ -185,13 +185,14 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | D7 | 记忆隔离与清理细化 | 只快照/恢复 `.datus/memory/chat/`；回灌**定向清**（清理条目由材料包提供）；**清后重跑仍通过=闭环验收**；有益教训升格进语义层 | §四 |
 | D8 | 适配器永久留本仓（用户拍板） | `ask_datus`/`ask_cube` 固化在 sql-sparring `adapters/`，**不回迁**各自仓库；统一契约单一事实源 | §三 |
 | D9 | 模型不对称与可换配置（用户拍板 2026-10-22） | **答题人**生产现配不动（datus=GLM-5.3-Flash、cube=Claude Agent SDK 现配）；**出题人**经本机 claude 无头调起（现配即 GLM 系；出题受考纲约束，与答题人同源风险低）；**裁判**与出题人/答题人不同接口不同源——用另一接口的 DeepSeek 模型（v1=人 + DeepSeek 辅助，M4 固化）。**裁判与出题人的模型/接口/key 一律走配置文件 `conf/models.json`**：换模型、换接口只改配置不改代码；key 不入库，配置文件只存环境变量名（本仓已公开于 GitHub，真实 key 放本机环境变量） | §一 角色表、§二 Step 2、§四、§七、里程碑 M1/M2/M4 |
+| D10 | M1 契约三拍板（用户 2026-10-22） | ① 作答卡 `status` **六值超集**：answer/ask/nomatch/timeout/error/failed（failed=适配器链路失败，error=智能体答错/中断，timeout=超时截断，两侧共用）；② **口径卡只在裁决书** `cards`，作答卡保持纯机器提取零 LLM；③ 作答卡**以 M0 实卡为底定稿**（`sql`/`sql_count` 双侧同放 SQL），不做 queries 改造、不迁移 M0 证据卡 | §三、设计文档 §1.7、schemas/answer_card.schema.json |
 
 ## 六、里程碑（M0–M4，答题链路先行）
 
 | 里程碑 | 内容 | 验收 | 产出 |
 |---|---|---|---|
 | **M0 答题链路打通** | Windows 侧 uv 环境初始化（pyproject.toml + uv.lock 入 git，依赖仅 httpx/jsonschema/pydantic）+ `ask_datus`（wsl_runner 桥接 + §2.2 提取器）+ `ask_cube`（:4100 三态 + 拍板政策）+ **最小作答卡结构**（id / question / status / metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path——M1 升格为正式 schema 的底坯） | **对接活体验证**：datus ≥2 道新题活跑（`datus -p`）status=answer 且带数值；cube ≥2 道新题活跑（`:4100/chat`）至少 1 题数值答案 | `adapters/` 双适配器 + `rounds/m0/` 证据 + `pyproject.toml` |
-| **M1 契约定稿** | 四个 JSON Schema（question / answer_card / verdict / capability）+ questions.jsonl 格式定稿；answer_card 以 M0 最小结构为底补全（口径卡 / arbiter 全字段），适配器输出切换到 schema 校验；`conf/models.json` 骨架落盘（examiner/judge 两节，key 只存环境变量名） | 适配器全量输出过 schema 校验 | `schemas/` + `conf/models.json` |
+| **M1 契约定稿** | 四个 JSON Schema（question / answer_card / verdict / capability）+ questions.jsonl 格式定稿；answer_card 以 M0 实卡为底定稿（status 六值、arbiter 全字段；口径卡只在裁决书，D10），适配器写卡前内联 schema 校验 + `bin/validate.py` 全量校验器；`conf/models.json` 骨架落盘（examiner/judge 两节，key 只存环境变量名） | 适配器全量输出过 schema 校验 | `schemas/` + `bin/validate.py` + `conf/models.json` |
 | **M2 出题人启动** | 考纲编译器（db_profile 纯解析 + business.md 剥题整理）+ SKILL.md + `bin/examine.py`（LLM 调用接入 `conf/models.json` examiner 节，缺省本机 claude 现配）；能力卡生成器换岗至裁决/回灌侧 | db_profile 抽查对上 P0/P1 结论；business.md 剥题检查通过；题库覆盖矩阵无漏项；首个机器题库诞生 | `syllabus/` + `examiner/` + `capability/` + round-02 题库 |
 | **M3 首个自动轮** | `bin/round.py` 跑 round-02 全流程（出题→双侧作答→提取）；裁决人工在环 | 一轮完整记录落盘 + 轮报五指标（一致率/分歧分布/差距数/闭环率/双侧共同缺口数） | `rounds/round-02/` + report |
 | **M4 复验轮与固化** | 复验轮机制跑通：人工按材料包修双侧语义层并清记忆 → 发起复验（`--retest <上轮>`，复验集=上轮分歧题）→ 通过题人工确认入库；材料包格式定稿；裁判固化 judge 服务（模型/接口接 `conf/models.json` judge 节） | 复验轮至少跑通一次且闭环率>0；judge 以人工裁决为回归基准 | 回归套件 + 材料包模板 |
@@ -238,7 +239,8 @@ uv run python bin/round.py suite-add --round round-02
 ```
 D:\develop\sql-sparring\
   README.md  docs\                     索引 + 总体设计 + 本实施设计
-  schemas\                             M1：四类 JSON Schema（契约定稿，answer_card 以 M0 最小结构为底）
+  schemas\  bin\validate.py            M1：四类 JSON Schema + 全量校验器（契约定稿，answer_card 以 M0 实卡为底）
+  conf\models.json                     M1：出题人/裁判模型配置骨架（key 只存环境变量名，D9）
   adapters\{ask_datus, ask_cube}\      M0：双答题驱动器（永久在本仓，D8）
   syllabus\                            M2：考纲=课本（db_profile 数据画像 + business.md 业务课本，出题唯一依据）
   examiner\                            M2：出题人（SKILL.md + bin/examine.py，只读考纲盲考）

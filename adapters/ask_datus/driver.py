@@ -79,13 +79,15 @@ def run_question(qid: str, question: str, runs_dir: Path, timeout_s: int = DEFAU
 
 
 def build_and_write_card(qid: str, question: str, result: dict, answers_dir: Path) -> Path:
-    """提取结果 → 作答卡 → 落盘（覆盖写）。返回卡片路径。"""
+    """提取结果 → 作答卡（契约校验，不过不落盘）→ 落盘（覆盖写）。返回卡片路径。"""
     from .card import build_card
+    from schemas.validator import validate_card
     card = build_card(
         qid, question, result["extracted"],
         elapsed_s=result["meta"]["elapsed_s"],
         raw_path=result["payload_rel"],
     )
+    validate_card(card, where="（ask_datus 写卡前）")
     answers_dir.mkdir(parents=True, exist_ok=True)
     out = answers_dir / f"{qid}.json"
     out.write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")

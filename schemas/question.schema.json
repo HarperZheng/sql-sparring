@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "question（题库一行一题；机器题库另过 examine.py 的 syllabus_ref/覆盖矩阵检查）",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "question"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$", "description": "题号，全库唯一" },
+    "question": { "type": "string", "minLength": 1, "description": "题目原文（自然语言）" },
+    "source": { "type": "string", "description": "出题溯源（M0 手写题库用；机器题库不填）" },
+    "round": { "type": "string", "description": "所属轮（可选）" },
+    "type": { "enum": ["事实", "关联", "辨析", "边界"], "description": "题型=课本知识点性质（机器题库必带）" },
+    "category": { "type": "string", "description": "考纲知识点大类（可选）" },
+    "syllabus_ref": {
+      "type": "array", "minItems": 1, "items": { "type": "string" },
+      "description": "回指考纲知识点编号（机器题库必带；悬空即打回）"
+    },
+    "baseline": {
+      "type": "object",
+      "properties": { "source": { "type": "string" }, "note": { "type": "string" } },
+      "description": "可选 T1 基准（人工出题才用，机器出题不填）"
+    }
+  }
+}

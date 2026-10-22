@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "answer_card（作答卡，每题每方一份；以 rounds/m0/answers 六张实卡为底定稿，M1 拍板 D10 不改写不迁移）",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "question", "status", "metrics_hit", "sql", "sql_count",
+               "answer", "errors", "elapsed_s", "arbiter", "raw_path"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+    "question": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["answer", "ask", "nomatch", "timeout", "error", "failed"],
+      "description": "六值超集（D10）：failed=适配器链路失败，error=智能体答错/中断，timeout=超时截断"
+    },
+    "metrics_hit": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "anyOf": [{ "required": ["tool"] }, { "required": ["measures"] }],
+        "description": "datus 形态 {tool,depth,names} / cube 形态 {measures,dimensions}；命中了哪些语义层指标（过程证据，纯机器提取）"
+      }
+    },
+    "sql": { "type": ["string", "null"], "description": "双侧同放 SQL 文本（cube 为 :4000 编译后）" },
+    "sql_count": { "type": "integer", "minimum": 0, "description": "执行 SQL 条数" },
+    "answer": { "type": "string", "description": "提取出的答案正文" },
+    "errors": { "type": "array", "items": { "type": "string" }, "description": "真实错误（非 KB 文本里的 Code NNN）" },
+    "elapsed_s": { "type": "number", "minimum": 0 },
+    "arbiter": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["mode", "policy", "first_type", "ask_question", "options", "followups"],
+          "properties": {
+            "mode": { "type": "string", "description": "auto=适配器自动拍板 / human=人在环" },
+            "policy": { "type": "string" },
+            "first_type": { "enum": ["answer", "ask", "nomatch"] },
+            "ask_question": { "type": "string" },
+            "options": { "type": "array" },
+            "followups": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true,
+                         "required": ["question", "response_type"] }
+            }
+          }
+        }
+      ],
+      "description": "ask 态自动拍板全程记录；无拍板流为 null"
+    },
+    "raw_path": { "type": "string", "minLength": 1, "description": "原始留痕路径（runs/<侧>/，一字不改）" }
+  }
+}

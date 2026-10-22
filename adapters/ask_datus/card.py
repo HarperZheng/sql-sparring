@@ -1,9 +1,10 @@
-"""最小作答卡（M0 底坯，11 字段）：id / question / status / metrics_hit / sql /
-sql_count / answer / errors / elapsed_s / arbiter / raw_path。
+"""作答卡（11 字段，契约=schemas/answer_card.schema.json）：id / question / status /
+metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path。
 
-M1 将升格为 schemas/answer_card.schema.json；本文件只做"提取结果 → 卡"的组装。
-status 枚举（answer|ask|nomatch|failed）——datus 侧 M0 只会出现 answer / failed：
-datus -p 无 ask 追问流（arbiter 恒为 null），nomatch 是 cube 三态概念。
+本文件只做"提取结果 → 卡"的组装；写卡前由 schemas.validator.validate_card 过契约。
+status 六值枚举（M1 拍板 D10）：answer|ask|nomatch|timeout|error|failed——
+datus -p 无 ask 追问流（arbiter 恒为 null），本侧现产 answer / failed；
+ask/nomatch 是 cube 三态概念，六值为两侧共用的超集。
 """
 
 # v0 状态 → 作答卡 status 枚举

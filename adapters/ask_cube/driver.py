@@ -67,6 +67,8 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
         elapsed_s=elapsed, raw_path=str(raw_path.relative_to(REPO_ROOT)).replace("\\", "/"),
         sql=sql, sql_count=sql_count,
     )
+    from schemas.validator import validate_card
+    validate_card(card, where="（ask_cube 写卡前）")
     return {"card": card, "first_type": first_type, "raw_rel": str(raw_path)}
 
 

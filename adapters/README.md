@@ -39,8 +39,9 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 | `runs/<侧>/` | 原始留痕（一级证据，一字不改）。datus：question.txt / payload.jsonl / stderr.txt / meta.json；cube：raw.json（首答+追问）/ sql.txt |
 | `answers/<侧>/<id>.json` | 作答卡 11 字段：id / question / status / metrics_hit（命中了哪些语义层指标）/ sql / sql_count / answer / errors / elapsed_s / arbiter（自动拍板记录）/ raw_path |
 
-- status 取值：datus 侧 `answer`（成功）/ `failed`；cube 侧 `answer` / `ask`（首答反问）/ `nomatch`（能力外）/ `failed`。
+- status 六值枚举（契约，M1 拍板 D10）：`answer`（有答案）/ `ask`（反问）/ `nomatch`（能力外）/ `timeout`（超时截断）/ `error`（智能体答错/中断）/ `failed`（适配器没连上服务）。datus 侧现产 answer/failed，cube 侧 answer/ask/nomatch/failed。
 - 幂等：`--only` 可复跑子集；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
+- 契约校验：作答卡写盘前内联过 `schemas/answer_card.schema.json`（不过即报错不落卡）；全量核查跑 `uv run python bin/validate.py --round rounds/m0`。
 
 完整实例见 `rounds/m0/`。
 
@@ -58,6 +59,8 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 （全文定义与 `docs/glossary.md` 一致，此处为速查）
 
 - **作答卡**：每题的机器提取结果（统一 11 字段结构），从原始留痕提取而来。
+- **契约（schemas/）**：角色间交接数据的固定格式（题库/作答卡/裁决书/能力卡四份 JSON Schema），适配器输出必须过它。
+- **校验器（bin/validate.py）**：逐份数据对 JSON Schema 检查的脚本，不过即逐条报错退出。
 - **payload（原始报文）**：datus 逐条输出的原始消息流，一字不改存档，是一级证据。
 - **三态**：cube 返回的三种类型：answer（有答案）/ ask（反问口径）/ nomatch（能力外）。
 - **拍板政策**：对口径反问的标准应答规则——本项目取第一个选项原文回发同一会话。

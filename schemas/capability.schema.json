@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "capability（能力卡，每侧每轮刷新；供裁判切片/差距分析/答题前健康检查，不进出题人——D3b 盲考）",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["side", "generated_at", "source", "healthy", "metrics"],
+  "properties": {
+    "side": { "enum": ["datus", "cube"] },
+    "generated_at": { "type": "string", "description": "生成日期（YYYY-MM-DD）" },
+    "source": { "type": "string", "description": "datus=fne_fund_main.yml+三方一致断言 / cube=dictionary/members" },
+    "healthy": { "type": "boolean", "description": "答题前健康检查：false 则先修再考" },
+    "health_detail": { "type": "string", "description": "健康检查未过的说明（可选）" },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "definition"],
+        "properties": {
+          "name": { "type": "string" },
+          "definition": { "type": "string", "description": "语义层定义原文（裁判切片用）" },
+          "dataset": { "type": "string", "description": "datus 数据集 / cube cube 名" }
+        }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "type": "string" },
+          "field_count": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

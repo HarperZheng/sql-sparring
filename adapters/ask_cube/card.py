@@ -1,8 +1,8 @@
-"""cube 侧作答卡组装（11 字段，与 ask_datus 同构）。
+"""cube 侧作答卡组装（11 字段，与 ask_datus 同构；契约=schemas/answer_card.schema.json）。
 
 status 取**终态**：ask 经自动拍板拿到 answer → status=answer、arbiter 记录拍板全程；
-首答即 answer/nomatch → arbiter 为 null。首答三态本身由留痕与 arbiter.first_type 记载，
-A3 对账用首答三态比对 v0 status.json。
+首答即 answer/nomatch → arbiter 为 null。首答三态由留痕与 arbiter.first_type 记载，
+裁决时"自动拍板"与"人拍板"区分对待（§三）。
 """
 
 _FINAL_FROM_FIRST = {"answer": "answer", "nomatch": "nomatch"}
