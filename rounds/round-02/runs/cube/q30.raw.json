@@ -1,0 +1,64 @@
+{
+  "session_id": "r02s-q30",
+  "question": "目前系统里能查到非税收入对账和财政记账环节的数据吗？",
+  "first": {
+    "elapsed_sec": 62.8,
+    "response": {
+      "type": "answer",
+      "title": "对账环节可查（缴库视图 reconcile_status），财政记账环节未建模查不了",
+      "plan": [
+        [
+          "按对账状态分组看缴库笔数与金额，验证对账环节数据可查",
+          "fiscal_treasury_view.reconcile_status",
+          "ai_context：对账成功 reconcile_status='1'"
+        ],
+        [
+          "确认财政记账环节是否有建模成员",
+          "无（fiscal_treasury_view / fiscal_collection_view 成员面均无记账相关成员）",
+          "成员面逐项核对；fiscal_treasury 未建模盘点 status=未盘点，只能以模型里没有作答"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "缴库明细按到账对账状态分布（reconcile_status：1 成功 / 0 未对账）",
+          "query": {
+            "measures": [
+              "fiscal_treasury_view.count",
+              "fiscal_treasury_view.amt"
+            ],
+            "dimensions": [
+              "fiscal_treasury_view.reconcile_status"
+            ],
+            "filters": [],
+            "timeDimensions": [],
+            "order": {
+              "fiscal_treasury_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_treasury_view.reconcile_status": "0",
+              "fiscal_treasury_view.count": "50",
+              "fiscal_treasury_view.amt": "29409625.05"
+            },
+            {
+              "fiscal_treasury_view.reconcile_status": "1",
+              "fiscal_treasury_view.count": "26",
+              "fiscal_treasury_view.amt": "46304.09"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "能查：非税收入缴库侧的到账对账环节数据在 fiscal_treasury_view 已建模可查——对账状态 reconcile_status（1 成功 / 0 未对账）与对账日期 reconcile_date 均可用，实测分布：未对账 50 笔 / 2940.96 万元，对账成功 26 笔 / 4.63 万元（缴库明细口径，按明细去重；表数据直接由 /agent/query 返回）。同时该视图还透出缴库回执 status（9=回执成功）与入库状态 enter_status（1=已入国库）两个相邻环节。查不了：财政记账环节在现有模型中没有任何成员（fiscal_treasury_view、fiscal_collection_view 成员面均无记账/凭证类字段），且 fiscal_treasury 的未建模盘点 status=未盘点，无法确认是源库有料待建模还是源数据缺失；如需该环节，请先拍板是否补建（需先做源库盘点）。",
+      "assumption": "「对账环节」按缴库视图到账对账口径（reconcile_status/reconcile_date）理解；「财政记账环节」无对应建模成员，按查不了处理。",
+      "truncated": false,
+      "rows": 2,
+      "hitPreAgg": true,
+      "audited": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

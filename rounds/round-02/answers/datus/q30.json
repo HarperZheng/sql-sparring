@@ -1,0 +1,13 @@
+{
+  "id": "q30",
+  "question": "目前系统里能查到非税收入对账和财政记账环节的数据吗？",
+  "status": "answer",
+  "metrics_hit": [],
+  "sql": "SELECT\n  fisgenerec,\n  count() AS cnt\nFROM yunnan0508.fne_income_daybook\nGROUP BY fisgenerec",
+  "sql_count": 5,
+  "answer": "能查到。两个环节在物理库里都有真实数据表，但**尚未纳入语义模型/指标层**（领域树“资金链”只建到缴款→清分→划拨→缴库）。实测情况如下：\n\n## 1. 对账环节：`une_cbill_check`（缴款书对账表）\n\n| 维度 | 实测值 |\n|---|---|\n| 数据量 | 105 行（fid 全唯一），对应 3 张缴款书（frelatedbillid 仅 3 个） |\n| 业务日期 | fdate：2026-08-25 ~ 2026-09-09，fupdatetime 至 2026-09-09 |\n| fstate 分布 | `1`×84、`0`×17、`2`×4（状态含义需业务确认，疑似 1=已对账/0=待对账/2=异常） |\n| fsource | `1`×88、`0`×17 |\n\n字段很少：fdate、fid、fstate、fupdatetime、frelatedbillid、fbatchno、fsource。属于**票级对账流水**，要还原业务口径需回连 `une_cbill_high`（按 fid 关联）。\n\n## 2. 财政记账环节：`fne_income_daybook`（收入日记账）\n\n| 维度 | 实测值 |\n|---|---|\n| 数据量 | 740 行、447 笔缴款（fpaycode） |\n| 时间范围 | freceiveddate/fpaydate：2022-07-18 ~ 2026-06-30 |\n| 金额 | SUM(fimamt) = 147.23 万元（fimamt=入账金额） |\n| 入账类型 | fimtype：`1`×739、`5`×1 |\n| 关键标志 | **fisgeneacct 全 0、fisgenerec 全 0** |\n\n字段很全：含执收单位、区划、科目（fsubcode/fsubname）、收入分类、资金性质、预算单位、入账账户/银行等。可通过 `fsrcpaycode` 回连缴款书（paybook 的 fpaycode），`fbackpaysourceid` 关联退付。\n\n⚠️ 注意：`fisgenerec`（是否已生成记账记录）和 `fisgeneacct`（是否生成会计账）实测**全部为 0**，即这批日记账记录都停在“已入日记账、未生成正式记账凭证”状态——如果分析目标是“记账完成情况”，这本身就是一个待业务确认的关键口径点。\n\n## 小结与提醒\n\n- **对账**：有数据但量极小（105 行、3 张票、仅 8/25–9/9 两周窗口），明显是测试/抽样片段；做对账分析时建议与 `une_cbill_high`（cbill:n → check）关联还原票面。\n- **记账**：740 行跨度 4 年，但同样不含正式记账凭证数据；若需要真正的财政总会计凭证，目前库里没有对应表。\n- 这两张表目前**没有任何语义建模**（fne_fund_main.yml 只覆盖资金链四环），如果想把“对账率”“入账金额/记账完成率”等指标纳入现有指标体系，需要先补建模。\n\n需要我进一步做的话，可以：①用 fsrcpaycode 把 daybook 与 paybook_full_high 对齐试算“缴款→入账”勾稽差异；②把这两个环节纳入语义模型和指标体系。要继续哪个？",
+  "errors": [],
+  "elapsed_s": 86.9,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q30.payload.jsonl"
+}

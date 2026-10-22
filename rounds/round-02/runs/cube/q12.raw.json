@@ -1,0 +1,148 @@
+{
+  "session_id": "r02s-q12",
+  "question": "非税收入缴款资金从缴款到最终缴入国库，中间要依次经过哪些环节？",
+  "first": {
+    "elapsed_sec": 30.9,
+    "response": {
+      "type": "answer",
+      "title": "非税缴款资金链路：缴款→清分划拨→缴库→入国库→对账",
+      "plan": [
+        [
+          "缴款环节：缴款书×项目行明细，时间轴 pay_date",
+          "fiscal_collection_view.count",
+          "meta ai_context：缴款全景事实 fne_paybook_full_high"
+        ],
+        [
+          "清分划拨环节：一笔清分 from→to，划拨到账日期 enter_date，资金归口 bgt_style（1国库/2专户）",
+          "fiscal_allocation_view.count",
+          "meta ai_context：清分流向 fne_funddivide_transfer"
+        ],
+        [
+          "缴库环节：缴库单×科目，缴库回执成功 status='9'，缴库日期 build_date",
+          "fiscal_treasury_view.status",
+          "meta ai_context：缴库入库 fne_treasury_transfer_new 三环节状态"
+        ],
+        [
+          "入国库环节：已入国库 enter_status='1'，入国库日期 enter_date",
+          "fiscal_treasury_view.enter_status",
+          "meta ai_context：已入国库口径必须 enter_date + enter_status='1'"
+        ],
+        [
+          "对账环节：对账成功 reconcile_status='1'，为入国库后的尾环",
+          "fiscal_treasury_view.reconcile_status",
+          "meta ai_context：三环节状态之对账成功"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "环节1 缴款：缴款明细笔数/缴款书数（全量）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.count",
+              "fiscal_collection_view.paybook_count"
+            ],
+            "order": {
+              "fiscal_collection_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "count": "1281",
+              "paybook_count": "975"
+            }
+          ],
+          "total": null
+        },
+        {
+          "title": "环节2 清分划拨：清分笔数/划拨金额(元)",
+          "query": {
+            "measures": [
+              "fiscal_allocation_view.count",
+              "fiscal_allocation_view.trans_amt"
+            ],
+            "order": {
+              "fiscal_allocation_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "count": "728",
+              "trans_amt": "72507.62"
+            }
+          ],
+          "total": null
+        },
+        {
+          "title": "环节3 缴库：缴库回执成功(status='9')笔数/单数/金额(元)",
+          "query": {
+            "measures": [
+              "fiscal_treasury_view.count",
+              "fiscal_treasury_view.bill_count",
+              "fiscal_treasury_view.amt"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_treasury_view.status",
+                "operator": "equals",
+                "values": [
+                  "9"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_treasury_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "count": "26",
+              "bill_count": "26",
+              "amt": "46304.09"
+            }
+          ],
+          "total": null
+        },
+        {
+          "title": "环节4 已入国库(enter_status='1')笔数/金额(元)",
+          "query": {
+            "measures": [
+              "fiscal_treasury_view.count",
+              "fiscal_treasury_view.amt"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_treasury_view.enter_status",
+                "operator": "equals",
+                "values": [
+                  "1"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_treasury_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "count": "26",
+              "amt": "46304.09"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "按模型 ai_context，非税收入缴款资金从缴款到缴入国库依次经过：①缴款（缴款书开立与缴款，collection 视图，pay_date）→ ②清分划拨（资金从执收侧清分划转，allocation 视图 from→to，可入国库或专户，bgt_style 1国库/2专户，划拨到账 enter_date）→ ③缴库（生成缴库单并获缴库回执，status='9' 为回执成功，build_date）→ ④入国库（enter_status='1' 为已入国库，enter_date）→ ⑤对账（reconcile_status='1' 为对账成功，收尾环节）。当前库内数据量级：缴款明细 1281 笔/975 张缴款书，清分划拨 728 笔（划拨金额 72507.62 元），缴库回执成功 26 笔（26 单，46304.09 元），其中已入国库 26 笔（46304.09 元）。各环节分属不同事实表、口径独立（缴款票面科目与缴库清分归属科目不可混用，到账日期在划拨/入库两侧口径不同），故各环节单表单列，跨环节笔数差异属正常（一笔缴款可对应多科目/多轮划拨）。对账成功笔数可按 reconcile_status='1' 在 fiscal_treasury_view 复算。",
+      "assumption": "环节划分以 meta ai_context 描述的三环节状态（缴库回执/已入国库/对账）加缴款、清分划拨两事实表链路为准；未对某一口径做用户拍板（唯一口径，直接采用）",
+      "truncated": false,
+      "rows": 4,
+      "hitPreAgg": true,
+      "audited": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

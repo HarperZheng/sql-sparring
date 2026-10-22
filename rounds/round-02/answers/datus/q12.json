@@ -1,0 +1,13 @@
+{
+  "id": "q12",
+  "question": "非税收入缴款资金从缴款到最终缴入国库，中间要依次经过哪些环节？",
+  "status": "failed",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "这是业务流程知识问题，项目知识库（`development_process_record/non_tax/01-非税业务说明.md`）已有完整梳理，且各环节落地表均已实测验证过，直接为你回答：\n\n## 资金主链：从缴款到缴入国库的环节序列\n\n```text\n执收单位发起缴款通知书（缴款依据）\n   ↓ 缴款（直缴 / 汇缴 两条路）\n   │    ← 欠缴时：财政定期催缴，促执收单位汇缴上缴\n银行代收（代理银行过渡户，日终清零）\n   ↓\n① 清分 → ② 汇总 → ③ 划拨 → ④ 缴库 → ⑤ 对账、财政记账\n```\n\n### 逐环节说明\n\n| 环节 | 做什么 | 数据落地表（yunnan0508） |\n|---|---|---|\n| **缴款** | 缴款人按缴款通知书缴款，分两条路：**直缴**（缴款人直接缴入过渡户）、**汇缴**（执收单位先收款，定期开汇缴通知书汇总上缴） | `fne_paybook_high` / `fne_paybook_full_high` |\n| **银行代收** | 代理银行通过\"待结算财政款项\"科目/财政汇缴专户代收，日终零余额管理 | （含在缴款宽表内） |\n| **① 清分** | 按分层比例确定资金归属：中央/省/市/县分成 | `fne_paybook_full_high`（`fimamt` 清分金额、`frecrgnname` 归属区划、`fsublevel` 分成层级） |\n| **② 汇总** | 按单位、科目汇总，形成**待划拨批次** | `fne_funddivide_transfer`（FUNDDIVIDE+COLLECT+CAPITAL 三合一宽表，批次键 `fcollectid`） |\n| **③ 划拨** | 生成资金拨付指令，银行执行划转 | `fne_funddivide_transfer`（`ftransno` 划拨流水、`fistransfer` 划拨状态） |\n| **④ 缴库** | 资金缴入国库 | `fne_treasury_transfer_new` |\n| **⑤ 对账、财政记账** | 国库对账、财政记账 | ⚠️ **数据空缺**——无落地表，仅 `freconcilestatus` 字段散落在 funddivide/transfer/treasury 表内 |\n\n### 两个关键口径提醒\n\n1. **两条缴款路径严格分口径**：直缴与汇缴的资金起点账户不同（汇缴时“缴款人”票面是执收单位自己），统计缴款人时不能混用两套表。\n2. **欠缴分支**：汇缴路径下若执收单位未及时上缴，资金停在“未到账”状态（`fne_paybook_full_high` 中 `fstate='1'` 且 `feffdate` 早于当天），由财政定期催缴——这也是主链上唯一的“停留/回流”环节。\n\n**一句话总结**：缴款（直缴/汇缴）→ 银行代收 → **清分（定归属）→ 汇总（成批次）→ 划拨（拨指令）→ 缴库（入国库）** → 对账记账（本库暂无数据）。",
+  "errors": [],
+  "elapsed_s": 224.7,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q12.payload.jsonl"
+}
