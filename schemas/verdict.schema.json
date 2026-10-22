@@ -4,7 +4,7 @@
   "type": "object",
   "additionalProperties": true,
   "required": ["id", "round", "cards", "comparison", "verdict", "verdict_detail",
-               "corrected", "issue", "memory_cleanup", "evidence_refs"],
+               "corrected", "issues", "memory_cleanup", "evidence_refs"],
   "properties": {
     "id": { "type": "string" },
     "round": { "type": "string" },
@@ -51,21 +51,10 @@
       ],
       "description": "修正答案（分歧题才有）；人工确认后升入 suite/accepted_answers.json"
     },
-    "issue": {
-      "anyOf": [
-        { "type": "null" },
-        {
-          "type": "object", "additionalProperties": true,
-          "required": ["side", "type", "target", "suggest"],
-          "properties": {
-            "side": { "enum": ["datus", "cube"] },
-            "type": { "type": "string" },
-            "target": { "type": "string" },
-            "suggest": { "type": "string" }
-          }
-        }
-      ],
-      "description": "非空即回灌问题单的机器形态，issues-*.md 由它渲染"
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issueItem" },
+      "description": "回灌问题单的机器形态（0..n 条；互证通过通常为空），issues-*.md 由它渲染；非空的题默认进下轮复验集（D12）"
     },
     "memory_cleanup": {
       "anyOf": [
@@ -93,6 +82,16 @@
     }
   },
   "$defs": {
+    "issueItem": {
+      "type": "object", "additionalProperties": true,
+      "required": ["side", "type", "target", "suggest"],
+      "properties": {
+        "side": { "enum": ["datus", "cube", "both"], "description": "谁要动手；both=双侧都补建模" },
+        "type": { "enum": ["补指标", "补维度", "改口径", "修bug"], "description": "补指标/补维度/改口径=建模动作；修bug=口径同值异的排错，不属建模" },
+        "target": { "type": "string", "description": "动哪个建模对象（数据集/指标/维度/词典条目）" },
+        "suggest": { "type": "string", "description": "建议修法" }
+      }
+    },
     "caliberCard": {
       "type": "object",
       "additionalProperties": true,
