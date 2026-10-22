@@ -1,0 +1,60 @@
+{
+  "sessionId": "nlq1021-q24",
+  "elapsed_sec": 30.8,
+  "question": "未清分的缴款笔数和金额是多少？",
+  "response": {
+    "type": "answer",
+    "title": "未清分缴款 439 笔、金额 23.15 亿元",
+    "plan": [
+      [
+        "未清分（清分日期为空）的缴款书笔数",
+        "fiscal_collection_view.paybook_count",
+        "meta ai_context：缴款书笔数用 paybook_count，count 是明细行数勿当笔数"
+      ],
+      [
+        "未清分（清分日期为空）的缴款金额合计",
+        "fiscal_collection_view.amt",
+        "meta ai_context：明细金额用 amt"
+      ],
+      [
+        "未清分过滤条件",
+        "fiscal_collection_view.clear_date",
+        "清分日期 fcleardate 为 notSet = 未清分"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "未清分缴款（clear_date 为空）笔数与金额",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.paybook_count",
+            "fiscal_collection_view.amt"
+          ],
+          "filters": [
+            {
+              "member": "fiscal_collection_view.clear_date",
+              "operator": "notSet",
+              "values": []
+            }
+          ],
+          "order": {
+            "fiscal_collection_view.amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "paybook_count": "439",
+            "amt": "2314587534.582"
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径：未清分按「清分日期 clear_date（fcleardate）为空」过滤（词典无「未清分」词条，此为模型内唯一清分标记，直接采用并声明）。笔数用缴款书笔数 paybook_count（去重票数，非明细行数），金额用缴款金额 amt 合计。数据范围：缴款全景事实 fne_paybook_full_high 全期，不限时间。结果：未清分缴款书 439 笔，金额合计 2,314,587,534.58 元。",
+    "assumption": "「未清分」拍板为 clear_date 为空（notSet）；词典无该词约定，如需改为按缴款书状态等其他口径请告知后回写词典",
+    "truncated": false,
+    "rows": 1,
+    "hitPreAgg": false
+  }
+}

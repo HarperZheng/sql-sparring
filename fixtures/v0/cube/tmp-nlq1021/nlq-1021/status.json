@@ -1,0 +1,172 @@
+[
+  {
+    "id": "q01",
+    "type": "ask",
+    "elapsed": 38.0
+  },
+  {
+    "id": "q02",
+    "type": "answer",
+    "elapsed": 48.4,
+    "sql": true
+  },
+  {
+    "id": "q03",
+    "type": "answer",
+    "elapsed": 43.5,
+    "sql": true
+  },
+  {
+    "id": "q04",
+    "type": "answer",
+    "elapsed": 24.7,
+    "sql": true
+  },
+  {
+    "id": "q05",
+    "type": "ask",
+    "elapsed": 27.9
+  },
+  {
+    "id": "q06",
+    "type": "answer",
+    "elapsed": 25.0,
+    "sql": true
+  },
+  {
+    "id": "q07",
+    "type": "nomatch",
+    "elapsed": 52.4
+  },
+  {
+    "id": "q08",
+    "type": "answer",
+    "elapsed": 29.3,
+    "sql": true
+  },
+  {
+    "id": "q09",
+    "type": "nomatch",
+    "elapsed": 22.5
+  },
+  {
+    "id": "q10",
+    "type": "ask",
+    "elapsed": 23.5
+  },
+  {
+    "id": "q11",
+    "type": "answer",
+    "elapsed": 30.2,
+    "sql": true
+  },
+  {
+    "id": "q12",
+    "type": "answer",
+    "elapsed": 71.5,
+    "sql": true
+  },
+  {
+    "id": "q13",
+    "type": "error",
+    "elapsed": 70.9
+  },
+  {
+    "id": "q14",
+    "type": "answer",
+    "elapsed": 26.9,
+    "sql": true
+  },
+  {
+    "id": "q15",
+    "type": "answer",
+    "elapsed": 26.1,
+    "sql": true
+  },
+  {
+    "id": "q16",
+    "type": "answer",
+    "elapsed": 31.5,
+    "sql": true
+  },
+  {
+    "id": "q17",
+    "type": "answer",
+    "elapsed": 39.0,
+    "sql": true
+  },
+  {
+    "id": "q18",
+    "type": "answer",
+    "elapsed": 34.4,
+    "sql": true
+  },
+  {
+    "id": "q19",
+    "type": "answer",
+    "elapsed": 22.4,
+    "sql": true
+  },
+  {
+    "id": "q20",
+    "type": "answer",
+    "elapsed": 31.8,
+    "sql": true
+  },
+  {
+    "id": "q21",
+    "type": "answer",
+    "elapsed": 47.8,
+    "sql": true
+  },
+  {
+    "id": "q22",
+    "type": "answer",
+    "elapsed": 23.0,
+    "sql": true
+  },
+  {
+    "id": "q23",
+    "type": "ask",
+    "elapsed": 30.0
+  },
+  {
+    "id": "q24",
+    "type": "answer",
+    "elapsed": 30.8,
+    "sql": true
+  },
+  {
+    "id": "q25",
+    "type": "ask",
+    "elapsed": 37.6
+  },
+  {
+    "id": "q26",
+    "type": "answer",
+    "elapsed": 30.3,
+    "sql": true
+  },
+  {
+    "id": "q27",
+    "type": "answer",
+    "elapsed": 21.3,
+    "sql": true
+  },
+  {
+    "id": "q28",
+    "type": "answer",
+    "elapsed": 26.2,
+    "sql": true
+  },
+  {
+    "id": "q29",
+    "type": "ask",
+    "elapsed": 21.8
+  },
+  {
+    "id": "q30",
+    "type": "nomatch",
+    "elapsed": 22.7
+  }
+]

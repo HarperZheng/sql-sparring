@@ -1,0 +1,13 @@
+{
+  "sessionId": "nlq1021-q23",
+  "elapsed_sec": 30.0,
+  "question": "汇总批次一共多少个？",
+  "response": {
+    "type": "ask",
+    "question": "「汇总批次一共多少个」有两种口径分叉，实质改变结果，需要拍板：A. 划转视图 fiscal_allocation_view 里「是否汇总 collect_flag=是」的清分记录数（模型直接支持，一条 count 即可）；B. 去重的汇总单据批次数（按 fcollectid 去重计数）——成员面没有 fcollectid 维度，也没有对应去重计数度量，该口径当前查不了（只能转建模补成员）。选 A 还是 B？",
+    "options": [
+      "A：查 collect_flag=是 的汇总清分记录数（立即可查）",
+      "B：按汇总单据 fcollectid 去重的批次数（需建模补成员后才能查）"
+    ]
+  }
+}

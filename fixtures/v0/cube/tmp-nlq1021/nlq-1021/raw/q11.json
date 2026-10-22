@@ -1,0 +1,182 @@
+{
+  "sessionId": "nlq1021-q11",
+  "elapsed_sec": 30.2,
+  "question": "各预算科目清分金额排行，政府性基金收入（103）大类下哪些叶子科目收得最多？",
+  "response": {
+    "type": "answer",
+    "title": "政府性基金收入（103）叶子科目清分（分入）金额排行",
+    "plan": [
+      [
+        "清分金额口径取分入金额 im_amt（ai_context：清分收入口径），按预算科目 rec_sub_code 分组",
+        "fiscal_allocation_view.im_amt / fiscal_allocation_view.rec_sub_code",
+        "/agent/meta/fiscal_allocation_view ai_context"
+      ],
+      [
+        "限定政府性基金收入大类：科目编码前缀 103（startsWith 过滤）",
+        "fiscal_allocation_view.rec_sub_code startsWith 103",
+        "预算科目编码层级前缀"
+      ],
+      [
+        "叶子科目判定：返回 20 个编码两两无前缀包含关系，均为叶子，无截断（20<500）",
+        "返回数据集内判定",
+        "totalRows=20, truncated=false"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "政府性基金收入（103）叶子科目清分金额排行（分入金额 im_amt，全量 20 科目）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.im_amt",
+            "fiscal_allocation_view.count"
+          ],
+          "dimensions": [
+            "fiscal_allocation_view.rec_sub_code",
+            "fiscal_allocation_view.rec_sub_name"
+          ],
+          "filters": [
+            {
+              "member": "fiscal_allocation_view.rec_sub_code",
+              "operator": "startsWith",
+              "values": [
+                "103"
+              ]
+            }
+          ],
+          "order": {
+            "fiscal_allocation_view.im_amt": "desc"
+          },
+          "limit": 500
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.rec_sub_code": "103010201",
+            "fiscal_allocation_view.rec_sub_name": "中央农网还贷资金收入 / 中央农网还贷资金收入25 / 普通话水平测试费",
+            "fiscal_allocation_view.im_amt": "15985889302.18",
+            "fiscal_allocation_view.count": "275"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030110",
+            "fiscal_allocation_view.rec_sub_name": "民航发展基金收入",
+            "fiscal_allocation_view.im_amt": "28938336.12",
+            "fiscal_allocation_view.count": "60"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030106",
+            "fiscal_allocation_view.rec_sub_name": "铁路建设基金收入",
+            "fiscal_allocation_view.im_amt": "495345.65",
+            "fiscal_allocation_view.count": "44"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030115",
+            "fiscal_allocation_view.rec_sub_name": "港口建设费收入",
+            "fiscal_allocation_view.im_amt": "495318.31",
+            "fiscal_allocation_view.count": "176"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030121",
+            "fiscal_allocation_view.rec_sub_name": "旅游发展基金收入",
+            "fiscal_allocation_view.im_amt": "154995.46",
+            "fiscal_allocation_view.count": "49"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030129",
+            "fiscal_allocation_view.rec_sub_name": "国家电影事业发展专项资金收入",
+            "fiscal_allocation_view.im_amt": "36668.96",
+            "fiscal_allocation_view.count": "16"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030146",
+            "fiscal_allocation_view.rec_sub_name": "国有土地收益基金收入",
+            "fiscal_allocation_view.im_amt": "22488",
+            "fiscal_allocation_view.count": "4"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042762",
+            "fiscal_allocation_view.rec_sub_name": "考试考务费",
+            "fiscal_allocation_view.im_amt": "17080",
+            "fiscal_allocation_view.count": "19"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042758",
+            "fiscal_allocation_view.rec_sub_name": "高等学校住宿费",
+            "fiscal_allocation_view.im_amt": "16643",
+            "fiscal_allocation_view.count": "33"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042706",
+            "fiscal_allocation_view.rec_sub_name": "教师资格考试费",
+            "fiscal_allocation_view.im_amt": "6531",
+            "fiscal_allocation_view.count": "3"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042755",
+            "fiscal_allocation_view.rec_sub_name": "中等职业学校学费",
+            "fiscal_allocation_view.im_amt": "4513",
+            "fiscal_allocation_view.count": "11"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103040702",
+            "fiscal_allocation_view.rec_sub_name": "考试考务费",
+            "fiscal_allocation_view.im_amt": "680",
+            "fiscal_allocation_view.count": "14"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103045754",
+            "fiscal_allocation_view.rec_sub_name": "教材费",
+            "fiscal_allocation_view.im_amt": "580",
+            "fiscal_allocation_view.count": "9"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042707",
+            "fiscal_allocation_view.rec_sub_name": "普通话水平测试费",
+            "fiscal_allocation_view.im_amt": "433",
+            "fiscal_allocation_view.count": "2"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030219",
+            "fiscal_allocation_view.rec_sub_name": "教育资金收入",
+            "fiscal_allocation_view.im_amt": "260",
+            "fiscal_allocation_view.count": "7"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030801",
+            "fiscal_allocation_view.rec_sub_name": "国外捐赠收入",
+            "fiscal_allocation_view.im_amt": "100",
+            "fiscal_allocation_view.count": "1"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030802",
+            "fiscal_allocation_view.rec_sub_name": "国内捐赠收入",
+            "fiscal_allocation_view.im_amt": "100",
+            "fiscal_allocation_view.count": "1"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "1030149",
+            "fiscal_allocation_view.rec_sub_name": "大中型水库移民后期扶持基金收入",
+            "fiscal_allocation_view.im_amt": "60",
+            "fiscal_allocation_view.count": "1"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103014899",
+            "fiscal_allocation_view.rec_sub_name": "其他土地出让收入",
+            "fiscal_allocation_view.im_amt": "33",
+            "fiscal_allocation_view.count": "1"
+          },
+          {
+            "fiscal_allocation_view.rec_sub_code": "103042751",
+            "fiscal_allocation_view.rec_sub_name": "预防接种劳务费",
+            "fiscal_allocation_view.im_amt": "0",
+            "fiscal_allocation_view.count": "2"
+          }
+        ],
+        "total": 16016079467.68
+      }
+    ],
+    "answer": "口径：清分金额取 fiscal_allocation_view 分入金额 im_amt（ai_context 定义为清分收入口径），按预算科目 rec_sub_code 分组，用 startsWith '103' 限定政府性基金收入大类；时间不限（全期）。科目收得最多的是 103010201（清分金额 15,985,889,302.18 元，275 笔，占大类 99.81%），其后为 1030110 民航发展基金收入（28,938,336.12 元）、1030106 铁路建设基金收入（495,345.65 元）、1030115 港口建设费收入（495,318.31 元）。数据集内 20 个科目编码两两无前缀包含关系，均视为叶子科目，结果无截断（共 20 组）；rec_sub_name 为别名拼接仅展示（103010201 存在一码多名），以编码为准。",
+    "assumption": "\"清分金额\"按 ai_context 唯一口径取分入金额 im_amt（清分收入口径），未用划拨金额 trans_amt；\"叶子科目\"按返回数据集内编码无下级前缀判定（模型未提供层级维度）；时间范围未指定，取全期。",
+    "truncated": false,
+    "rows": 20,
+    "hitPreAgg": null
+  }
+}

@@ -1,0 +1,296 @@
+{
+  "sessionId": "nlq1021-q29",
+  "followup": "就按第一个选项的口径来（bus_type='2' 是汇缴（1=直缴，惯例映射）），直接出答案。",
+  "elapsed_sec": 51.4,
+  "response": {
+    "type": "answer",
+    "title": "汇缴缴款（bus_type=2）缴款明细：209 行/120 票，金额 22.85 亿元",
+    "plan": [
+      [
+        "汇缴 = 缴款书业务类型 bus_type=2（用户拍板，1=直缴），已回写口径词典",
+        "fiscal_collection_view.bus_type",
+        "用户选项一拍板 2026-10-21；词典词条已固化（legacy:false）"
+      ],
+      [
+        "明细行数用 count、缴款书笔数用 paybook_count（一票多项目行）、金额用 amt",
+        "fiscal_collection_view.amt",
+        "meta ai_context：明细金额 amt；缴款书笔数 paybook_count"
+      ],
+      [
+        "明细按缴款码×缴款日期×执收单位×票面科目展示，取前 100 行按缴款日期倒序",
+        "fiscal_collection_view.pay_code",
+        "meta：分组用 *_code，名称列仅展示"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "汇缴缴款明细（bus_type=2，前 100 行，按缴款日期倒序）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.count",
+            "fiscal_collection_view.amt"
+          ],
+          "dimensions": [
+            "fiscal_collection_view.pay_code",
+            "fiscal_collection_view.pay_date",
+            "fiscal_collection_view.chg_agency_code",
+            "fiscal_collection_view.chg_agency_name",
+            "fiscal_collection_view.sub_code",
+            "fiscal_collection_view.sub_name"
+          ],
+          "filters": [
+            {
+              "member": "fiscal_collection_view.bus_type",
+              "operator": "equals",
+              "values": [
+                "2"
+              ]
+            }
+          ],
+          "order": {
+            "fiscal_collection_view.pay_date": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.pay_code": "53000026000000391098",
+            "fiscal_collection_view.pay_date": "2026-06-15T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124045",
+            "fiscal_collection_view.chg_agency_name": "001 / 测试云南测试环境 / 测试云南测试环境(试用版) / 测试云南测试环境(试用版)(试用版)",
+            "fiscal_collection_view.sub_code": "1030110",
+            "fiscal_collection_view.sub_name": "民航发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "20000"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000026000000391100",
+            "fiscal_collection_view.pay_date": "2026-06-15T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124045",
+            "fiscal_collection_view.chg_agency_name": "001 / 测试云南测试环境 / 测试云南测试环境(试用版) / 测试云南测试环境(试用版)(试用版)",
+            "fiscal_collection_view.sub_code": "103010201",
+            "fiscal_collection_view.sub_name": "中央农网还贷资金收入 / 中央农网还贷资金收入25",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "65017.59"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000026000000391080",
+            "fiscal_collection_view.pay_date": "2026-06-15T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124045",
+            "fiscal_collection_view.chg_agency_name": "001 / 测试云南测试环境 / 测试云南测试环境(试用版) / 测试云南测试环境(试用版)(试用版)",
+            "fiscal_collection_view.sub_code": "103042758",
+            "fiscal_collection_view.sub_name": "高等学校住宿费",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "14820171"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000026904000000036",
+            "fiscal_collection_view.pay_date": "2026-06-05T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "998017",
+            "fiscal_collection_view.chg_agency_name": "通用测试单位070301",
+            "fiscal_collection_view.sub_code": "1030110",
+            "fiscal_collection_view.sub_name": "民航发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "301.98"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000026904000000010",
+            "fiscal_collection_view.pay_date": "2026-06-05T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "998017",
+            "fiscal_collection_view.chg_agency_name": "通用测试单位070301",
+            "fiscal_collection_view.sub_code": "1030110",
+            "fiscal_collection_view.sub_name": "民航发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "402.64"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010226821000000227",
+            "fiscal_collection_view.pay_date": "2026-04-02T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "125026",
+            "fiscal_collection_view.chg_agency_name": "云南医保测试单位改名 / 开票点一 / 李思维",
+            "fiscal_collection_view.sub_code": "1030115",
+            "fiscal_collection_view.sub_name": "港口建设费收入",
+            "fiscal_collection_view.count": "2",
+            "fiscal_collection_view.amt": "1981.32"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010026000000390247",
+            "fiscal_collection_view.pay_date": "2026-01-12T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124992",
+            "fiscal_collection_view.chg_agency_name": "云南信息技术中心 / 信息技术中心",
+            "fiscal_collection_view.sub_code": "103010201",
+            "fiscal_collection_view.sub_name": "中央农网还贷资金收入 / 中央农网还贷资金收入25",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "484"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010026000000390247",
+            "fiscal_collection_view.pay_date": "2026-01-12T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124992",
+            "fiscal_collection_view.chg_agency_name": "云南信息技术中心 / 信息技术中心",
+            "fiscal_collection_view.sub_code": "1030115",
+            "fiscal_collection_view.sub_name": "港口建设费收入",
+            "fiscal_collection_view.count": "2",
+            "fiscal_collection_view.amt": "528"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010026000000390247",
+            "fiscal_collection_view.pay_date": "2026-01-12T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124992",
+            "fiscal_collection_view.chg_agency_name": "云南信息技术中心 / 信息技术中心",
+            "fiscal_collection_view.sub_code": "103042758",
+            "fiscal_collection_view.sub_name": "高等学校住宿费",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "324"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010026000000390247",
+            "fiscal_collection_view.pay_date": "2026-01-12T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124992",
+            "fiscal_collection_view.chg_agency_name": "云南信息技术中心 / 信息技术中心",
+            "fiscal_collection_view.sub_code": "1030110",
+            "fiscal_collection_view.sub_name": "民航发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "396"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025907000000033",
+            "fiscal_collection_view.pay_date": "2025-10-14T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "998021",
+            "fiscal_collection_view.chg_agency_name": "云南医疗测试单位10131",
+            "fiscal_collection_view.sub_code": "103010201",
+            "fiscal_collection_view.sub_name": "中央农网还贷资金收入 / 中央农网还贷资金收入25",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "632.36"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025907000000033",
+            "fiscal_collection_view.pay_date": "2025-10-14T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "998021",
+            "fiscal_collection_view.chg_agency_name": "云南医疗测试单位10131",
+            "fiscal_collection_view.sub_code": "1030121",
+            "fiscal_collection_view.sub_name": "旅游发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "3120"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53010025000000389434",
+            "fiscal_collection_view.pay_date": "2025-10-14T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "124994",
+            "fiscal_collection_view.chg_agency_name": "云南发展改革委员会 / 开票点001 / 开票点002",
+            "fiscal_collection_view.sub_code": "103010201",
+            "fiscal_collection_view.sub_name": "中央农网还贷资金收入 / 中央农网还贷资金收入25",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "100"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025821000000570",
+            "fiscal_collection_view.pay_date": "2025-07-28T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "125026",
+            "fiscal_collection_view.chg_agency_name": "云南医保测试单位改名 / 开票点一 / 李思维",
+            "fiscal_collection_view.sub_code": "1030110",
+            "fiscal_collection_view.sub_name": "民航发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "861"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025849000000268",
+            "fiscal_collection_view.pay_date": "2025-06-17T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "999012",
+            "fiscal_collection_view.chg_agency_name": "智能核销单位0408",
+            "fiscal_collection_view.sub_code": "1030115",
+            "fiscal_collection_view.sub_name": "港口建设费收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "123"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025902000000065",
+            "fiscal_collection_view.pay_date": "2025-06-17T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "425107",
+            "fiscal_collection_view.chg_agency_name": "云南测试单位95",
+            "fiscal_collection_view.sub_code": "1030115",
+            "fiscal_collection_view.sub_name": "港口建设费收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "123"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025902000000030",
+            "fiscal_collection_view.pay_date": "2025-06-16T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "425107",
+            "fiscal_collection_view.chg_agency_name": "云南测试单位95",
+            "fiscal_collection_view.sub_code": "1030121",
+            "fiscal_collection_view.sub_name": "旅游发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "369"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025902000000049",
+            "fiscal_collection_view.pay_date": "2025-06-16T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "425107",
+            "fiscal_collection_view.chg_agency_name": "云南测试单位95",
+            "fiscal_collection_view.sub_code": "1030121",
+            "fiscal_collection_view.sub_name": "旅游发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "123"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025902000000057",
+            "fiscal_collection_view.pay_date": "2025-06-16T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "425107",
+            "fiscal_collection_view.chg_agency_name": "云南测试单位95",
+            "fiscal_collection_view.sub_code": "1030121",
+            "fiscal_collection_view.sub_name": "旅游发展基金收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "246"
+          },
+          {
+            "fiscal_collection_view.pay_code": "53000025849000000209",
+            "fiscal_collection_view.pay_date": "2025-06-15T16:00:00.000",
+            "fiscal_collection_view.chg_agency_code": "999012",
+            "fiscal_collection_view.chg_agency_name": "智能核销单位0408",
+            "fiscal_collection_view.sub_code": "1030115",
+            "fiscal_collection_view.sub_name": "港口建设费收入",
+            "fiscal_collection_view.count": "1",
+            "fiscal_collection_view.amt": "123"
+          }
+        ],
+        "total": 2284794298.882
+      },
+      {
+        "title": "汇缴缴款汇总（bus_type=2，全量单行聚合）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.count",
+            "fiscal_collection_view.paybook_count",
+            "fiscal_collection_view.amt"
+          ],
+          "dimensions": [],
+          "filters": [
+            {
+              "member": "fiscal_collection_view.bus_type",
+              "operator": "equals",
+              "values": [
+                "2"
+              ]
+            }
+          ],
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.count": "209",
+            "fiscal_collection_view.paybook_count": "120",
+            "fiscal_collection_view.amt": "2284794298.882"
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径：汇缴 = fiscal_collection_view.bus_type（fbustype）= '2'（1=直缴），按你拍板的口径执行，并已回写口径词典（term=汇缴，legacy:false）。数据范围：全库汇缴缴款明细共 209 行（缴款书 120 票），缴款金额合计 2,284,794,298.88 元；明细表按缴款日期倒序返回前 100 行（覆盖 2024-10-09 至 2026-06-15），其余 109 组明细可提高 limit 或在构建器中查看全量。",
+    "assumption": "汇缴拍板为 bus_type='2'（1=直缴，惯例映射；meta 与词典原先未写明编码），已固化进口径词典",
+    "truncated": true,
+    "rows": 101,
+    "hitPreAgg": null,
+    "audited": false
+  }
+}

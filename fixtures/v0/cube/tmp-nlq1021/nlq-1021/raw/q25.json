@@ -1,0 +1,15 @@
+{
+  "sessionId": "nlq1021-q25",
+  "elapsed_sec": 37.6,
+  "question": "清分率按业务类型分组对比：直缴和汇缴各是多少？",
+  "response": {
+    "type": "ask",
+    "question": "「清分率」在模型 meta（fiscal_collection_view / fiscal_allocation_view 的 ai_context 与成员面）中没有任何定义，口径词典也无该词条；而「直缴/汇缴」分组维度已确认存在（fiscal_collection_view.bus_type，fbustype：直缴/汇缴）。清分率的分子/分母不明确，不同取法结果实质不同，需拍板后再查。",
+    "options": [
+      "划转成功笔数 ÷ 清分记录数（fiscal_allocation_view：trans_stats=9 的 count ÷ 总 count，按划出/划入区划关联 bus_type 需联查）",
+      "划拨金额 ÷ 分入金额（fiscal_allocation_view.trans_amt ÷ im_amt）",
+      "已划转到账金额 ÷ 缴款金额（跨 fiscal_treasury_view/fiscal_collection_view，需联查，跨视图不可同查只能分别取数后答案层相除）",
+      "其他（请说明分子/分母口径）"
+    ]
+  }
+}

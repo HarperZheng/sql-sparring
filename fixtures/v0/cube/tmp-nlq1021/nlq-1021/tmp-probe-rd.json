@@ -1,0 +1,1 @@
+{"query":{"measures":["fiscal_collection_view.count","fiscal_collection_view.entered_amt"],"timeDimensions":[{"dimension":"fiscal_collection_view.received_date","dateRange":["2020-01-01","2026-12-31"],"granularity":"year"}]}}

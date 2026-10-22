@@ -1,0 +1,55 @@
+{
+  "sessionId": "nlq1021-q23",
+  "followup": "就按第一个选项的口径来（A：查 collect_flag=是 的汇总清分记录数（立即可查）），直接出答案。",
+  "elapsed_sec": 21.5,
+  "response": {
+    "type": "answer",
+    "title": "汇总批次（口径A：汇总清分记录）共 550 条",
+    "plan": [
+      [
+        "口径A：按 collect_flag=1（是否汇总）过滤的清分记录数",
+        "fiscal_allocation_view.count",
+        "成员面 ai_context：collect_flag 由 fcollectid 非空衍生，取值 1/0；用户拍板口径A"
+      ],
+      [
+        "全表清分记录（参考分母，非本次口径）",
+        "fiscal_allocation_view.count",
+        "主度量附列，用于数据范围核对"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "口径A：汇总批次（collect_flag=1）清分记录数",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.count"
+          ],
+          "filters": [
+            {
+              "member": "fiscal_allocation_view.collect_flag",
+              "operator": "equals",
+              "values": [
+                "1"
+              ]
+            }
+          ],
+          "order": {
+            "fiscal_allocation_view.count": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.count": "550"
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：按用户拍板的口径A，「汇总批次」= 划转视图（fiscal_allocation_view）中是否汇总 collect_flag=1 的清分记录数，全时间范围、无其他过滤。歧义拍板：collect_flag 实际取值为 1/0（字面「是」无命中），已按 1 过滤；「按 fcollectid 去重的批次数」口径模型无成员、当前查不了（已写入口径词典备查）。数据范围：550 条，非截断（totalRows=1，单行聚合）。",
+    "assumption": "用户拍板口径A：汇总清分记录数（collect_flag=1），非 fcollectid 去重批次数",
+    "truncated": false,
+    "rows": 1,
+    "hitPreAgg": false
+  }
+}

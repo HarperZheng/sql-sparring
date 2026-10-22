@@ -1,0 +1,19 @@
+{
+  "per_question": {
+    "q23": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "三态不一致"
+    }
+  },
+  "v0_dist": {
+    "ask": 1
+  },
+  "got_dist": {
+    "answer": 1
+  },
+  "expected_transient": {
+    "q13": "v0 为瞬时 502 链路故障，answer 为合理复原"
+  },
+  "pass": false
+}

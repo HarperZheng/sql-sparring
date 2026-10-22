@@ -1,0 +1,14 @@
+{
+  "sessionId": "nlq1021-q10",
+  "elapsed_sec": 23.5,
+  "question": "按执收单位统计未到账（欠缴）的缴款笔数",
+  "response": {
+    "type": "ask",
+    "question": "「未到账（欠缴）」在模型里有两种实质不同的口径，结果差别很大，请拍板：A) 欠缴口径（场景12）：缴款书状态=待缴款(state='1') 且有效期(eff_date)已过期——票还没缴款；B) 未到账口径：已缴款但资金未到账——received_date 为空（资金到账日期缺失）。两种口径都按执收单位编码(chg_agency_code)分组、笔数用 paybook_count（缴款书去重笔数）。",
+    "options": [
+      "A：欠缴=待缴款+有效期已过期（按 eff_date 催缴口径）",
+      "B：未到账=已缴款但资金到账日期(received_date)为空",
+      "两种口径各出一张表对比"
+    ]
+  }
+}

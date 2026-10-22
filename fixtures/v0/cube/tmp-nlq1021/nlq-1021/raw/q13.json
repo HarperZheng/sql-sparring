@@ -1,0 +1,9 @@
+{
+  "sessionId": "nlq1021-q13-r2",
+  "elapsed_sec": 70.9,
+  "question": "按收入分类统计：政府性基金收入、专项收入、行政事业性收费、罚没各占多少？",
+  "response": {
+    "type": "error",
+    "error": "HTTP Error 502: Bad Gateway"
+  }
+}

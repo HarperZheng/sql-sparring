@@ -1,0 +1,78 @@
+{
+  "sessionId": "nlq1021-q14",
+  "elapsed_sec": 26.9,
+  "question": "按资金性质分组：一般公共预算、政府性基金、财政专户管理资金各收多少？",
+  "response": {
+    "type": "answer",
+    "title": "按收入归属资金性质分组的缴款金额分布",
+    "plan": [
+      [
+        "按收入侧资金性质分组统计缴款金额与明细行数",
+        "fiscal_collection_view.rec_funds_nature_code",
+        "ai_context：rec_* 前缀为收入侧口径，分组必须用 *_code 成员"
+      ],
+      [
+        "金额取缴款金额 amt（明细口径）",
+        "fiscal_collection_view.amt",
+        "ai_context：明细金额用 amt"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "收入侧资金性质×缴款金额（全量，无时间过滤）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.amt",
+            "fiscal_collection_view.count"
+          ],
+          "dimensions": [
+            "fiscal_collection_view.rec_funds_nature_code",
+            "fiscal_collection_view.rec_funds_nature_name"
+          ],
+          "order": {
+            "fiscal_collection_view.amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.rec_funds_nature_code": "12",
+            "fiscal_collection_view.rec_funds_nature_name": "政府性基金预算收入",
+            "fiscal_collection_view.amt": 16016379742.39,
+            "fiscal_collection_view.count": 589
+          },
+          {
+            "fiscal_collection_view.rec_funds_nature_code": "",
+            "fiscal_collection_view.rec_funds_nature_name": "（未标注资金性质）",
+            "fiscal_collection_view.amt": 2314603154.582,
+            "fiscal_collection_view.count": 544
+          },
+          {
+            "fiscal_collection_view.rec_funds_nature_code": "11",
+            "fiscal_collection_view.rec_funds_nature_name": "一般公共预算收入",
+            "fiscal_collection_view.amt": 1184377.16,
+            "fiscal_collection_view.count": 63
+          },
+          {
+            "fiscal_collection_view.rec_funds_nature_code": "2",
+            "fiscal_collection_view.rec_funds_nature_name": "财政专户管理资金",
+            "fiscal_collection_view.amt": 39329,
+            "fiscal_collection_view.count": 70
+          },
+          {
+            "fiscal_collection_view.rec_funds_nature_code": "5",
+            "fiscal_collection_view.rec_funds_nature_name": "其他",
+            "fiscal_collection_view.amt": 600,
+            "fiscal_collection_view.count": 6
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径：按收入侧资金性质（rec_funds_nature_code，收入归属口径）分组，金额为缴款金额 amt（缴款明细口径），未加时间过滤，覆盖缴款全景事实全量数据。三项分别：政府性基金预算收入 16,016,379,742.39 元（589 行）、一般公共预算收入 1,184,377.16 元（63 行）、财政专户管理资金 39,329 元（70 行）。另有资金性质未标注（空编码）2,314,603,154.58 元（544 行）与其他 600 元（6 行），一并列出供参考。无截断，共 5 组。",
+    "assumption": "未指定时间范围，按全量数据统计；资金性质取收入归属口径（rec_funds_nature）而非缴款票面口径（funds_nature），如需票面口径可另查",
+    "truncated": false,
+    "rows": 5,
+    "hitPreAgg": false
+  }
+}

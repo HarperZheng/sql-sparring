@@ -1,0 +1,65 @@
+{
+  "sessionId": "nlq1021-q03",
+  "elapsed_sec": 43.5,
+  "question": "清分金额 2022 年对比 2021 年同比增长多少？",
+  "response": {
+    "type": "answer",
+    "title": "清分金额 2022 年同比：该期无数据，无法计算",
+    "plan": [
+      [
+        "定位清分主题",
+        "fiscal_allocation_view",
+        "/agent/meta 目录面：清分流向事实（fdt）"
+      ],
+      [
+        "绑定同比计算成员（引擎已算）",
+        "fiscal_allocation_view.im_amt_yoy_diff / im_amt_yoy_rate / trans_amt_yoy_diff / trans_amt_yoy_rate",
+        "meta measures 含 _yoy 系，按 2026-10-18 固化族绑定，答案层不重复计算"
+      ],
+      [
+        "时间轴用 pay_date 按年分组",
+        "fiscal_allocation_view.pay_date",
+        "ai_context：同环比仅 pay_date 一条轴，平移 1 年"
+      ],
+      [
+        "执行查询",
+        "POST /agent/query",
+        "返回 ok:true 但 data 为空（2022 年 pay_date 轴无清分数据）"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "清分金额 2022 年同比（pay_date 年度轴，分入/划拨双口径）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.im_amt",
+            "fiscal_allocation_view.im_amt_yoy_diff",
+            "fiscal_allocation_view.im_amt_yoy_rate",
+            "fiscal_allocation_view.trans_amt",
+            "fiscal_allocation_view.trans_amt_yoy_diff",
+            "fiscal_allocation_view.trans_amt_yoy_rate"
+          ],
+          "timeDimensions": [
+            {
+              "dimension": "fiscal_allocation_view.pay_date",
+              "granularity": "year",
+              "dateRange": [
+                "2022-01-01",
+                "2022-12-31"
+              ]
+            }
+          ],
+          "order": {},
+          "limit": 10
+        },
+        "rows": [],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：\"清分金额\"在 fiscal_allocation_view 有两个金额口径——分入金额 im_amt 与划拨金额 trans_amt，词典无该词条、ai_context 未定默认，本次两口径并出（各带引擎已算的同比差值/增长率成员）。数据范围：时间轴 pay_date，2022-01-01～2022-12-31（同比自动平移至 2021 年），按年分组。查询返回 0 行——该时间范围内无清分数据，故两口径的 2022 年同比增长率均无法计算（非 0%）。如需查看其他年份或改用 trans_date/enter_date 轴（注：同环比不支持这两条轴），请明示后另查。",
+    "assumption": "\"清分金额\"未定默认口径：分入金额(im_amt)与划拨金额(trans_amt)双口径并列呈现，未静默选择；空结果按契约直接拍板为该期无数据、同比无法计算，未追加反向探测查询",
+    "truncated": false,
+    "rows": 0,
+    "hitPreAgg": false
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "sessionId": "nlq1021-q05",
+  "followup": "就按第一个选项的口径来（分入金额 ÷ 缴款总额（fiscal_collection_view 口径，跨视图）），直接出答案。",
+  "elapsed_sec": 22.6,
+  "response": {
+    "type": "answer",
+    "title": "全库累计清分率 87.37%（分入金额÷缴款总额）",
+    "plan": [
+      [
+        "全库累计清分金额（分入口径，无时间过滤）",
+        "fiscal_allocation_view.im_amt",
+        "用户问「清分了多少」→ 分入金额口径（清分收入）"
+      ],
+      [
+        "全库缴款总额（缴款明细口径，无时间过滤）",
+        "fiscal_collection_view.amt",
+        "用户拍板清分率分母 = fiscal_collection_view 口径缴款总额"
+      ],
+      [
+        "清分率 = 分入金额 ÷ 缴款总额",
+        "fiscal_allocation_view.im_amt / fiscal_collection_view.amt",
+        "跨视图无固化比率成员，答案层相除；口径已回写词典「清分率」"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "口径A：全库累计清分 vs 缴款总额（清分率）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.im_amt",
+            "fiscal_allocation_view.trans_amt",
+            "fiscal_allocation_view.count"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "timeDimensions": [],
+          "order": {
+            "fiscal_allocation_view.im_amt": "desc"
+          },
+          "limit": 1
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.im_amt": 16016079467.68,
+            "fiscal_allocation_view.trans_amt": 72507.62,
+            "fiscal_allocation_view.count": 728,
+            "fiscal_collection_view.amt": 18332207203.13,
+            "清分率(%)": 87.37
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：清分率按您拍板的口径 = 分入金额（fiscal_allocation_view.im_amt）÷ 缴款总额（fiscal_collection_view.amt，缴款明细口径，非票面金额 total_amt——该成员禁 sum）。两视图均全库无时间过滤，各自单行全量聚合（跨视图不可同查，分别查询后答案层相除）。数据范围：全库累计清分（分入）16,016,079,467.68 元、728 笔（另有划拨金额 72,507.62 元）；缴款总额 18,332,207,203.13 元；清分率 = 16,016,079,467.68 ÷ 18,332,207,203.13 ≈ 87.37%。该口径已回写 /agent/dictionary 词典「清分率」词条。",
+    "assumption": "清分率口径拍板为「分入金额 ÷ 缴款总额（fiscal_collection_view 缴款明细口径 amt）」；分母未用票面金额 total_amt（fan trap 禁 sum）",
+    "truncated": false,
+    "rows": 1,
+    "hitPreAgg": false
+  }
+}

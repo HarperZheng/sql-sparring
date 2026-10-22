@@ -1,0 +1,193 @@
+{
+  "sessionId": "nlq1021-q08",
+  "elapsed_sec": 29.3,
+  "question": "各执收预算单位（主管预算单位）的清分金额对比",
+  "response": {
+    "type": "answer",
+    "title": "各执收预算单位清分金额对比（划出方单位分组）",
+    "plan": [
+      [
+        "各执收预算单位的清分金额，按划出方单位编码分组，划拨金额降序对比，同时附分入金额与清分记录数两个口径",
+        "fiscal_allocation_view.chg_agency_code + fiscal_allocation_view.trans_amt/im_amt/count",
+        "fiscal_allocation_view ai_context：划出方看 chg_agency_code；划拨金额用 trans_amt、分入金额用 im_amt；分组必须用 *_code，*_name 仅展示不作准（划出方单位名称无数据列，只出编码）"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "口径：划出方执收单位 × 清分金额（划拨金额 trans_amt 降序，附分入金额 im_amt 与记录数）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.trans_amt",
+            "fiscal_allocation_view.im_amt",
+            "fiscal_allocation_view.count"
+          ],
+          "dimensions": [
+            "fiscal_allocation_view.chg_agency_code"
+          ],
+          "order": {
+            "fiscal_allocation_view.trans_amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.chg_agency_code": "124045",
+            "fiscal_allocation_view.trans_amt": 63371,
+            "fiscal_allocation_view.im_amt": 15986585353.85,
+            "fiscal_allocation_view.count": 291
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "001",
+            "fiscal_allocation_view.trans_amt": 5082,
+            "fiscal_allocation_view.im_amt": 2541,
+            "fiscal_allocation_view.count": 16
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124994",
+            "fiscal_allocation_view.trans_amt": 2966,
+            "fiscal_allocation_view.im_amt": 28941171.61,
+            "fiscal_allocation_view.count": 141
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125026",
+            "fiscal_allocation_view.trans_amt": 664.62,
+            "fiscal_allocation_view.im_amt": 13384.84,
+            "fiscal_allocation_view.count": 36
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124992",
+            "fiscal_allocation_view.trans_amt": 324,
+            "fiscal_allocation_view.im_amt": 287174,
+            "fiscal_allocation_view.count": 8
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124993",
+            "fiscal_allocation_view.trans_amt": 100,
+            "fiscal_allocation_view.im_amt": 100,
+            "fiscal_allocation_view.count": 1
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125020",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 1915.12,
+            "fiscal_allocation_view.count": 9
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "001001",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 0,
+            "fiscal_allocation_view.count": 2
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124576",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 2057.68,
+            "fiscal_allocation_view.count": 13
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "425104",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 1601.32,
+            "fiscal_allocation_view.count": 6
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125019",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 6864.26,
+            "fiscal_allocation_view.count": 19
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124100",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 11663.68,
+            "fiscal_allocation_view.count": 19
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124002",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 4964,
+            "fiscal_allocation_view.count": 17
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125032",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 5500.66,
+            "fiscal_allocation_view.count": 22
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125029",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 30,
+            "fiscal_allocation_view.count": 2
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "425002",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 24034.92,
+            "fiscal_allocation_view.count": 4
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "105015",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 0,
+            "fiscal_allocation_view.count": 2
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "427008",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 2158,
+            "fiscal_allocation_view.count": 2
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "127208",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 12448.24,
+            "fiscal_allocation_view.count": 22
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124577",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 1377.76,
+            "fiscal_allocation_view.count": 7
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "425103",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 165008.58,
+            "fiscal_allocation_view.count": 43
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "124579",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 1100,
+            "fiscal_allocation_view.count": 2
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "125022",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 3803.64,
+            "fiscal_allocation_view.count": 20
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "998017",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 805.28,
+            "fiscal_allocation_view.count": 3
+          },
+          {
+            "fiscal_allocation_view.chg_agency_code": "998015",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.im_amt": 4409.24,
+            "fiscal_allocation_view.count": 21
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：执收预算单位按清分记录的划出方单位（chg_agency_code）分组——清分是资金从执收单位划出的流向事实，划出方即执收方；清分金额同时给出口径一「划拨金额 trans_amt」（划拨口径，作主排序）与口径二「分入金额 im_amt」（清分收入口径），未做单一拍板，两口径并列对比。数据范围：全量清分事实（fiscal_allocation_view，时间未过滤），共 25 个执收单位、totalRows=25 未截断。划出方单位名称在 fdt 无数据列，仅出编码（ai_context 明示）。划分拨口径看，单位 124045 以 63,371 元居首（其分入口径达约 159.87 亿元），其后为 001（5,082 元）、124994（2,966 元）；其余 19 个单位无划拨金额（trans_amt 为 null，即最近一轮未发生划拨或金额为空），仅存在分入金额记录。",
+    "assumption": "「清分金额」未指明口径，按 ai_context 两个既有金额成员并列输出：主口径 trans_amt（划拨金额，排序依据），附 im_amt（分入金额）；「执收预算单位/主管预算单位」映射为划出方单位编码 chg_agency_code，未静默替换为划入方或预算归类（rec_bgt_agen_code）口径。",
+    "truncated": false,
+    "rows": 25,
+    "hitPreAgg": null
+  }
+}

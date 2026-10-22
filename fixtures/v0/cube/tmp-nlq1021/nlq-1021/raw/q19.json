@@ -1,0 +1,103 @@
+{
+  "sessionId": "nlq1021-q19",
+  "elapsed_sec": 22.4,
+  "question": "各收款银行（代理银行）2022 年各收了多少笔、多少钱？",
+  "response": {
+    "type": "answer",
+    "title": "2022 年各收款银行收缴笔数与金额",
+    "plan": [
+      [
+        "按收款银行分组，统计 2022 年缴款书笔数与缴款金额",
+        "fiscal_collection_view.rec_bank_code / fiscal_collection_view.rec_bank_name",
+        "view 维度成员，收款银行编码/名称"
+      ],
+      [
+        "笔数用缴款书笔数（票数口径，非明细行数）",
+        "fiscal_collection_view.paybook_count",
+        "ai_context：一票多项目行，count 是行数勿当笔数"
+      ],
+      [
+        "金额用缴款金额",
+        "fiscal_collection_view.amt",
+        "ai_context：明细金额用 amt"
+      ],
+      [
+        "时间范围 2022-01-01 至 2022-12-31",
+        "fiscal_collection_view.pay_date",
+        "ai_context：时间过滤用 pay_date（缴款日期）"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "2022 年各收款银行：缴款笔数与金额（缴款日期口径）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.paybook_count",
+            "fiscal_collection_view.amt"
+          ],
+          "dimensions": [
+            "fiscal_collection_view.rec_bank_code",
+            "fiscal_collection_view.rec_bank_name"
+          ],
+          "timeDimensions": [
+            {
+              "dimension": "fiscal_collection_view.pay_date",
+              "dateRange": [
+                "2022-01-01",
+                "2022-12-31"
+              ]
+            }
+          ],
+          "order": {
+            "fiscal_collection_view.amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.rec_bank_code": "0105",
+            "fiscal_collection_view.rec_bank_name": "中国建设银行",
+            "fiscal_collection_view.paybook_count": 211,
+            "fiscal_collection_view.amt": 18208121939.04
+          },
+          {
+            "fiscal_collection_view.rec_bank_code": "0104",
+            "fiscal_collection_view.rec_bank_name": "中国银行",
+            "fiscal_collection_view.paybook_count": 103,
+            "fiscal_collection_view.amt": 800419.02
+          },
+          {
+            "fiscal_collection_view.rec_bank_code": "0100",
+            "fiscal_collection_view.rec_bank_name": "中国邮政储蓄银行",
+            "fiscal_collection_view.paybook_count": 7,
+            "fiscal_collection_view.amt": 7778
+          },
+          {
+            "fiscal_collection_view.rec_bank_code": "0102",
+            "fiscal_collection_view.rec_bank_name": "中国工商银行",
+            "fiscal_collection_view.paybook_count": 9,
+            "fiscal_collection_view.amt": 5426.21
+          },
+          {
+            "fiscal_collection_view.rec_bank_code": "0103",
+            "fiscal_collection_view.rec_bank_name": "中国农业银行",
+            "fiscal_collection_view.paybook_count": 3,
+            "fiscal_collection_view.amt": 510
+          },
+          {
+            "fiscal_collection_view.rec_bank_code": "0303",
+            "fiscal_collection_view.rec_bank_name": "中国光大银行",
+            "fiscal_collection_view.paybook_count": 1,
+            "fiscal_collection_view.amt": 500
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径：按收款银行（rec_bank_code/rec_bank_name）分组，笔数=缴款书笔数 paybook_count（票数口径，非明细行数），金额=缴款金额 amt，时间轴=缴款日期 pay_date，范围 2022-01-01 至 2022-12-31。共 6 家银行、334 笔；建行 211 笔 182.08 亿元占绝对主体。无歧义分叉，未截断（totalRows=6）。",
+    "assumption": "笔数取缴款书票数口径（paybook_count）而非明细行数 count；金额取缴款金额（amt）而非到账金额（entered_amt）",
+    "truncated": false,
+    "rows": 6,
+    "hitPreAgg": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+ "type": "nomatch",
+ "question": "各笔缴款的到账日期和退付金额是多少？",
+ "gaps": [
+  "「到账日期」可查：fiscal_collection_view.received_date（资金到账日期，freceiveddate）为明细级维度，可逐笔给出",
+  "「退付金额」在当前模型中不存在任何成员：fiscal_collection_view / fiscal_treasury_view 成员面均无退付/退库类度量或维度",
+  "退付口径词典无词条（GET /agent/dictionary?term=退付 为空，无 legacy 可参考）",
+  "fiscal_collection 未建模盘点（conf/unmodel/fiscal_collection.json 不存在，status=未盘点），无法确认源库退付表（UBR_PAYCODE 系，本环境实测 0 行）是否可补建",
+  "需要拍板：①若接受用「到账金额 entered_amt」或「缴款金额 amt」替代退付金额，可立即出「缴款码×到账日期×金额」明细表；②若必须退付金额，需先做未建模盘点/补建后另查"
+ ]
+}

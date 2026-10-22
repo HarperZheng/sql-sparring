@@ -1,0 +1,84 @@
+{
+  "sessionId": "nlq1021-q17",
+  "elapsed_sec": 39.0,
+  "question": "按执收区划名称统计缴款金额",
+  "response": {
+    "type": "answer",
+    "title": "按执收区划（收入归属区划）统计缴款金额",
+    "plan": [
+      [
+        "缴款金额按收入归属区划分组，金额用明细金额 amt，附带明细行数 count",
+        "fiscal_collection_view.amt",
+        "ai_context：明细金额用 amt；分组用 *_code 成员，*_name 仅跟随展示"
+      ],
+      [
+        "按收入归属区划编码 rec_rgn_code 分组、区划名称 rec_rgn_name 展示",
+        "fiscal_collection_view.rec_rgn_code",
+        "ai_context：分组必须用 *_code，*_name 是别名拼接不作准，不用于分组"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "缴款金额按执收区划（rec_rgn_code+名称展示，全期）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.amt",
+            "fiscal_collection_view.count"
+          ],
+          "dimensions": [
+            "fiscal_collection_view.rec_rgn_code",
+            "fiscal_collection_view.rec_rgn_name"
+          ],
+          "order": {
+            "fiscal_collection_view.amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.rec_rgn_code": "530000",
+            "fiscal_collection_view.rec_rgn_name": "云南省本级",
+            "fiscal_collection_view.amt": 16016434579.21,
+            "fiscal_collection_view.count": 686
+          },
+          {
+            "fiscal_collection_view.rec_rgn_code": "",
+            "fiscal_collection_view.rec_rgn_name": null,
+            "fiscal_collection_view.amt": 2314603154.58,
+            "fiscal_collection_view.count": 544
+          },
+          {
+            "fiscal_collection_view.rec_rgn_code": "532929",
+            "fiscal_collection_view.rec_rgn_name": "云龙县",
+            "fiscal_collection_view.amt": 1156320,
+            "fiscal_collection_view.count": 2
+          },
+          {
+            "fiscal_collection_view.rec_rgn_code": "000000",
+            "fiscal_collection_view.rec_rgn_name": "中央",
+            "fiscal_collection_view.amt": 9617.68,
+            "fiscal_collection_view.count": 31
+          },
+          {
+            "fiscal_collection_view.rec_rgn_code": "530100",
+            "fiscal_collection_view.rec_rgn_name": "昆明市本级",
+            "fiscal_collection_view.amt": 2541,
+            "fiscal_collection_view.count": 8
+          },
+          {
+            "fiscal_collection_view.rec_rgn_code": "530102",
+            "fiscal_collection_view.rec_rgn_name": "五华区",
+            "fiscal_collection_view.amt": 990.66,
+            "fiscal_collection_view.count": 1
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：缴款金额取 fiscal_collection_view 明细金额 amt；分组按 ai_context 规定使用收入归属区划编码 rec_rgn_code（区划名称 rec_rgn_name 为该编码别名拼接、不作准，仅跟随展示）。数据范围：未加时间过滤，覆盖视图全量缴款数据，共 6 组、未截断。数据说明：有 544 条明细（约 23.15 亿）区划编码为空、名称为 null，作为单独一组列示；合计 183.3 亿，云南省本级占 160.16 亿为最大区划。",
+    "assumption": "问句\"按执收区划名称\"与 ai_context 单一口径（编码分组、名称仅展示）一致，直接采用 rec_rgn_code 分组并附 rec_rgn_name 列，未另开口径分支。",
+    "truncated": false,
+    "rows": 6,
+    "hitPreAgg": false
+  }
+}

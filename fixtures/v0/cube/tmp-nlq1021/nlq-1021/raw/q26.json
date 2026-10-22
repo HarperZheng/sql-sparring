@@ -1,0 +1,113 @@
+{
+  "sessionId": "nlq1021-q26",
+  "elapsed_sec": 30.3,
+  "question": "划拨金额按划入的下级区划和划入单位拆分统计",
+  "response": {
+    "type": "answer",
+    "title": "划拨金额按划入区划×划入单位拆分",
+    "plan": [
+      [
+        "按划入方区划+划入方单位分组，统计划拨金额及笔数",
+        "fiscal_allocation_view.trans_amt",
+        "ai_context：划拨金额用 trans_amt；划入方看 rec_rgn_code/rec_agency_code，方向不混用"
+      ],
+      [
+        "划入区划名称仅展示辅助",
+        "fiscal_allocation_view.rec_rgn_name",
+        "ai_context：*_name 为别名拼接展示、不作准，分组用 *_code"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "划拨金额：划入区划×划入单位（清分流向）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.trans_amt",
+            "fiscal_allocation_view.count"
+          ],
+          "dimensions": [
+            "fiscal_allocation_view.rec_rgn_code",
+            "fiscal_allocation_view.rec_rgn_name",
+            "fiscal_allocation_view.rec_agency_code"
+          ],
+          "order": {
+            "fiscal_allocation_view.trans_amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "36299bf16778469f9c5eafdbf16cc588",
+            "fiscal_allocation_view.trans_amt": "63371",
+            "fiscal_allocation_view.count": "291"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "db33a748c53e4f70b8c71569127f71df",
+            "fiscal_allocation_view.trans_amt": "2936",
+            "fiscal_allocation_view.count": "129"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "",
+            "fiscal_allocation_view.trans_amt": "2541",
+            "fiscal_allocation_view.count": "9"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530100",
+            "fiscal_allocation_view.rec_rgn_name": "昆明市本级",
+            "fiscal_allocation_view.rec_agency_code": "62aa363159804af19811045eeef897f0",
+            "fiscal_allocation_view.trans_amt": "2541",
+            "fiscal_allocation_view.count": "8"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "808548570b444a3ca6d9c1b4ed5428b7",
+            "fiscal_allocation_view.trans_amt": "664.62",
+            "fiscal_allocation_view.count": "33"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "dd9c08b7a7b948f795ec3f26f05ccdd9",
+            "fiscal_allocation_view.trans_amt": "324",
+            "fiscal_allocation_view.count": "8"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530000",
+            "fiscal_allocation_view.rec_rgn_name": "云南省本级",
+            "fiscal_allocation_view.rec_agency_code": "5c3391a145e546c9b5f61a512b590516",
+            "fiscal_allocation_view.trans_amt": "100",
+            "fiscal_allocation_view.count": "1"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "000000",
+            "fiscal_allocation_view.rec_rgn_name": "中央",
+            "fiscal_allocation_view.rec_agency_code": "df155e380d804b90be68033d4333a80b",
+            "fiscal_allocation_view.trans_amt": "30",
+            "fiscal_allocation_view.count": "2"
+          },
+          {
+            "fiscal_allocation_view.rec_rgn_code": "530102",
+            "fiscal_allocation_view.rec_rgn_name": "五华区",
+            "fiscal_allocation_view.rec_agency_code": "808548570b444a3ca6d9c1b4ed5428b7",
+            "fiscal_allocation_view.trans_amt": null,
+            "fiscal_allocation_view.count": "1"
+          }
+        ],
+        "total": 72507.62
+      }
+    ],
+    "answer": "口径：划拨金额=fiscal_allocation_view.trans_amt（划拨口径，非分入金额 im_amt），按划入方区划（rec_rgn_code）×划入方单位（rec_agency_code）分组。拍板说明：\"下级区划\"按划入方区划 rec_rgn_code 解释——ai_context 注明上/下级层级 ETL 未补全，无独立\"下级区划\"成员，结果含中央/省本级/市/区县全部划入区划；如需仅限某一级下级区划请给区划编码过滤。划入方单位暂无名称列（待 ETL），仅出编码。数据范围：全时段清分记录，共 728 笔、划拨金额合计 72507.62 元，分组共 29 组（表中仅列有金额的前 9 组，其余 20 组金额为 null/未划拨），无截断。",
+    "assumption": "\"下级区划\"取划入方区划 rec_rgn_code（层级 ETL 未补全，未做上下级过滤）；划拨金额取 trans_amt 口径",
+    "truncated": false,
+    "rows": 9,
+    "hitPreAgg": null,
+    "audited": false
+  }
+}

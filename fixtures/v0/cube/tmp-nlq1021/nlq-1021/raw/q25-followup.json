@@ -1,0 +1,94 @@
+{
+  "sessionId": "nlq1021-q25",
+  "followup": "就按第一个选项的口径来（划转成功笔数 ÷ 清分记录数（fiscal_allocation_view：trans_stats=9 的 count ÷ 总 count，按划出/划入区划关联 bus_type 需联查）），直接出答案。",
+  "elapsed_sec": 33.6,
+  "response": {
+    "type": "answer",
+    "title": "清分率=划转成功÷清分记录：总体0%，按直缴/汇缴拆分暂不可查",
+    "plan": [
+      [
+        "清分记录数（分母，全量）",
+        "fiscal_allocation_view.count",
+        "meta 成员面 measures"
+      ],
+      [
+        "划转成功记录数（分子，trans_stats=9）",
+        "fiscal_allocation_view.count + filter trans_stats=9",
+        "成员 description：9成功"
+      ],
+      [
+        "业务类型分组（直缴/汇缴）",
+        "fiscal_collection_view.bus_type",
+        "成员 description：fbustype（直缴/汇缴）"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "清分率（口径：划转成功笔数÷清分记录数，fiscal_allocation_view）",
+        "query": {
+          "measures": [
+            "fiscal_allocation_view.count"
+          ],
+          "dimensions": [],
+          "filters": [],
+          "timeDimensions": [],
+          "order": {
+            "fiscal_allocation_view.count": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_allocation_view.count": "728",
+            "fiscal_allocation_view.trans_stats": "全部",
+            "fiscal_allocation_view.clear_rate_num": "0",
+            "fiscal_allocation_view.clear_rate_pct": "0.00"
+          },
+          {
+            "fiscal_allocation_view.count": "0",
+            "fiscal_allocation_view.trans_stats": "9",
+            "fiscal_allocation_view.clear_rate_num": "0",
+            "fiscal_allocation_view.clear_rate_pct": "0.00"
+          }
+        ],
+        "total": 728
+      },
+      {
+        "title": "业务类型分布（缴款全景，bus_type：1=直缴 2=汇缴，参考背景）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.paybook_count",
+            "fiscal_collection_view.count"
+          ],
+          "dimensions": [
+            "fiscal_collection_view.bus_type"
+          ],
+          "filters": [],
+          "timeDimensions": [],
+          "order": {
+            "fiscal_collection_view.paybook_count": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.bus_type": "1",
+            "fiscal_collection_view.paybook_count": "848",
+            "fiscal_collection_view.count": "1063"
+          },
+          {
+            "fiscal_collection_view.bus_type": "2",
+            "fiscal_collection_view.paybook_count": "120",
+            "fiscal_collection_view.count": "209"
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：清分率按拍板口径＝划转成功笔数÷清分记录数（fiscal_allocation_view.count filter trans_stats=9 ÷ count），已回写口径词典。查询结果：清分记录数共 728 条，其中划转状态=9（成功）0 条，清分率＝0÷728＝0.00%（数据范围：fiscal_allocation_view 全量，未加时间过滤）。直缴/汇缴分组说明：bus_type（1=直缴，2=汇缴）位于 fiscal_collection_view，与 fiscal_allocation_view 之间引擎无 join path、也无联查 view，实测报错 \"Can't find join path to join 'fiscal_collection', 'fiscal_allocation'\"，故按业务类型拆分的清分率当前查不了；作为参考给出缴款侧业务类型分布（直缴 848 票/1063 行，汇缴 120 票/209 行）。若需按直缴/汇缴拆分清分率，需补建跨视图联查（轻扩展，拍板后另办）。",
+    "assumption": "清分率口径由用户拍板：划转成功笔数（trans_stats=9）÷ 清分记录数；分子分母同取 fiscal_allocation_view 全量（无时间范围限制）",
+    "truncated": false,
+    "rows": 4,
+    "hitPreAgg": null
+  }
+}

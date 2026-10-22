@@ -1,0 +1,91 @@
+{
+  "sessionId": "nlq1021-q12",
+  "elapsed_sec": 71.5,
+  "question": "民航发展基金历年缴款趋势",
+  "response": {
+    "type": "answer",
+    "title": "民航发展基金收入历年缴款金额与笔数趋势",
+    "plan": [
+      [
+        "识别项目",
+        "fiscal_collection_view.item_code",
+        "目录面定位 fiscal_collection_view；item_name contains 民航 探测命中唯一项 1030110001 民航发展基金收入"
+      ],
+      [
+        "按年聚合缴款金额与笔数",
+        "fiscal_collection_view.amt",
+        "ai_context：金额用 amt，缴款书笔数用 paybook_count，时间过滤用 pay_date"
+      ],
+      [
+        "按缴款日期年度分组",
+        "fiscal_collection_view.pay_date",
+        "趋势轴用 timeDimensions granularity=year，未限定年份范围"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "民航发展基金收入（项目 1030110001）历年缴款趋势（按缴款日期 pay_date 年度，金额=amt）",
+        "query": {
+          "measures": [
+            "fiscal_collection_view.amt",
+            "fiscal_collection_view.paybook_count"
+          ],
+          "dimensions": [],
+          "timeDimensions": [
+            {
+              "dimension": "fiscal_collection_view.pay_date",
+              "granularity": "year"
+            }
+          ],
+          "filters": [
+            {
+              "member": "fiscal_collection_view.item_code",
+              "operator": "equals",
+              "values": [
+                "1030110001"
+              ]
+            }
+          ],
+          "order": {
+            "fiscal_collection_view.pay_date": "asc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "fiscal_collection_view.pay_date.year": "2022-01-01T00:00:00.000",
+            "fiscal_collection_view.amt": "27879.00",
+            "fiscal_collection_view.paybook_count": 3
+          },
+          {
+            "fiscal_collection_view.pay_date.year": "2023-01-01T00:00:00.000",
+            "fiscal_collection_view.amt": "1403.30",
+            "fiscal_collection_view.paybook_count": 7
+          },
+          {
+            "fiscal_collection_view.pay_date.year": "2024-01-01T00:00:00.000",
+            "fiscal_collection_view.amt": "28962042.04",
+            "fiscal_collection_view.paybook_count": 68
+          },
+          {
+            "fiscal_collection_view.pay_date.year": "2025-01-01T00:00:00.000",
+            "fiscal_collection_view.amt": "1837652.80",
+            "fiscal_collection_view.paybook_count": 37
+          },
+          {
+            "fiscal_collection_view.pay_date.year": "2026-01-01T00:00:00.000",
+            "fiscal_collection_view.amt": "21801.94",
+            "fiscal_collection_view.paybook_count": 11
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：主题 fiscal_collection_view（缴款全景，缴款书×项目行明细粒度）；「民航发展基金」按项目编码 item_code=1030110001（民航发展基金收入）过滤，该项目在缴款数据中唯一命中；金额=amt（缴款明细口径），笔数=paybook_count（缴款书去重笔数），时间轴=pay_date（缴款日期）按年分组，未限定年份范围（数据自然覆盖 2022–2026，2026 仅为年内已发生部分）。趋势：2022–2023 金额极小（2.8万/0.14万），2024 年跃升至 2896.20 万元（68 笔）为峰值，2025 年回落至 183.77 万元，2026 年至今 2.18 万元。说明：meta 透出的同比成员（amt_yoy_diff/amt_yoy_rate）在本过滤+年度分组下返回空集，故同比列未纳入，未在答案层代算。无截断，共 5 个年度组。",
+    "assumption": "民航发展基金→项目编码 1030110001（民航发展基金收入），item_name contains 民航 全量探测唯一命中，非歧义；「缴款」取缴款金额 amt 口径（非到账 entered_amt/缴库口径）",
+    "truncated": false,
+    "rows": 5,
+    "hitPreAgg": false,
+    "audited": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "sessionId": "nlq1021-q22",
+  "elapsed_sec": 23.0,
+  "question": "缴库报文里已确认入库和待国库确认的金额各多少？",
+  "response": {
+    "type": "answer",
+    "title": "缴库报文按入库状态金额分布（已入库 4.6万，未入库 2941万）",
+    "plan": [
+      [
+        "按入库状态分组汇总缴库金额与笔数",
+        "fiscal_treasury_view.amt",
+        "ai_context：入库状态 enter_status='1'已入国库 / '0'未入库，明细金额用 amt"
+      ]
+    ],
+    "tables": [
+      {
+        "title": "缴库报文：已确认入库 vs 待国库确认（enter_status 分组，全量）",
+        "query": {
+          "measures": [
+            "fiscal_treasury_view.amt",
+            "fiscal_treasury_view.count",
+            "fiscal_treasury_view.bill_count"
+          ],
+          "dimensions": [
+            "fiscal_treasury_view.enter_status"
+          ],
+          "filters": [],
+          "timeDimensions": [],
+          "order": {
+            "fiscal_treasury_view.amt": "desc"
+          },
+          "limit": 100
+        },
+        "rows": [
+          {
+            "enter_status": "0（待国库确认/未入库）",
+            "amt": 29409625.05,
+            "count": 50,
+            "bill_count": 44
+          },
+          {
+            "enter_status": "1（已确认入库/已入国库）",
+            "amt": 46304.09,
+            "count": 26,
+            "bill_count": 26
+          }
+        ],
+        "total": null
+      }
+    ],
+    "answer": "口径声明：缴库入库视图（fiscal_treasury_view，缴库单×科目去重明细），入库状态用 enter_status——'1'已入国库（已确认入库）、'0'未入库（对应问句中的\"待国库确认\"，模型内该状态原文为\"未入库\"，如有出入请指正）；金额用 amt（明细口径，去重后 sum 正确），未限定时间范围，为全量数据。结果：待国库确认 29,409,625.05 元（50 行明细/44 张缴库单），已确认入库 46,304.09 元（26 行明细/26 张缴库单）。合计由本结果两行直接可加（2 组全量、无截断）。",
+    "assumption": "\"已确认入库\"映射 enter_status='1'（已入国库）；\"待国库确认\"映射 enter_status='0'（模型口径原文为\"未入库\"），未指定时间范围故查全量",
+    "truncated": false,
+    "rows": 2,
+    "hitPreAgg": false
+  }
+}
