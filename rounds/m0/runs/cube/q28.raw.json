@@ -1,0 +1,70 @@
+{
+  "session_id": "a31022-q28",
+  "question": "2022 年缴款金额排名前 10 的缴款人",
+  "first": {
+    "elapsed_sec": 23.7,
+    "response": {
+      "type": "answer",
+      "title": "2022 年缴款人 Top10：缴款人名称全为空，无法排名",
+      "plan": [
+        [
+          "2022 年按缴款日期全年范围",
+          "fiscal_collection_view.pay_date",
+          "ai_context：时间过滤用 pay_date"
+        ],
+        [
+          "缴款金额用明细金额合计",
+          "fiscal_collection_view.amt",
+          "ai_context：金额明细用 amt"
+        ],
+        [
+          "按缴款人分组取金额前 10",
+          "fiscal_collection_view.payer_name",
+          "ai_context：缴款人名称=fpayer_name，已脱敏"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "2022 年缴款人缴款金额 Top10（口径：缴款金额 amt，按缴款日期 pay_date 全年）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.paybook_count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.payer_name"
+            ],
+            "timeDimensions": [
+              {
+                "dimension": "fiscal_collection_view.pay_date",
+                "dateRange": [
+                  "2022-01-01",
+                  "2022-12-31"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 10
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.payer_name": null,
+              "fiscal_collection_view.amt": "18208936572.27",
+              "fiscal_collection_view.paybook_count": "334"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：金额=缴款金额 amt（明细口径），时间=缴款日期 pay_date 2022-01-01~2022-12-31，分组=缴款人名称 payer_name。查询结果仅 1 组且缴款人名称为 null——该视图 payer_name 经 access_policy 脱敏，2022 年数据中缴款人名称全部为空（脱敏或源数据缺失），不存在可识别的缴款人，因此无法给出前 10 排名。2022 年全年缴款金额合计 18,208,936,572.27 元、334 笔缴款书（该行即唯一分组）。未做反向探测，空值拍板以查询结果为据。",
+      "assumption": "「缴款人」绑定为视图唯一提供的 payer_name（缴款人名称，已脱敏）；2022 年该列全为 null，视为无有效缴款人。",
+      "truncated": false,
+      "rows": 1,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

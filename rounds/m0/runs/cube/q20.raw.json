@@ -1,0 +1,99 @@
+{
+  "session_id": "a31022-q20",
+  "question": "归属区划在云南省本级以外的缴款有多少？",
+  "first": {
+    "elapsed_sec": 33.0,
+    "response": {
+      "type": "answer",
+      "title": "云南省本级以外归属区划缴款 595 笔 23.16 亿元",
+      "plan": [
+        [
+          "定位缴款主题，归属区划取收入归属 rec_rgn_code（ai_context：rec_* 前缀=收入归属）",
+          "fiscal_collection_view.rec_rgn_code",
+          "/agent/meta/fiscal_collection_view ai_context"
+        ],
+        [
+          "省本级=编码 530000（数据成员面名称即'云南省本级'，词典无既有约定，按唯一编码口径直接采用）",
+          "fiscal_collection_view.rec_rgn_code=530000",
+          "归组查询 530000→'云南省本级'"
+        ],
+        [
+          "省本级以外=rec_rgn_code 不等于 530000（含归属区划为空的 553 笔），filter notEquals 直接查",
+          "fiscal_collection_view.rec_rgn_code notEquals 530000",
+          "POST /agent/query 分组结果与全量互核一致（1281−686=595）"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "口径：缴款按归属区划（rec_rgn_code≠530000，含归属区划为空）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.count",
+              "fiscal_collection_view.amt"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.rec_rgn_code",
+              "fiscal_collection_view.rec_rgn_name"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_collection_view.rec_rgn_code",
+                "operator": "notEquals",
+                "values": [
+                  "530000"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.rec_rgn_code": "",
+              "fiscal_collection_view.rec_rgn_name": null,
+              "fiscal_collection_view.count": 553,
+              "fiscal_collection_view.amt": 2314663239.362
+            },
+            {
+              "fiscal_collection_view.rec_rgn_code": "532929",
+              "fiscal_collection_view.rec_rgn_name": "云龙县",
+              "fiscal_collection_view.count": 2,
+              "fiscal_collection_view.amt": 1156320
+            },
+            {
+              "fiscal_collection_view.rec_rgn_code": "000000",
+              "fiscal_collection_view.rec_rgn_name": "中央",
+              "fiscal_collection_view.count": 31,
+              "fiscal_collection_view.amt": 9617.68
+            },
+            {
+              "fiscal_collection_view.rec_rgn_code": "530100",
+              "fiscal_collection_view.rec_rgn_name": "昆明市本级",
+              "fiscal_collection_view.count": 8,
+              "fiscal_collection_view.amt": 2541
+            },
+            {
+              "fiscal_collection_view.rec_rgn_code": "530102",
+              "fiscal_collection_view.rec_rgn_name": "五华区",
+              "fiscal_collection_view.count": 1,
+              "fiscal_collection_view.amt": 990.66
+            }
+          ],
+          "total": {
+            "count": 1281,
+            "amt": 18332267287.912
+          }
+        }
+      ],
+      "answer": "口径声明：缴款金额取 fiscal_collection_view.amt（明细合计），归属区划取收入归属 rec_rgn_code/rec_rgn_name；'云南省本级'=编码 530000（数据成员面名称即云南省本级，词典无既有约定、ai_context 唯一编码口径直接采用）。'省本级以外'按 rec_rgn_code≠530000 过滤，归属区划为空的 553 笔（23.15 亿）计入'以外'。数据范围：全量 1281 笔、18,332,267,287.91 元，其中省本级 686 笔、16,016,434,579.21 元；省本级以外合计 595 笔、2,315,832,708.70 元（约 23.16 亿元），明细分组共 5 组（上表，按金额降序），未截断。注意：'以外'金额 87.6% 来自归属区划为空的记录，若空值不应计入请拍板后另查。",
+      "assumption": "省本级=rec_rgn_code 530000；'以外'含归属区划为空（notEquals 语义自然包含），拍板依据为数据成员面唯一名称对应",
+      "truncated": false,
+      "rows": 5,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

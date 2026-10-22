@@ -1,0 +1,81 @@
+{
+  "session_id": "a31022-q13",
+  "question": "按收入分类统计：政府性基金收入、专项收入、行政事业性收费、罚没各占多少？",
+  "first": {
+    "elapsed_sec": 23.7,
+    "response": {
+      "type": "answer",
+      "title": "按收入类别统计的缴款金额占比（收入归属口径）",
+      "plan": [
+        [
+          "按收入类别分组统计缴款金额",
+          "fiscal_collection_view.amt + fiscal_collection_view.income_sort_code",
+          "收入视图 ai_context：金额用 amt；收入类别用 income_sort_* 成员"
+        ],
+        [
+          "全量总额作为占比分母",
+          "fiscal_collection_view.amt（不带 dimensions）",
+          "契约铁律：占比分母用单独全量查询，禁止截断行加总"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "各收入类别缴款金额及占比（全量数据，缴款金额口径）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.income_sort_code",
+              "fiscal_collection_view.income_sort_name"
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.income_sort_code": "101",
+              "fiscal_collection_view.income_sort_name": "政府性基金收入",
+              "fiscal_collection_view.amt": 18285282556.99,
+              "share_pct": 99.74
+            },
+            {
+              "fiscal_collection_view.income_sort_code": "102",
+              "fiscal_collection_view.income_sort_name": "专项收入",
+              "fiscal_collection_view.amt": 30951894.082,
+              "share_pct": 0.17
+            },
+            {
+              "fiscal_collection_view.income_sort_code": "103",
+              "fiscal_collection_view.income_sort_name": "行政事业性收费收入",
+              "fiscal_collection_view.amt": 16031930.84,
+              "share_pct": 0.09
+            },
+            {
+              "fiscal_collection_view.income_sort_code": "",
+              "fiscal_collection_view.income_sort_name": "（未分类）",
+              "fiscal_collection_view.amt": 600,
+              "share_pct": 3e-06
+            },
+            {
+              "fiscal_collection_view.income_sort_code": "104",
+              "fiscal_collection_view.income_sort_name": "罚没收入",
+              "fiscal_collection_view.amt": 306,
+              "share_pct": 1.7e-06
+            }
+          ],
+          "total": 18332267287.912
+        }
+      ],
+      "answer": "口径声明：收入分类取 fiscal_collection_view 的收入类别（income_sort_code/income_sort_name），金额用缴款金额 amt（缴款明细口径），时间范围为全部数据（问句未指定时间）。共 5 组、无截断。占比=各组金额÷全量总额 18,332,267,287.91 元（单独全量查询取得，命中预聚合）。结果：政府性基金收入 182.85 亿元占 99.74% 绝对主体；专项收入 0.31 亿元占 0.17%；行政事业性收费收入 0.16 亿元占 0.09%；罚没收入仅 306 元占比约 0.0000017%；另有 600 元收入类别编码为空（未分类）约 0.000003%。未指定时间范围，如需按年/月口径请补充说明。",
+      "assumption": "收入分类绑定 income_sort_code（含空类别一组，展示为未分类）；金额口径取 amt（缴款金额），非到账金额",
+      "truncated": false,
+      "rows": 5,
+      "hitPreAgg": true
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

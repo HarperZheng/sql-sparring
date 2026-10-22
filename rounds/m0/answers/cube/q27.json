@@ -1,0 +1,23 @@
+{
+  "id": "q27",
+  "question": "财政专户收入和国库收入分别是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.im_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": [
+        "fiscal_allocation_view.bgt_style"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_allocation`.`fbgtstyle` `fiscal_allocation_view__bgt_style`, sum(`fiscal_allocation`.`fimamt`) `fiscal_allocation_view__im_amt`, count(*) `fiscal_allocation_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT t.*, c.chg_agency_name_canon FROM fne_funddivide_transfer t\n      LEFT JOIN (SELECT fchgagencode,\n                        arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                 FROM fne_funddivide_transfer GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n    ) x1\n    LEFT JOIN (SELECT frecrgncode,\n                      arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n               FROM fne_funddivide_transfer WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n  ) x2\n  LEFT JOIN (SELECT fitemcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n             FROM fne_funddivide_transfer WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n) x3\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_funddivide_transfer WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x3.frecsubcode = rs.frecsubcode\n)  AS `fiscal_allocation`\nWHERE (`fiscal_allocation`.`fbgtstyle` IN (?, ?))\nGROUP BY 1\nORDER BY  2  DESC\nLIMIT 10012",
+  "sql_count": 1,
+  "answer": "口径：fiscal_allocation_view 清分收入金额 im_amt，按资金归口 bgt_style 划分（1=国库，2=专户），未加时间过滤（全量历史）。结果：国库收入 16,016,039,490.68 元（644 笔清分记录），财政专户收入 39,377 元（78 笔）。占比仅在表内相对比较，无跨口径合计分母。",
+  "errors": [],
+  "elapsed_s": 19.6,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q27.raw.json"
+}

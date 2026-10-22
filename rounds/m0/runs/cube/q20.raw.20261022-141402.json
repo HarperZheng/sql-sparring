@@ -1,0 +1,10 @@
+{
+  "session_id": "a31022-q20",
+  "question": "归属区划在云南省本级以外的缴款有多少？",
+  "first": {
+    "elapsed_sec": 62.5,
+    "response": null
+  },
+  "followups": [],
+  "error_chain": "Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502"
+}

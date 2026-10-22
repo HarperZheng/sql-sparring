@@ -1,0 +1,24 @@
+{
+  "id": "q14",
+  "question": "按资金性质分组：一般公共预算、政府性基金、财政专户管理资金各收多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.rec_funds_nature_code",
+        "fiscal_collection_view.rec_funds_nature_name"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_collection`.`frecfundsnaturecode` `fiscal_collection_view__rec_funds_nature_code`, `fiscal_collection`.`frecfundsnaturename` `fiscal_collection_view__rec_funds_nature_name`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, count(*) `fiscal_collection_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nGROUP BY 1, 2\nORDER BY  3  DESC\nLIMIT 100",
+  "sql_count": 1,
+  "answer": "口径声明：问句\"各收多少\"按收入归属侧口径处理——分组用 fiscal_collection_view.rec_funds_nature_code/rec_funds_nature_name（ai_context：rec_* 前缀均为收入侧口径），金额用缴款金额 amt，时间范围未指定即全量。歧义拍板：资金性质存在缴款票面（funds_nature_*）与收入归属（rec_funds_nature_*）两侧，词典无词条；按\"收\"的语义取收入归属侧，若需缴款票面口径请另行说明。数据范围：全库共 1281 行明细、缴款金额合计 18,332,267,287.91 元；分组结果共 5 组，其中一组资金性质编码/名称为空（约 23.15 亿元、553 行），说明存量明细该字段未回填；一般公共预算收入（编码 11）1,184,377.16 元、政府性基金预算收入（编码 12）16,016,379,742.39 元、财政专户管理资金（编码 2）39,329 元、其他（编码 5）600 元。总计查询命中预聚合（hitPreAgg:true）。",
+  "errors": [],
+  "elapsed_s": 23.3,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q14.raw.json"
+}

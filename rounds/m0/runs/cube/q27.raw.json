@@ -1,0 +1,66 @@
+{
+  "session_id": "a31022-q27",
+  "question": "财政专户收入和国库收入分别是多少？",
+  "first": {
+    "elapsed_sec": 19.6,
+    "response": {
+      "type": "answer",
+      "title": "国库与专户清分收入金额对比",
+      "plan": [
+        [
+          "按资金归口（1国库/2专户）分组查清分收入金额",
+          "fiscal_allocation_view.im_amt",
+          "ai_context：金额用 im_amt，资金归口用 bgt_style（1国库 2专户）"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "资金归口×清分收入金额（bgt_style：1国库 2专户）",
+          "query": {
+            "measures": [
+              "fiscal_allocation_view.im_amt",
+              "fiscal_allocation_view.count"
+            ],
+            "dimensions": [
+              "fiscal_allocation_view.bgt_style"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_allocation_view.bgt_style",
+                "operator": "equals",
+                "values": [
+                  "1",
+                  "2"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_allocation_view.im_amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_allocation_view.bgt_style": "1",
+              "fiscal_allocation_view.im_amt": "16016039490.68",
+              "fiscal_allocation_view.count": "644"
+            },
+            {
+              "fiscal_allocation_view.bgt_style": "2",
+              "fiscal_allocation_view.im_amt": "39377",
+              "fiscal_allocation_view.count": "78"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径：fiscal_allocation_view 清分收入金额 im_amt，按资金归口 bgt_style 划分（1=国库，2=专户），未加时间过滤（全量历史）。结果：国库收入 16,016,039,490.68 元（644 笔清分记录），财政专户收入 39,377 元（78 笔）。占比仅在表内相对比较，无跨口径合计分母。",
+      "assumption": "「收入」取清分收入口径 im_amt（分入金额）；「国库/专户」取资金归口 bgt_style（1国库 2专户），未按时间范围收窄。",
+      "truncated": false,
+      "rows": 2,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

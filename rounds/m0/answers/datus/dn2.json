@@ -1,0 +1,13 @@
+{
+  "id": "dn2",
+  "question": "2023年缴款金额排名前5的执收单位有哪些？",
+  "status": "answer",
+  "metrics_hit": [],
+  "sql": "SELECT\n    fchgagenidcode          AS agen_code,\n    trim(fchgagenname)      AS agen_name,\n    round(SUM(famt), 2)     AS total_amt,\n    uniqExact(fid)          AS bill_cnt\nFROM yunnan0508.fne_paybook_full_high\nWHERE toDate(ffilldate) BETWEEN '2023-01-01' AND '2023-12-31'\nGROUP BY fchgagenidcode, trim(fchgagenname)\nORDER BY total_amt DESC\nLIMIT 5",
+  "sql_count": 3,
+  "answer": "查询完成。基于 `fne_paybook_full_high`（缴款书全生命周期宽表，明细行粒度），按主时间轴 `fill_date = toDate(ffilldate)` 落在 2023 年，金额口径 `SUM(famt)`，执收单位取内联名称（按编码去重分组）：\n\n## 2023 年缴款金额 Top 5 执收单位\n\n| 排名 | 执收单位 | 缴款金额（元） | 缴款笔数 |\n|---|---|---:|---:|\n| 1 | 云龙县长新乡中心学校 | 1,156,320.00 | 1 |\n| 2 | 测试云南测试环境 | 146,862.05 | 76 |\n| 3 | 智能核销测试测试单位1 | 128,070.88 | 3 |\n| 4 | 云南通用测试单位0801 | 24,357.08 | 22 |\n| 5 | 云南一通用单位0303 | 5,597.00 | 22 |\n\n**口径说明：**\n- 金额直接 `SUM(famt)`（明细行可直加，未做去重处理）；笔数按 `uniqExact(fid)` 统计（该表 147 个 fid 存在生命周期多版本重复，fid 非唯一键）。\n- 未按缴款方式（直缴/汇缴）收窄——您未指定，此为全口径；若只看直缴需加 `fbustype='1'` 过滤。\n\n**提示：** 本环境为测试数据，Top 5 中 4 个单位名称带“测试”字样；榜首云龙县长新乡中心学校仅 1 笔即 115.63 万元，属于单笔大额缴款。如需剔除测试单位或按直缴/汇缴拆分，我可以继续查。",
+  "errors": [],
+  "elapsed_s": 155.2,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/datus/dn2.payload.jsonl"
+}

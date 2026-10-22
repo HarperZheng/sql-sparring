@@ -1,0 +1,24 @@
+{
+  "id": "cn3",
+  "question": "各收款银行2023年各收了多少钱？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.entered_amt"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.rec_bank_code",
+        "fiscal_collection_view.rec_bank_name"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_collection`.`frecbankcode` `fiscal_collection_view__rec_bank_code`, `fiscal_collection`.`frecbankname` `fiscal_collection_view__rec_bank_name`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, sum(CASE WHEN (`fiscal_collection`.`freceiveddate` != '') THEN `fiscal_collection`.`fimamt` END) `fiscal_collection_view__entered_amt` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1, 2\nORDER BY  3  DESC\nLIMIT 1002023-01-01T00:00:00.000Z2023-12-31T23:59:59.999Z",
+  "sql_count": 1,
+  "answer": "口径声明：按收款银行（rec_bank_code，名称仅跟随展示）分组，时间轴用缴款日期 pay_date（2023-01-01～2023-12-31），金额同时给出两个口径——缴款金额 amt 与到账金额 entered_amt（freceiveddate 非空部分，未到账不计入），未静默选定单一口径。数据范围：2023年共 5 家收款银行有缴款记录，其中人民银行的到账金额为 null（无到账记录），农信社与邮储到账金额为 0；到账金额与缴款金额差异较大，如需\"实际收到\"口径请以 entered_amt 列为准。",
+  "errors": [],
+  "elapsed_s": 29.3,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/cn3.raw.json"
+}

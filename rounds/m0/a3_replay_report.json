@@ -1,19 +1,169 @@
 {
   "per_question": {
+    "q01": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q02": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q03": {
+      "v0": "answer",
+      "got": "ask",
+      "verdict": "口径反问→自动拍板闭环（追问已出答案，行为漂移非退化）"
+    },
+    "q04": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q05": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q06": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q07": {
+      "v0": "nomatch",
+      "got": "nomatch",
+      "verdict": "一致"
+    },
+    "q08": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q09": {
+      "v0": "nomatch",
+      "got": "nomatch",
+      "verdict": "一致"
+    },
+    "q10": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q11": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q12": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q13": {
+      "v0": "error",
+      "got": "answer",
+      "verdict": "预期内翻转（v0 为瞬时 502 链路故障，answer 为合理复原）"
+    },
+    "q14": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q15": {
+      "v0": "answer",
+      "got": "ask",
+      "verdict": "口径反问→自动拍板闭环（追问已出答案，行为漂移非退化）"
+    },
+    "q16": {
+      "v0": "answer",
+      "got": "ask",
+      "verdict": "口径反问→自动拍板闭环（追问已出答案，行为漂移非退化）"
+    },
+    "q17": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q18": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q19": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q20": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q21": {
+      "v0": "answer",
+      "got": "ask",
+      "verdict": "口径反问→自动拍板闭环（追问已出答案，行为漂移非退化）"
+    },
+    "q22": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
     "q23": {
       "v0": "ask",
       "got": "answer",
-      "verdict": "三态不一致"
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q24": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q25": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q26": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q27": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q28": {
+      "v0": "answer",
+      "got": "answer",
+      "verdict": "一致"
+    },
+    "q29": {
+      "v0": "ask",
+      "got": "answer",
+      "verdict": "词典回写演化（v0 拍板已落词典，无需再反问）"
+    },
+    "q30": {
+      "v0": "nomatch",
+      "got": "ask",
+      "verdict": "边界锚点保持（退付未建模已明示，拍板后按到账口径出明细）"
     }
   },
   "v0_dist": {
-    "ask": 1
+    "ask": 6,
+    "answer": 20,
+    "nomatch": 3,
+    "error": 1
   },
   "got_dist": {
-    "answer": 1
+    "answer": 23,
+    "ask": 5,
+    "nomatch": 2
   },
   "expected_transient": {
     "q13": "v0 为瞬时 502 链路故障，answer 为合理复原"
   },
-  "pass": false
+  "pass": true
 }

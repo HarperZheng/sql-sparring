@@ -1,0 +1,69 @@
+{
+  "session_id": "a31022-q25",
+  "question": "清分率按业务类型分组对比：直缴和汇缴各是多少？",
+  "first": {
+    "elapsed_sec": 29.3,
+    "response": {
+      "type": "answer",
+      "title": "直缴/汇缴到账率对比（到账金额÷缴款金额）",
+      "plan": [
+        [
+          "按业务类型分组对比直缴与汇缴，缴款金额/到账金额/笔数",
+          "fiscal_collection_view.bus_type + amt/entered_amt/paybook_count",
+          "view 成员面 bus_type（fbustype：1直缴 2汇缴）；'清分率'无词典词条与 ai_context 覆盖，拍板为视图内可计算口径"
+        ],
+        [
+          "清分率=到账金额÷缴款金额，按返回行计算",
+          "fiscal_collection_view.entered_amt / amt",
+          "仅基于返回 data 行计算，2026-10-09 到账口径（freceiveddate 非空）"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "业务类型（1直缴/2汇缴）×缴款/到账金额与到账率（全时段）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.entered_amt",
+              "fiscal_collection_view.paybook_count",
+              "fiscal_collection_view.count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.bus_type"
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.bus_type": "1",
+              "fiscal_collection_view.amt": 16047415015.25,
+              "fiscal_collection_view.entered_amt": 29280416.15,
+              "fiscal_collection_view.paybook_count": 850,
+              "fiscal_collection_view.count": 1065,
+              "clear_rate_pct": 0.18
+            },
+            {
+              "fiscal_collection_view.bus_type": "2",
+              "fiscal_collection_view.amt": 2284852272.662,
+              "fiscal_collection_view.entered_amt": 73804.61,
+              "fiscal_collection_view.paybook_count": 125,
+              "fiscal_collection_view.count": 216,
+              "clear_rate_pct": 0.003
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：'清分率'在口径词典与主题 ai_context 中均无定义，本答案拍板为 fiscal_collection_view 内可计算口径——到账金额(entered_amt)÷缴款金额(amt)×100；分组用业务类型 bus_type（fbustype：1=直缴，2=汇缴）。结果：直缴到账率约 0.18%（29,280,416.15÷16,047,415,015.25），汇缴约 0.003%（73,804.61÷2,284,852,272.662）。数据范围：缴款全表全时段（未加时间过滤），共 2 组、无截断。注意：若'清分率'指清分视图分入金额(im_amt)÷缴款金额，属跨 cube 口径，当前无法单查询实现，如需此口径请另行确认。",
+      "assumption": "'清分率'=到账金额÷缴款金额（entered_amt/amt）；业务类型 1=直缴、2=汇缴",
+      "truncated": false,
+      "rows": 2,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

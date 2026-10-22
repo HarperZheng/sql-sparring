@@ -1,0 +1,120 @@
+{
+  "session_id": "a31022-q06",
+  "question": "2022 年缴款金额排名前 10 的执收单位",
+  "first": {
+    "elapsed_sec": 24.1,
+    "response": {
+      "type": "answer",
+      "title": "2022 年缴款金额排名前 10 的执收单位",
+      "plan": [
+        [
+          "按缴款日期过滤 2022 年全年",
+          "fiscal_collection_view.pay_date",
+          "ai_context：时间过滤用 pay_date"
+        ],
+        [
+          "按执收单位编码分组，金额用缴款明细金额",
+          "fiscal_collection_view.chg_agency_code",
+          "ai_context：分组必须用 *_code；缴款金额用 amt"
+        ],
+        [
+          "按缴款金额降序取前 10",
+          "fiscal_collection_view.amt",
+          "order amt desc，limit 10"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "2022 年执收单位缴款金额 Top10（口径：缴款明细金额 amt，按 pay_date）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.chg_agency_code",
+              "fiscal_collection_view.chg_agency_name"
+            ],
+            "timeDimensions": [
+              {
+                "dimension": "fiscal_collection_view.pay_date",
+                "dateRange": [
+                  "2022-01-01",
+                  "2022-12-31"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 10
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.chg_agency_code": "124045",
+              "fiscal_collection_view.chg_agency_name": "001 / 测试云南测试环境 / 测试云南测试环境(试用版) / 测试云南测试环境(试用版)(试用版)",
+              "fiscal_collection_view.amt": "18208882274.85",
+              "fiscal_collection_view.count": "294"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "425002",
+              "fiscal_collection_view.chg_agency_name": "云南测试单位1209",
+              "fiscal_collection_view.amt": "24034.92",
+              "fiscal_collection_view.count": "4"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124100",
+              "fiscal_collection_view.chg_agency_name": "测试1125",
+              "fiscal_collection_view.amt": "11763.68",
+              "fiscal_collection_view.count": "20"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125019",
+              "fiscal_collection_view.chg_agency_name": "云南医疗单位0729 / 测试云南医疗单位0729",
+              "fiscal_collection_view.amt": "6864.26",
+              "fiscal_collection_view.count": "19"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "001",
+              "fiscal_collection_view.chg_agency_name": "测试分成测试",
+              "fiscal_collection_view.amt": "5184",
+              "fiscal_collection_view.count": "17"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124576",
+              "fiscal_collection_view.chg_agency_name": "测试云南通用测试单位0720",
+              "fiscal_collection_view.amt": "2057.68",
+              "fiscal_collection_view.count": "13"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125020",
+              "fiscal_collection_view.chg_agency_name": "测试云南医疗单位0805",
+              "fiscal_collection_view.amt": "1915.12",
+              "fiscal_collection_view.count": "9"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124577",
+              "fiscal_collection_view.chg_agency_name": "测试测试单位0722",
+              "fiscal_collection_view.amt": "1377.76",
+              "fiscal_collection_view.count": "7"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124579",
+              "fiscal_collection_view.chg_agency_name": "测试云南通用Oracle0728",
+              "fiscal_collection_view.amt": "1100",
+              "fiscal_collection_view.count": "2"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径：按缴款日期 pay_date 过滤 2022-01-01 至 2022-12-31，按执收单位编码 chg_agency_code 分组，金额为缴款明细金额 amt（元）降序取前 10。单位名称列（chg_agency_name）为一码多名的字典序拼接，仅跟随展示不作准（如编码 124045 的名称含多个测试别名）。2022 年实际仅 9 个执收单位有缴款数据，不足 10 个，已全部列出；无截断。",
+      "assumption": "执收单位取缴款侧 chg_agency_code（缴款书票面执收单位），金额取缴款明细口径 amt，时间轴取 pay_date——ai_context 唯一口径，直接采用",
+      "truncated": false,
+      "rows": 9,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

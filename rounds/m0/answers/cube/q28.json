@@ -1,0 +1,23 @@
+{
+  "id": "q28",
+  "question": "2022 年缴款金额排名前 10 的缴款人",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.payer_name"
+      ]
+    }
+  ],
+  "sql": "SELECT (NULL) `fiscal_collection_view__payer_name`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1\nORDER BY  2  DESC\nLIMIT 102022-01-01T00:00:00.000Z2022-12-31T23:59:59.999Z",
+  "sql_count": 1,
+  "answer": "口径声明：金额=缴款金额 amt（明细口径），时间=缴款日期 pay_date 2022-01-01~2022-12-31，分组=缴款人名称 payer_name。查询结果仅 1 组且缴款人名称为 null——该视图 payer_name 经 access_policy 脱敏，2022 年数据中缴款人名称全部为空（脱敏或源数据缺失），不存在可识别的缴款人，因此无法给出前 10 排名。2022 年全年缴款金额合计 18,208,936,572.27 元、334 笔缴款书（该行即唯一分组）。未做反向探测，空值拍板以查询结果为据。",
+  "errors": [],
+  "elapsed_s": 23.7,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q28.raw.json"
+}

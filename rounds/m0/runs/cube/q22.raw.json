@@ -1,0 +1,56 @@
+{
+  "session_id": "a31022-q22",
+  "question": "缴库报文里已确认入库和待国库确认的金额各多少？",
+  "first": {
+    "elapsed_sec": 20.5,
+    "response": {
+      "type": "answer",
+      "title": "缴库报文按入库状态金额分布：已入国库与未入库",
+      "plan": [
+        [
+          "按入库状态分组统计缴库金额与笔数",
+          "fiscal_treasury_view.amt + enter_status",
+          "ai_context：已入国库=enter_status='1'；两态二值无第三档，待国库确认映射 enter_status='0'（未入库）"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "缴库报文按入库状态（enter_status）金额与笔数，全量无时间过滤",
+          "query": {
+            "measures": [
+              "fiscal_treasury_view.amt",
+              "fiscal_treasury_view.count"
+            ],
+            "dimensions": [
+              "fiscal_treasury_view.enter_status"
+            ],
+            "order": {
+              "fiscal_treasury_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_treasury_view.enter_status": "0",
+              "fiscal_treasury_view.amt": "29409625.05",
+              "fiscal_treasury_view.count": "50"
+            },
+            {
+              "fiscal_treasury_view.enter_status": "1",
+              "fiscal_treasury_view.amt": "46304.09",
+              "fiscal_treasury_view.count": "26"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：按缴库入库视图（fiscal_treasury_view，明细已去重）统计，全量数据、不限时间。源模型入库状态为两态二值——enter_status='1' 已入国库（已确认入库）金额 46,304.09 元、26 笔；enter_status='0' 未入库（按待国库确认处理）金额 29,40,9625.05 元（29,409,625.05 元）、50 笔。词典无「待国库确认」词条，本答案按 enter_status='0' 拍板（assumption 已声明）；如「待国库确认」另有所指（如缴库回执 status）需再拍板回写词典。",
+      "assumption": "「待国库确认」= enter_status='0'（未入库）；「已确认入库」= enter_status='1'（已入国库）",
+      "truncated": false,
+      "rows": 2,
+      "hitPreAgg": true
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

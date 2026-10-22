@@ -1,0 +1,82 @@
+{
+  "session_id": "a31022-q05",
+  "question": "全库累计清分了多少、清分率是多少？",
+  "first": {
+    "elapsed_sec": 24.5,
+    "response": {
+      "type": "answer",
+      "title": "全库累计清分：分入金额160.16亿/728笔，清分率0%",
+      "plan": [
+        [
+          "全库累计清分记录数与金额（无时间过滤）",
+          "fiscal_allocation_view.count/im_amt/trans_amt",
+          "ai_context：金额分入用 im_amt，划拨用 trans_amt"
+        ],
+        [
+          "划转成功笔数（划转状态=9）",
+          "fiscal_allocation_view.count + filter trans_stats=9",
+          "口径词典『清分率』：划转成功笔数÷清分记录数，2026-10-21 用户拍板定案，legacy:false 直接套用"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "全库累计清分（清分记录数+分入金额+划拨金额）",
+          "query": {
+            "measures": [
+              "fiscal_allocation_view.count",
+              "fiscal_allocation_view.im_amt",
+              "fiscal_allocation_view.trans_amt"
+            ],
+            "order": {
+              "fiscal_allocation_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_allocation_view.count": 728,
+              "fiscal_allocation_view.im_amt": 16016079467.68,
+              "fiscal_allocation_view.trans_amt": 72507.62
+            }
+          ],
+          "total": null
+        },
+        {
+          "title": "清分率口径：划转成功笔数÷清分记录数（词典定案）",
+          "query": {
+            "measures": [
+              "fiscal_allocation_view.count"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_allocation_view.trans_stats",
+                "operator": "equals",
+                "values": [
+                  "9"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_allocation_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_allocation_view.count": 0
+            }
+          ],
+          "total": 728
+        }
+      ],
+      "answer": "口径声明：清分主题走 fiscal_allocation_view；『清分率』采用口径词典 2026-10-21 拍板定案（legacy:false）——划转成功笔数（trans_stats=9）÷ 清分记录数；金额两口径并列展示：分入金额 im_amt（清分收入口径）与划拨金额 trans_amt（划拨口径），不静默择一。数据范围：全库累计（无时间过滤）。结果：累计清分 728 笔，分入金额 16,016,079,467.68 元（约160.16亿），划拨金额 72,507.62 元；划转成功笔数 0 笔，清分率 0÷728 = 0%（全库尚无划转状态为 9 成功的记录，另有 72507.62 元划拨金额对应记录状态非 9）。未发生截断（totalRows=1）。",
+      "assumption": "清分率按词典定案口径（成功笔数÷总笔数）；金额未定单一口径，故分入/划拨两口径并列展示，如需单口径请指明",
+      "truncated": false,
+      "rows": 2,
+      "hitPreAgg": false,
+      "audited": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

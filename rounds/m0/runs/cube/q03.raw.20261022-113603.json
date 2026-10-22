@@ -1,0 +1,10 @@
+{
+  "session_id": "a31022-q03",
+  "question": "清分金额 2022 年对比 2021 年同比增长多少？",
+  "first": {
+    "elapsed_sec": 1.8,
+    "response": null
+  },
+  "followups": [],
+  "error_chain": "Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502"
+}

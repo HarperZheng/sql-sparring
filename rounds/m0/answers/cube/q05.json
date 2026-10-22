@@ -1,0 +1,28 @@
+{
+  "id": "q05",
+  "question": "全库累计清分了多少、清分率是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.count",
+        "fiscal_allocation_view.im_amt",
+        "fiscal_allocation_view.trans_amt"
+      ],
+      "dimensions": []
+    },
+    {
+      "measures": [
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": []
+    }
+  ],
+  "sql": "SELECT count(*) `fiscal_allocation_view__count`, sum(`fiscal_allocation`.`fimamt`) `fiscal_allocation_view__im_amt`, sum(`fiscal_allocation`.`ftransamt`) `fiscal_allocation_view__trans_amt` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT t.*, c.chg_agency_name_canon FROM fne_funddivide_transfer t\n      LEFT JOIN (SELECT fchgagencode,\n                        arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                 FROM fne_funddivide_transfer GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n    ) x1\n    LEFT JOIN (SELECT frecrgncode,\n                      arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n               FROM fne_funddivide_transfer WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n  ) x2\n  LEFT JOIN (SELECT fitemcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n             FROM fne_funddivide_transfer WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n) x3\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_funddivide_transfer WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x3.frecsubcode = rs.frecsubcode\n)  AS `fiscal_allocation`\nORDER BY  1  DESC\nLIMIT 100",
+  "sql_count": 2,
+  "answer": "口径声明：清分主题走 fiscal_allocation_view；『清分率』采用口径词典 2026-10-21 拍板定案（legacy:false）——划转成功笔数（trans_stats=9）÷ 清分记录数；金额两口径并列展示：分入金额 im_amt（清分收入口径）与划拨金额 trans_amt（划拨口径），不静默择一。数据范围：全库累计（无时间过滤）。结果：累计清分 728 笔，分入金额 16,016,079,467.68 元（约160.16亿），划拨金额 72,507.62 元；划转成功笔数 0 笔，清分率 0÷728 = 0%（全库尚无划转状态为 9 成功的记录，另有 72507.62 元划拨金额对应记录状态非 9）。未发生截断（totalRows=1）。",
+  "errors": [],
+  "elapsed_s": 24.5,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q05.raw.json"
+}

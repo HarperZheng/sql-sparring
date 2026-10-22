@@ -1,0 +1,21 @@
+{
+  "id": "q24",
+  "question": "未清分的缴款笔数和金额是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.paybook_count",
+        "fiscal_collection_view.amt"
+      ],
+      "dimensions": []
+    }
+  ],
+  "sql": "SELECT COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fcleardate`) IS NULL)\nORDER BY  2  DESC\nLIMIT 100",
+  "sql_count": 1,
+  "answer": "口径声明：「未清分」取 fiscal_collection_view 中清分日期（clear_date，源 fcleardate）为空的缴款记录，全时间范围汇总；笔数用缴款书笔数 paybook_count（去重缴款码，非明细行数），金额用缴款金额 amt。结果：未清分缴款 446 笔，金额 2,314,647,619.36 元。词典无「未清分」词条、ai_context 未提供其他口径，未做时间限定。",
+  "errors": [],
+  "elapsed_s": 31.4,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q24.raw.json"
+}

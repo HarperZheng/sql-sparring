@@ -1,0 +1,22 @@
+{
+  "id": "q10",
+  "question": "按执收单位统计未到账（欠缴）的缴款笔数",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.chg_agency_code"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_collection`.`fchgagencode` `fiscal_collection_view__chg_agency_code`, COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`feffdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`feffdate`) <= parseDateTimeBestEffort(?)) AND (`fiscal_collection`.`fstate` = ?)\nGROUP BY 1\nORDER BY  2  DESC\nLIMIT 1001900-01-01T00:00:00.000Z2026-10-21T23:59:59.999Z1",
+  "sql_count": 1,
+  "answer": "口径声明：欠缴（未到账）按 ai_context 场景 12 固化口径判定——缴款书状态 fstate='1'（待缴款）且有效期 eff_date 已过（截至 2026-10-22 前到期）；笔数用 paybook_count（缴款书去重笔数，非明细行数），按执收单位编码分组（名称列一码多名不作准，故只出编码）。数据范围：全量查询，仅执收单位 124045 有 1 笔欠缴缴款书；其余执收单位在数据范围内无欠缴记录。",
+  "errors": [],
+  "elapsed_s": 22.7,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q10.raw.json"
+}

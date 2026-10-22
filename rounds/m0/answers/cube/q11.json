@@ -1,0 +1,34 @@
+{
+  "id": "q11",
+  "question": "各预算科目清分金额排行，政府性基金收入（103）大类下哪些叶子科目收得最多？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.im_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": [
+        "fiscal_allocation_view.rec_sub_code",
+        "fiscal_allocation_view.rec_sub_name"
+      ]
+    },
+    {
+      "measures": [
+        "fiscal_allocation_view.im_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": [
+        "fiscal_allocation_view.rec_sub_code",
+        "fiscal_allocation_view.rec_sub_name"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_allocation`.`frecsubcode` `fiscal_allocation_view__rec_sub_code`, `fiscal_allocation`.rec_sub_name_canon `fiscal_allocation_view__rec_sub_name`, sum(`fiscal_allocation`.`fimamt`) `fiscal_allocation_view__im_amt`, count(*) `fiscal_allocation_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT t.*, c.chg_agency_name_canon FROM fne_funddivide_transfer t\n      LEFT JOIN (SELECT fchgagencode,\n                        arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                 FROM fne_funddivide_transfer GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n    ) x1\n    LEFT JOIN (SELECT frecrgncode,\n                      arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n               FROM fne_funddivide_transfer WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n  ) x2\n  LEFT JOIN (SELECT fitemcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n             FROM fne_funddivide_transfer WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n) x3\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_funddivide_transfer WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x3.frecsubcode = rs.frecsubcode\n)  AS `fiscal_allocation`\nGROUP BY 1, 2\nORDER BY  3  DESC\nLIMIT 500",
+  "sql_count": 2,
+  "answer": "口径声明：'清分金额'按 ai_context 唯一对应取分入金额 im_amt（清分收入口径），未取划拨口径 trans_amt；预算科目用收入归属科目编码 rec_sub_code 分组（rec_sub_name 为一码多名拼接、仅展示不作准，如 103010201 同码挂'中央农网还贷资金收入/普通话水平测试费'多名）；'政府性基金收入(103)'按科目编码前缀 103 过滤。数据范围：未指定时间，取全量；全部清分数据仅覆盖 20 个科目编码，且全部位于 103 大类下、编码间互无父子前缀（均为叶子科目），合计分入金额 16,016,079,467.68 元。结论：收得最多的叶子科目是 103010201（约 159.86 亿元，占 99.8%），其后为 1030110 民航发展基金收入（2,893.8 万）、1030106 铁路建设基金收入（49.5 万）、1030115 港口建设费收入（49.5 万）、1030121 旅游发展基金收入（15.5 万）。无截断（limit 500 实回 20 行）。",
+  "errors": [],
+  "elapsed_s": 42.0,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q11.raw.json"
+}

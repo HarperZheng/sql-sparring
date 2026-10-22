@@ -1,0 +1,74 @@
+{
+  "session_id": "a31022-q04",
+  "question": "缴库金额按年汇总 2022 到 2026 各年多少？",
+  "first": {
+    "elapsed_sec": 21.8,
+    "response": {
+      "type": "answer",
+      "title": "2022–2026 缴库金额按年汇总（build_date 口径）",
+      "plan": [
+        [
+          "缴库金额按年汇总 2022 到 2026",
+          "fiscal_treasury_view.amt",
+          "ai_context：缴库金额用 amt，缴库口径时间轴用 build_date"
+        ],
+        [
+          "按年分组",
+          "fiscal_treasury_view.build_date",
+          "timeDimensions granularity=year，dateRange 2022-01-01~2026-12-31"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "缴库金额按年汇总（缴库日期 build_date 口径，2022–2026）",
+          "query": {
+            "measures": [
+              "fiscal_treasury_view.amt"
+            ],
+            "dimensions": [],
+            "timeDimensions": [
+              {
+                "dimension": "fiscal_treasury_view.build_date",
+                "dateRange": [
+                  "2022-01-01",
+                  "2026-12-31"
+                ],
+                "granularity": "year"
+              }
+            ],
+            "order": {
+              "fiscal_treasury_view.build_date": "asc"
+            },
+            "limit": 10
+          },
+          "rows": [
+            {
+              "fiscal_treasury_view.build_date.year": "2022",
+              "fiscal_treasury_view.amt": 46053.04
+            },
+            {
+              "fiscal_treasury_view.build_date.year": "2023",
+              "fiscal_treasury_view.amt": 34178.26
+            },
+            {
+              "fiscal_treasury_view.build_date.year": "2024",
+              "fiscal_treasury_view.amt": 3463.3
+            },
+            {
+              "fiscal_treasury_view.build_date.year": "2026",
+              "fiscal_treasury_view.amt": 29372234.54
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：缴库金额= amt（缴库明细口径，去重后 sum），时间轴按缴库日期 build_date，范围 2022-01-01 至 2026-12-31，按年分组。数据范围：查询范围内 2022/2023/2024/2026 有数据，2025 年无缴库数据（返回集无该年行，按 0 处理）。合计约 29,455,929.14 元，其中 2026 年占绝对大头（29,372,234.54 元）。hitPreAgg 命中预聚合。",
+      "assumption": "「缴库金额」取 amt 缴库明细口径、时间轴取 build_date（缴库日期）而非 enter_date（入国库日期）——ai_context 唯一口径，未做已入国库过滤；如需「已入国库」口径请改用 enter_date+enter_status='1'。",
+      "truncated": false,
+      "rows": 4,
+      "hitPreAgg": true
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

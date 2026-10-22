@@ -1,0 +1,63 @@
+{
+  "session_id": "m0q-cn1",
+  "question": "2023年全年缴款金额是多少？",
+  "first": {
+    "elapsed_sec": 14.7,
+    "response": {
+      "type": "answer",
+      "title": "2023年全年缴款金额146.58万元",
+      "plan": [
+        [
+          "2023年全年缴款金额合计",
+          "fiscal_collection_view.amt",
+          "ai_context：金额明细口径用 amt；时间过滤用 pay_date"
+        ],
+        [
+          "按缴款日期限定2023-01-01至2023-12-31",
+          "fiscal_collection_view.pay_date",
+          "时间过滤走 timeDimensions.dateRange，不用 filters 拼日期"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "2023年全年缴款汇总（缴款日期 pay_date）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.count",
+              "fiscal_collection_view.paybook_count"
+            ],
+            "timeDimensions": [
+              {
+                "dimension": "fiscal_collection_view.pay_date",
+                "dateRange": [
+                  "2023-01-01",
+                  "2023-12-31"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.amt": "1465810.31",
+              "fiscal_collection_view.count": "170",
+              "fiscal_collection_view.paybook_count": "126"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：缴款金额按明细金额 amt 合计（ai_context 唯一口径），时间轴为缴款日期 pay_date，范围 2023-01-01 至 2023-12-31，无歧义拍板。结果：2023年全年缴款金额 1,465,810.31 元，共 170 条缴款明细行、126 笔缴款书（paybook_count 口径）。数据范围即该时间范围内全部数据，无截断。",
+      "assumption": "无歧义：金额口径唯一取 amt，时间轴取 pay_date",
+      "truncated": false,
+      "rows": 1,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

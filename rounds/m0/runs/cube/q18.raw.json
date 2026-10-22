@@ -1,0 +1,84 @@
+{
+  "session_id": "a31022-q18",
+  "question": "五华区的执收单位有哪些、各收了多少钱？",
+  "first": {
+    "elapsed_sec": 20.2,
+    "response": {
+      "type": "answer",
+      "title": "五华区执收单位 3 家、缴款金额按单位分组",
+      "plan": [
+        [
+          "五华区（按执收区划名称含\"五华\"过滤）的执收单位列表",
+          "fiscal_collection_view.chg_agency_code",
+          "ai_context：分组必须用 *_code 成员"
+        ],
+        [
+          "各执收单位收了多少钱（缴款金额）",
+          "fiscal_collection_view.amt",
+          "ai_context：明细金额用 amt"
+        ],
+        [
+          "附缴款书笔数",
+          "fiscal_collection_view.paybook_count",
+          "ai_context：缴款书\"笔数\"用 paybook_count，count 是明细行数勿当笔数"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "五华区执收单位×缴款金额（口径：缴款明细 amt，全期无时间过滤）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.paybook_count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.chg_agency_code",
+              "fiscal_collection_view.chg_agency_name"
+            ],
+            "filters": [
+              {
+                "member": "fiscal_collection_view.chg_rgn_name",
+                "operator": "contains",
+                "values": [
+                  "五华"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.chg_agency_code": "777001",
+              "fiscal_collection_view.chg_agency_name": "智能核销五华区测试单位开票点",
+              "fiscal_collection_view.amt": "128036.8",
+              "fiscal_collection_view.paybook_count": "5"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125026",
+              "fiscal_collection_view.chg_agency_name": "云南医保测试单位改名 / 开票点一 / 李思维",
+              "fiscal_collection_view.amt": "1981.32",
+              "fiscal_collection_view.paybook_count": "1"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124994",
+              "fiscal_collection_view.chg_agency_name": "云南发展改革委员会 / 开票点001 / 开票点002",
+              "fiscal_collection_view.amt": "100",
+              "fiscal_collection_view.paybook_count": "1"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：按执收区划名称（chg_rgn_name）含\"五华\"过滤，执收单位按编码（chg_agency_code）分组；金额为缴款明细口径 amt（缴款金额，元），笔数为缴款书笔数 paybook_count；无时间过滤，覆盖数据全集。共 3 家执收单位、合计缴款 130,118.12 元（由 3 行完整结果合计，无截断）：777001 智能核销五华区测试单位开票点 128,036.80 元（5 笔）、125026 云南医保测试单位改名/开票点一/李思维 1,981.32 元（1 笔）、124994 云南发展改革委员会/开票点001/开票点002 100 元（1 笔）。注：单位名称列是一码多名别名拼接，仅展示不作准；三条数据名称均带\"测试\"字样，疑为测试数据。若\"五华区\"指收入归属区划（rec_rgn_code）而非执收区划，或需限定时间范围，请告知后另查。",
+      "assumption": "\"五华区\"拍板为执收单位所属区划（chg_rgn_name contains 五华）；金额拍板为缴款明细金额 amt",
+      "truncated": false,
+      "rows": 3,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

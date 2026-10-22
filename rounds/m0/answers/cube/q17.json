@@ -1,0 +1,23 @@
+{
+  "id": "q17",
+  "question": "按执收区划名称统计缴款金额",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.chg_rgn_name"
+      ]
+    }
+  ],
+  "sql": "-- /v1/sql 失败: Server error '502 Bad Gateway' for url 'http://localhost:4000/cubejs-api/v1/sql'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502",
+  "sql_count": 1,
+  "answer": "口径声明：缴款金额取 fiscal_collection_view.amt（缴款明细口径，famt 合计），按执收区划名称 chg_rgn_name 分组（该名称列原值不归一化，非一码多名拼接列，可直接分组）；未指定时间范围，为全期数据，共 5 个区划组，合计 18,332,286,287.91 元（云南省本级占绝对主体），行数合计 1,281。无截断。",
+  "errors": [],
+  "elapsed_s": 25.0,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/q17.raw.json"
+}

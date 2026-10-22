@@ -1,0 +1,35 @@
+{
+  "id": "dn1",
+  "question": "2024年上半年缴款金额和笔数是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额_环比",
+        "缴库金额_同比",
+        "清分金额_环比",
+        "清分金额_同比",
+        "非税缴款金额_环比"
+      ]
+    },
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额_环比",
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "非税缴款笔数"
+      ]
+    }
+  ],
+  "sql": "SELECT\n  sum(famt) AS pay_amt,\n  uniqExact(fid) AS pay_cnt,\n  count() AS row_cnt,\n  min(ffilldate) AS min_dt,\n  max(ffilldate) AS max_dt\nFROM fne_paybook_full_high\nWHERE ffilldate >= '2024-01-01' AND ffilldate <= '2024-06-30'",
+  "sql_count": 3,
+  "answer": "查询完成。按已拍板口径（缴款金额 = `SUM(famt)`，缴款笔数 = `fid` 去重，与语义指标「非税缴款金额/非税缴款笔数」一致），以 `ffilldate`（缴款日期）切片：\n\n## 2024 年上半年缴款情况\n\n| 指标 | 数值 |\n|---|---|\n| **缴款金额** | **75,217,304.92 元**（约 7,521.73 万元） |\n| **缴款笔数** | **102 笔**（`fid` 去重口径） |\n| 明细行数 | 115 行（同一缴款书含多条科目明细） |\n| 实际日期跨度 | 2024-01-05 ~ 2024-06-28 |\n\n**执行 SQL：**\n\n```sql\nSELECT\n  sum(famt)      AS pay_amt,   -- 缴款金额（元），SUM 直缴\n  uniqExact(fid) AS pay_cnt,   -- 缴款笔数，fid 去重\n  count()        AS row_cnt,\n  min(ffilldate) AS min_dt,\n  max(ffilldate) AS max_dt\nFROM fne_paybook_full_high\nWHERE ffilldate >= '2024-01-01' AND ffilldate <= '2024-06-30'\n```\n\n**口径说明：**\n- 表：`fne_paybook_full_high`（缴款通知书明细口径），全业务类型（未按 `fbustype` 切直缴/汇缴）；\n- 时间字段：语义维度 `fill_date` 对应物理列 `ffilldate`（已通过 `system.columns` 核实为 String 类型）；\n- 笔数采用正式指标「非税缴款笔数」的 `fid` 去重口径（`fid` = 缴款书行键）；\n- 明细 115 行 > 笔数 102，是因为一张缴款书（fid）可含多条科目明细行，金额按明细 `famt` 直接求和，不存在虚增。\n\n如需按 **直缴（fbustype='1'）/ 汇缴（fbustype='2'）** 分列，或按 **月度/区划/单位** 展开明细，告诉我即可。",
+  "errors": [],
+  "elapsed_s": 100.8,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/datus/dn1.payload.jsonl"
+}

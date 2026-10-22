@@ -28,6 +28,7 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
 
     返回 {card, first_type, raw_rel}。失败重试一次（新 sessionId，v0 同款）。
     """
+    runs_dir = Path(runs_dir).resolve()  # 相对路径（--questions 传相对值时）无法 relative_to 仓根
     runs_dir.mkdir(parents=True, exist_ok=True)
     raw_path = runs_dir / f"{qid}.raw.json"
     _archive_existing(raw_path)

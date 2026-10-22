@@ -1,0 +1,18 @@
+{
+  "session_id": "a31022-q09",
+  "question": "哪些非叶子单位自己直接收了款？",
+  "first": {
+    "elapsed_sec": 16.8,
+    "response": {
+      "type": "nomatch",
+      "question": "哪些非叶子单位自己直接收了款？",
+      "gaps": [
+        "fiscal_collection_view 成员面只有执收单位编码/名称（chg_agency_code/chg_agency_name），没有任何单位层级/上下级关系（父编码、层级深度、是否叶子）成员——'非叶子单位'这一判定维度在模型里不存在",
+        "口径词典中'非叶子单位'无词条（entries 为空），ai_context 亦未提供该口径，无法映射到已有成员",
+        "conf/unmodel/fiscal_collection.json 不存在，主题未做未建模盘点，无法确认源表（fne_paybook_full_high）是否含单位层级字段可补建；若源表有该字段，属轻扩展/补建，需用户拍板后再进 cube-modeling 流程"
+      ]
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

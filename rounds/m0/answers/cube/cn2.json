@@ -1,0 +1,21 @@
+{
+  "id": "cn2",
+  "question": "2024年清分金额按月展示",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.im_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": []
+    }
+  ],
+  "sql": "SELECT toDateTime64(toStartOfMonth(toTimeZone(toDateTime64(toDateOrNull(`fiscal_allocation`.`fdate`), 0), 'UTC'), 'UTC'), 0, 'UTC') `fiscal_allocation_view__pay_date_month`, sum(`fiscal_allocation`.`fimamt`) `fiscal_allocation_view__im_amt`, count(*) `fiscal_allocation_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT t.*, c.chg_agency_name_canon FROM fne_funddivide_transfer t\n      LEFT JOIN (SELECT fchgagencode,\n                        arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                 FROM fne_funddivide_transfer GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n    ) x1\n    LEFT JOIN (SELECT frecrgncode,\n                      arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n               FROM fne_funddivide_transfer WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n  ) x2\n  LEFT JOIN (SELECT fitemcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n             FROM fne_funddivide_transfer WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n) x3\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_funddivide_transfer WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x3.frecsubcode = rs.frecsubcode\n)  AS `fiscal_allocation`\nWHERE (toDateOrNull(`fiscal_allocation`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_allocation`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1\nORDER BY  1  ASC\nLIMIT 1002024-01-01T00:00:00.000Z2024-12-31T23:59:59.999Z",
+  "sql_count": 1,
+  "answer": "口径声明：「清分金额」按 meta ai_context 取分入金额 im_amt（清分收入口径，元）；时间轴用 pay_date（缴款日期），2024-01-01~2024-12-31 按月分组，12 个月均有数据（totalRows=12，未截断）。若需「划拨金额 trans_amt」口径或按清分日期/划转日期轴，请另行指定。",
+  "errors": [],
+  "elapsed_s": 22.2,
+  "arbiter": null,
+  "raw_path": "rounds/m0/runs/cube/cn2.raw.json"
+}

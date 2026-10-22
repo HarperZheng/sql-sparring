@@ -2,25 +2,25 @@
   "session_id": "a31022-q23",
   "question": "汇总批次一共多少个？",
   "first": {
-    "elapsed_sec": 28.0,
+    "elapsed_sec": 18.8,
     "response": {
       "type": "answer",
-      "title": "汇总清分记录共 550 条（collect_flag=1 口径）",
+      "title": "汇总清分记录共 550 条（collect_flag='1' 口径）",
       "plan": [
         [
           "定位主题",
           "fiscal_allocation_view",
-          "清分事实视图，含\"是否汇总 collect_flag\"成员"
+          "清分流向视图，含\"是否汇总 collect_flag\"成员"
         ],
         [
           "口径拍板",
           "fiscal_allocation_view.collect_flag",
-          "词典命中（legacy:false，2026-10-21 用户拍板）：汇总批次=collect_flag='1' 的清分记录数；按 fcollectid 去重批次模型无成员不支持"
+          "口径词典命中（legacy:false，2026-10-21 用户拍板）：汇总批次=collect_flag='1' 的清分记录数；按 fcollectid 去重批次口径模型无成员、不支持"
         ],
         [
           "执行查询",
           "fiscal_allocation_view.count",
-          "filters collect_flag equals ['1']，返回 550"
+          "filters collect_flag equals ['1']，返回 550，无截断"
         ]
       ],
       "tables": [
@@ -49,8 +49,8 @@
           "total": null
         }
       ],
-      "answer": "口径：按口径词典（2026-10-21 用户拍板，非 legacy）\"汇总批次\"= 清分记录中 collect_flag='1'（fcollectid 非空）的记录数，共 550 条。注意：按 fcollectid 去重的批次单数口径模型暂无成员、不支持，如需该口径需补建成员。数据范围为清分事实全量（未加时间过滤），无截断。",
-      "assumption": "汇总批次取词典定案口径 A：collect_flag='1' 的清分记录数（550）；未按 fcollectid 去重（模型不支持）",
+      "answer": "口径：按口径词典定案（2026-10-21 用户拍板，legacy:false）\"汇总批次\"= 清分记录中 collect_flag='1'（fcollectid 非空衍生）的记录数，共 550 条。数据范围为清分事实全量（未加时间过滤），无截断。注：按 fcollectid 去重的批次单数口径模型暂无成员、不支持，如需该口径须补建成员。",
+      "assumption": "汇总批次取词典定案口径：collect_flag='1' 的清分记录数（550），未按 fcollectid 去重（模型不支持该成员）",
       "truncated": false,
       "rows": 1,
       "hitPreAgg": false

@@ -1,0 +1,91 @@
+{
+  "session_id": "m0q-cn3",
+  "question": "各收款银行2023年各收了多少钱？",
+  "first": {
+    "elapsed_sec": 29.3,
+    "response": {
+      "type": "answer",
+      "title": "2023年各收款银行收款金额（缴款×到账两口径）",
+      "plan": [
+        [
+          "按收款银行分组统计2023年缴款金额与到账金额",
+          "fiscal_collection_view.rec_bank_code + fiscal_collection_view.amt / fiscal_collection_view.entered_amt",
+          "ai_context：分组用 *_code 成员；明细金额用 amt，到账金额用 entered_amt；时间过滤用 pay_date"
+        ],
+        [
+          "收款银行取收款银行编码/名称",
+          "fiscal_collection_view.rec_bank_code / rec_bank_name",
+          "成员面 dimensions 透出的收款银行编码与名称成员，名称仅跟随展示不用于分组"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "2023年各收款银行收款金额（缴款金额+到账金额，按缴款日期）",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.amt",
+              "fiscal_collection_view.entered_amt"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.rec_bank_code",
+              "fiscal_collection_view.rec_bank_name"
+            ],
+            "timeDimensions": [
+              {
+                "dimension": "fiscal_collection_view.pay_date",
+                "dateRange": [
+                  "2023-01-01",
+                  "2023-12-31"
+                ]
+              }
+            ],
+            "order": {
+              "fiscal_collection_view.amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.rec_bank_code": "1409",
+              "fiscal_collection_view.rec_bank_name": "云南省农村信用社联合社 ",
+              "fiscal_collection_view.amt": "1156320",
+              "fiscal_collection_view.entered_amt": "0"
+            },
+            {
+              "fiscal_collection_view.rec_bank_code": "0102",
+              "fiscal_collection_view.rec_bank_name": "中国工商银行 ",
+              "fiscal_collection_view.amt": "153464.54",
+              "fiscal_collection_view.entered_amt": "1500.66"
+            },
+            {
+              "fiscal_collection_view.rec_bank_code": "0105",
+              "fiscal_collection_view.rec_bank_name": "中国建设银行 ",
+              "fiscal_collection_view.amt": "151789.52",
+              "fiscal_collection_view.entered_amt": "38593.06"
+            },
+            {
+              "fiscal_collection_view.rec_bank_code": "9999",
+              "fiscal_collection_view.rec_bank_name": "人民银行",
+              "fiscal_collection_view.amt": "4234.25",
+              "fiscal_collection_view.entered_amt": null
+            },
+            {
+              "fiscal_collection_view.rec_bank_code": "0100",
+              "fiscal_collection_view.rec_bank_name": "中国邮政储蓄银行 ",
+              "fiscal_collection_view.amt": "2",
+              "fiscal_collection_view.entered_amt": "0"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：按收款银行（rec_bank_code，名称仅跟随展示）分组，时间轴用缴款日期 pay_date（2023-01-01～2023-12-31），金额同时给出两个口径——缴款金额 amt 与到账金额 entered_amt（freceiveddate 非空部分，未到账不计入），未静默选定单一口径。数据范围：2023年共 5 家收款银行有缴款记录，其中人民银行的到账金额为 null（无到账记录），农信社与邮储到账金额为 0；到账金额与缴款金额差异较大，如需\"实际收到\"口径请以 entered_amt 列为准。",
+      "assumption": "\"收了多少钱\"存在缴款金额（amt）与到账金额（entered_amt）两个口径，ai_context 两者均有定义且词典无约定，未静默拍板——两口径并列同表展示，用户可按需取舍",
+      "truncated": false,
+      "rows": 5,
+      "hitPreAgg": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

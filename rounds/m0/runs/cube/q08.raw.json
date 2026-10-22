@@ -1,0 +1,233 @@
+{
+  "session_id": "a31022-q08",
+  "question": "各执收预算单位（主管预算单位）的清分金额对比",
+  "first": {
+    "elapsed_sec": 24.0,
+    "response": {
+      "type": "answer",
+      "title": "各执收单位清分金额对比（划拨/分入口径并列）",
+      "plan": [
+        [
+          "按划出方单位（执收单位）分组统计清分金额",
+          "fiscal_allocation_view.chg_agency_code",
+          "view ai_context：划出方看 chg_agency_code，分组必须用 *_code"
+        ],
+        [
+          "金额同时取划拨金额与分入金额两口径",
+          "fiscal_allocation_view.trans_amt / fiscal_allocation_view.im_amt",
+          "ai_context：分入金额用 im_amt，划拨金额用 trans_amt，问句未指明故并列呈现"
+        ],
+        [
+          "附清分记录数",
+          "fiscal_allocation_view.count",
+          "度量未指明时主度量+count 附列"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "各执收单位（划出方）清分金额对比：划拨金额+分入金额（全量25单位，按划拨金额降序）",
+          "query": {
+            "measures": [
+              "fiscal_allocation_view.trans_amt",
+              "fiscal_allocation_view.im_amt",
+              "fiscal_allocation_view.count"
+            ],
+            "dimensions": [
+              "fiscal_allocation_view.chg_agency_code",
+              "fiscal_allocation_view.chg_agency_name"
+            ],
+            "order": {
+              "fiscal_allocation_view.trans_amt": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_allocation_view.chg_agency_code": "124045",
+              "fiscal_allocation_view.chg_agency_name": "001 / 云南测试环境 / 测试云南测试环境 / 测试云南测试环境(试用版) / 测试云南测试环境(试用版)(试用版)",
+              "fiscal_allocation_view.trans_amt": "63371",
+              "fiscal_allocation_view.im_amt": "15986585353.85",
+              "fiscal_allocation_view.count": "291"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "001",
+              "fiscal_allocation_view.chg_agency_name": "分成测试",
+              "fiscal_allocation_view.trans_amt": "5082",
+              "fiscal_allocation_view.im_amt": "2541",
+              "fiscal_allocation_view.count": "16"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124994",
+              "fiscal_allocation_view.chg_agency_name": "云南发展改革委员会 / 开票点001",
+              "fiscal_allocation_view.trans_amt": "2966",
+              "fiscal_allocation_view.im_amt": "28941171.61",
+              "fiscal_allocation_view.count": "141"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125026",
+              "fiscal_allocation_view.chg_agency_name": "云南医保测试单位改名 / 开票点一 / 李思维",
+              "fiscal_allocation_view.trans_amt": "664.62",
+              "fiscal_allocation_view.im_amt": "13384.84",
+              "fiscal_allocation_view.count": "36"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124992",
+              "fiscal_allocation_view.chg_agency_name": "云南信息技术中心 / 信息技术中心",
+              "fiscal_allocation_view.trans_amt": "324",
+              "fiscal_allocation_view.im_amt": "287174",
+              "fiscal_allocation_view.count": "8"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124993",
+              "fiscal_allocation_view.chg_agency_name": "体育彩票中心",
+              "fiscal_allocation_view.trans_amt": "100",
+              "fiscal_allocation_view.im_amt": "100",
+              "fiscal_allocation_view.count": "1"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "105015",
+              "fiscal_allocation_view.chg_agency_name": "云龙县长新乡中心学校",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "0",
+              "fiscal_allocation_view.count": "2"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125019",
+              "fiscal_allocation_view.chg_agency_name": "云南医疗单位0729 / 测试云南医疗单位0729",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "6864.26",
+              "fiscal_allocation_view.count": "19"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124002",
+              "fiscal_allocation_view.chg_agency_name": "云南一通用单位0303",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "4964",
+              "fiscal_allocation_view.count": "17"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124577",
+              "fiscal_allocation_view.chg_agency_name": "测试单位0722",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "1377.76",
+              "fiscal_allocation_view.count": "7"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124579",
+              "fiscal_allocation_view.chg_agency_name": "云南通用Oracle0728",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "1100",
+              "fiscal_allocation_view.count": "2"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "998017",
+              "fiscal_allocation_view.chg_agency_name": "通用测试单位070301",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "805.28",
+              "fiscal_allocation_view.count": "3"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "427008",
+              "fiscal_allocation_view.chg_agency_name": "云南测试单位0831",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "2158",
+              "fiscal_allocation_view.count": "2"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "425104",
+              "fiscal_allocation_view.chg_agency_name": "云南通用测试单位1128",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "1601.32",
+              "fiscal_allocation_view.count": "6"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125032",
+              "fiscal_allocation_view.chg_agency_name": "云南年结测试单位oracle20241009",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "5500.66",
+              "fiscal_allocation_view.count": "22"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "001001",
+              "fiscal_allocation_view.chg_agency_name": "001测试收款",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "0",
+              "fiscal_allocation_view.count": "2"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124100",
+              "fiscal_allocation_view.chg_agency_name": "测试1125",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "11663.68",
+              "fiscal_allocation_view.count": "19"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "124576",
+              "fiscal_allocation_view.chg_agency_name": "云南通用测试单位0720",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "2057.68",
+              "fiscal_allocation_view.count": "13"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125020",
+              "fiscal_allocation_view.chg_agency_name": "云南医疗单位0805",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "1915.12",
+              "fiscal_allocation_view.count": "9"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "425002",
+              "fiscal_allocation_view.chg_agency_name": "云南测试单位1209",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "24034.92",
+              "fiscal_allocation_view.count": "4"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "998015",
+              "fiscal_allocation_view.chg_agency_name": "云南反算测试单位20250401",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "4409.24",
+              "fiscal_allocation_view.count": "21"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "127208",
+              "fiscal_allocation_view.chg_agency_name": "通用单位168",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "12448.24",
+              "fiscal_allocation_view.count": "22"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125022",
+              "fiscal_allocation_view.chg_agency_name": "云南测试单位",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "3803.64",
+              "fiscal_allocation_view.count": "20"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "125029",
+              "fiscal_allocation_view.chg_agency_name": "云南医疗测试单位231124",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "30",
+              "fiscal_allocation_view.count": "2"
+            },
+            {
+              "fiscal_allocation_view.chg_agency_code": "425103",
+              "fiscal_allocation_view.chg_agency_name": "云南通用测试单位0801 / 通用测试单位0801",
+              "fiscal_allocation_view.trans_amt": null,
+              "fiscal_allocation_view.im_amt": "165008.58",
+              "fiscal_allocation_view.count": "43"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "口径声明：执收预算单位取清分流向视图的划出方单位（chg_agency_code/chg_agency_name，执收单位上缴清分方向）；金额并列绑定两口径——划拨金额 trans_amt 与分入金额 im_amt（ai_context 双口径，问句未指明，未静默择一）。数据范围：全量 25 个单位，无时间过滤（pay_date 全期），共 728 笔清分记录。全量合计：划拨金额 72507.62 元、分入金额 16016079467.68 元（来自不带分组的全量查询，非行加总）。排序按划拨金额降序，多数单位划拨金额为空（null）仅列于后段。",
+      "assumption": "「清分金额」未指明口径：按 ai_context 将划拨金额（trans_amt）与分入金额（im_amt）两口径并列呈现，未静默选择；「执收预算单位」按划出方单位（chg_agency_code）分组",
+      "truncated": false,
+      "rows": 25,
+      "hitPreAgg": null
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

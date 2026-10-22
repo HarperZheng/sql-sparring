@@ -1,0 +1,18 @@
+{
+  "session_id": "a31022-q07",
+  "question": "主管单位测试云南省教育厅1的下级单位合计缴款多少？",
+  "first": {
+    "elapsed_sec": 20.6,
+    "response": {
+      "type": "nomatch",
+      "question": "主管单位测试云南省教育厅1的下级单位合计缴款多少？",
+      "gaps": [
+        "模型（fiscal_collection_view 等 3 个主题）中不存在\"主管单位\"或单位隶属层级维度，仅有执收单位 chg_agency_code/名称、收入单位 rec_agency_code、代理单位 acc_agen_code，均无上下级关系字段，无法表达\"某主管单位的下级单位\"集合",
+        "口径词典中\"主管单位\"\"下级单位\"\"教育厅\"均无词条（entries 为空），无既有约定可映射",
+        "缴款金额度量 fiscal_collection_view.amt 本身存在，缺口仅在单位隶属关系维面，需新增层级/主管关系建模或由用户明确按下级单位的取值清单过滤"
+      ]
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

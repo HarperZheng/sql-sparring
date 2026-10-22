@@ -1,0 +1,10 @@
+{
+  "session_id": "a31022-q05",
+  "question": "全库累计清分了多少、清分率是多少？",
+  "first": {
+    "elapsed_sec": 66.5,
+    "response": null
+  },
+  "followups": [],
+  "error_chain": "Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502"
+}

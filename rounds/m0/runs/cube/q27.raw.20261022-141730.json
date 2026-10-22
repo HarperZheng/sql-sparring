@@ -1,0 +1,10 @@
+{
+  "session_id": "a31022-q27",
+  "question": "财政专户收入和国库收入分别是多少？",
+  "first": {
+    "elapsed_sec": 62.1,
+    "response": null
+  },
+  "followups": [],
+  "error_chain": "Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502 | Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502"
+}

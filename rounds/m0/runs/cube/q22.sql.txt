@@ -1,0 +1,6 @@
+-- table[0] 缴库报文按入库状态（enter_status）金额与笔数，全量无时间过滤
+SELECT "fiscal_treasury__enter_status" "fiscal_treasury_view__enter_status", sum("fiscal_treasury__amt") "fiscal_treasury_view__amt", sum("fiscal_treasury__count") "fiscal_treasury_view__count" 
+FROM  dev_pre_aggregations.fiscal_treasury_main  AS "fiscal_treasury__main"
+GROUP BY 1
+ORDER BY  2  DESC
+LIMIT 100

@@ -1,0 +1,570 @@
+{
+  "session_id": "a31022-q30",
+  "question": "各笔缴款的到账日期和退付金额是多少？",
+  "first": {
+    "elapsed_sec": 56.5,
+    "response": {
+      "type": "ask",
+      "question": "「退付金额」在当前模型（fiscal_collection_view）中没有对应成员，口径词典也无该词条、该主题未做未建模盘点，无法直接查退付口径。但问句里「到账日期」对应 received_date，与「到账金额 entered_amt」是天然一对——您要的是哪个？",
+      "options": [
+        "「退付金额」实指到账金额（entered_amt）：各笔缴款的资金到账日期 received_date + 到账金额，明细逐行返回",
+        "确实是退付（退款）金额：模型未建模，需先补建模/盘点后才能查",
+        "两者都要：到账明细一张表，退付口径列为缺口待建模"
+      ]
+    }
+  },
+  "followups": [
+    {
+      "question": "就按第一个选项的口径来（「退付金额」实指到账金额（entered_amt）：各笔缴款的资金到账日期 received_date + 到账金额，明细逐行返回），直接出答案。",
+      "response_type": "answer",
+      "response": {
+        "type": "answer",
+        "title": "各笔缴款到账日期与到账金额明细（前100/共975笔）",
+        "plan": [
+          [
+            "各笔缴款的到账金额",
+            "fiscal_collection_view.entered_amt",
+            "用户拍板：「退付金额」实指到账金额（模型无退付成员，词典无词条）"
+          ],
+          [
+            "到账日期",
+            "fiscal_collection_view.received_date",
+            "ai_context：到账看 received_date（freceiveddate）"
+          ],
+          [
+            "按缴款码逐笔明细",
+            "fiscal_collection_view.pay_code",
+            "「各笔」= 按 pay_code 分组逐行"
+          ]
+        ],
+        "tables": [
+          {
+            "title": "各笔缴款：到账日期 × 到账金额（明细粒度，按到账日期倒序）",
+            "query": {
+              "measures": [
+                "fiscal_collection_view.entered_amt"
+              ],
+              "dimensions": [
+                "fiscal_collection_view.pay_code",
+                "fiscal_collection_view.received_date"
+              ],
+              "order": {
+                "fiscal_collection_view.received_date": "desc"
+              },
+              "limit": 100
+            },
+            "rows": [
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000833",
+                "fiscal_collection_view.received_date": "2026-08-04T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000391637",
+                "fiscal_collection_view.received_date": "2026-08-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000391629",
+                "fiscal_collection_view.received_date": "2026-07-30T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000737",
+                "fiscal_collection_view.received_date": "2026-07-21T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100.66"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000745",
+                "fiscal_collection_view.received_date": "2026-07-21T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100.6"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000391186",
+                "fiscal_collection_view.received_date": "2026-06-29T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000391151",
+                "fiscal_collection_view.received_date": "2026-06-23T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000690",
+                "fiscal_collection_view.received_date": "2026-06-14T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000391039",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000614",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000606",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000622",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000630",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000649",
+                "fiscal_collection_view.received_date": "2026-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100.66"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000593",
+                "fiscal_collection_view.received_date": "2026-06-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "600"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026904000000010",
+                "fiscal_collection_view.received_date": "2026-06-05T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "402.64"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026904000000036",
+                "fiscal_collection_view.received_date": "2026-06-05T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "301.98"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026904000000052",
+                "fiscal_collection_view.received_date": "2026-06-05T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100.66"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000390845",
+                "fiscal_collection_view.received_date": "2026-05-20T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "4140"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000390837",
+                "fiscal_collection_view.received_date": "2026-05-19T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "3082"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000390298",
+                "fiscal_collection_view.received_date": "2026-01-27T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026000000390280",
+                "fiscal_collection_view.received_date": "2026-01-26T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53010026000000390239",
+                "fiscal_collection_view.received_date": "2026-01-12T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53010026000000390247",
+                "fiscal_collection_view.received_date": "2026-01-12T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "1468"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026844000000026",
+                "fiscal_collection_view.received_date": "2026-01-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "90"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026844000000018",
+                "fiscal_collection_view.received_date": "2026-01-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026829000000039",
+                "fiscal_collection_view.received_date": "2026-01-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "90"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026829000000047",
+                "fiscal_collection_view.received_date": "2026-01-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026829000000020",
+                "fiscal_collection_view.received_date": "2026-01-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "90"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000024",
+                "fiscal_collection_view.received_date": "2026-01-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000059",
+                "fiscal_collection_view.received_date": "2026-01-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "90"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000067",
+                "fiscal_collection_view.received_date": "2026-01-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000032",
+                "fiscal_collection_view.received_date": "2026-01-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000026821000000016",
+                "fiscal_collection_view.received_date": "2026-01-05T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000390072",
+                "fiscal_collection_view.received_date": "2025-12-28T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000390021",
+                "fiscal_collection_view.received_date": "2025-12-16T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389952",
+                "fiscal_collection_view.received_date": "2025-12-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389960",
+                "fiscal_collection_view.received_date": "2025-12-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025797000000370",
+                "fiscal_collection_view.received_date": "2025-12-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389936",
+                "fiscal_collection_view.received_date": "2025-12-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389928",
+                "fiscal_collection_view.received_date": "2025-12-04T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389901",
+                "fiscal_collection_view.received_date": "2025-12-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389880",
+                "fiscal_collection_view.received_date": "2025-12-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000876",
+                "fiscal_collection_view.received_date": "2025-11-25T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000868",
+                "fiscal_collection_view.received_date": "2025-11-25T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389830",
+                "fiscal_collection_view.received_date": "2025-11-23T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389848",
+                "fiscal_collection_view.received_date": "2025-11-23T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389821",
+                "fiscal_collection_view.received_date": "2025-11-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000492",
+                "fiscal_collection_view.received_date": "2025-11-13T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389450",
+                "fiscal_collection_view.received_date": "2025-10-15T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53010025000000389442",
+                "fiscal_collection_view.received_date": "2025-10-14T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53010025000000389434",
+                "fiscal_collection_view.received_date": "2025-10-14T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000389426",
+                "fiscal_collection_view.received_date": "2025-10-14T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000329",
+                "fiscal_collection_view.received_date": "2025-10-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000273",
+                "fiscal_collection_view.received_date": "2025-10-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000337",
+                "fiscal_collection_view.received_date": "2025-10-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000706",
+                "fiscal_collection_view.received_date": "2025-09-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000788",
+                "fiscal_collection_view.received_date": "2025-09-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000714",
+                "fiscal_collection_view.received_date": "2025-09-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000722",
+                "fiscal_collection_view.received_date": "2025-09-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000685",
+                "fiscal_collection_view.received_date": "2025-09-18T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000737",
+                "fiscal_collection_view.received_date": "2025-09-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000745",
+                "fiscal_collection_view.received_date": "2025-09-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000729",
+                "fiscal_collection_view.received_date": "2025-09-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025902000000065",
+                "fiscal_collection_view.received_date": "2025-06-17T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000268",
+                "fiscal_collection_view.received_date": "2025-06-17T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025902000000073",
+                "fiscal_collection_view.received_date": "2025-06-17T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025902000000049",
+                "fiscal_collection_view.received_date": "2025-06-16T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025902000000057",
+                "fiscal_collection_view.received_date": "2025-06-16T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025902000000030",
+                "fiscal_collection_view.received_date": "2025-06-16T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000225",
+                "fiscal_collection_view.received_date": "2025-06-15T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000217",
+                "fiscal_collection_view.received_date": "2025-06-15T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000433",
+                "fiscal_collection_view.received_date": "2025-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000417",
+                "fiscal_collection_view.received_date": "2025-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000425",
+                "fiscal_collection_view.received_date": "2025-06-11T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000446",
+                "fiscal_collection_view.received_date": "2025-06-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025844000000388",
+                "fiscal_collection_view.received_date": "2025-06-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000489",
+                "fiscal_collection_view.received_date": "2025-06-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000470",
+                "fiscal_collection_view.received_date": "2025-06-10T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000102",
+                "fiscal_collection_view.received_date": "2025-06-09T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000188",
+                "fiscal_collection_view.received_date": "2025-06-09T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000161",
+                "fiscal_collection_view.received_date": "2025-06-09T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000170",
+                "fiscal_collection_view.received_date": "2025-06-09T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000482",
+                "fiscal_collection_view.received_date": "2025-06-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025821000000490",
+                "fiscal_collection_view.received_date": "2025-06-08T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000057",
+                "fiscal_collection_view.received_date": "2025-06-04T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025849000000065",
+                "fiscal_collection_view.received_date": "2025-06-04T16:00:00.000",
+                "fiscal_collection_view.entered_amt": null
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000388247",
+                "fiscal_collection_view.received_date": "2025-06-03T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "0"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000388255",
+                "fiscal_collection_view.received_date": "2025-06-03T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025797000000127",
+                "fiscal_collection_view.received_date": "2025-04-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "30"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000307",
+                "fiscal_collection_view.received_date": "2025-04-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "30"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025829000000294",
+                "fiscal_collection_view.received_date": "2025-04-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "30"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025797000000119",
+                "fiscal_collection_view.received_date": "2025-04-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "30"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025838000000029",
+                "fiscal_collection_view.received_date": "2025-04-07T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "30"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387949",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "100.66"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387973",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "201.32"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387930",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "1000"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387922",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "503.3"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387957",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "201.32"
+              },
+              {
+                "fiscal_collection_view.pay_code": "53000025000000387981",
+                "fiscal_collection_view.received_date": "2025-04-02T16:00:00.000",
+                "fiscal_collection_view.entered_amt": "201.32"
+              }
+            ],
+            "total": 29354220.76
+          }
+        ],
+        "answer": "口径声明：问句中「退付金额」经用户拍板实指「到账金额」，取 fiscal_collection_view.entered_amt（sum(fimamt) WHERE freceiveddate 非空，2026-10-09 口径）；到账日期取 received_date（freceiveddate），与划拨入库 enter_date 口径不同。明细按缴款码（pay_code）逐笔分组、按到账日期倒序，覆盖全部有到账记录的缴款书，无时间过滤。数据范围：共 975 笔缴款书，全量到账金额合计 29,354,220.76 元（独立不带 dimensions 的汇总查询所得，非行加总）。表中仅展示最近到账的前 100 笔（表内 total 为全量分母）；部分笔 entered_amt 为空表示该缴款书虽有到账日期但对应明细金额为空。完整 975 笔明细可按表内 query 在构建器中打开并将 limit 提到 1000 获取（已实测 limit=1000 时 truncated:false）。",
+        "assumption": "「退付金额」模型中无对应成员（成员面/词典均无，fiscal_collection 未建模盘点），经用户拍板实指到账金额 entered_amt；如后续确需退付（退款）口径需先补建模",
+        "truncated": true,
+        "rows": 100,
+        "hitPreAgg": null
+      }
+    }
+  ],
+  "error_chain": ""
+}
