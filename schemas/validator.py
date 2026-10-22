@@ -65,6 +65,12 @@ def check_questions_file(path: Path) -> list[str]:
     return problems
 
 
+def validate_question(q: dict) -> list[str]:
+    """单题内存校验（bin/examine.py 出题驱动用）。返回问题清单（空=通过）。"""
+    return [f"{'/'.join(map(str, e.absolute_path)) or '<根>'}: {e.message}"
+            for e in _validator("question").iter_errors(q)]
+
+
 def check_cards_dir(answers_side_dir: Path) -> list[tuple[str, list[str]]]:
     """answers/<side>/*.json 逐份校验。返回 [(文件名, 问题清单)]，目录不存在返回空。"""
     out = []
