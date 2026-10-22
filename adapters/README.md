@@ -59,7 +59,7 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 （全文定义与 `docs/glossary.md` 一致，此处为速查）
 
 - **作答卡**：每题的机器提取结果（统一 11 字段结构），从原始留痕提取而来。
-- **契约（schemas/）**：角色间交接数据的固定格式（题库/作答卡/裁决书/能力卡四份 JSON Schema），适配器输出必须过它。
+- **契约（schemas/）**：角色间交接数据的固定格式（题库/作答卡/裁决书三份 JSON Schema），适配器输出必须过它。
 - **校验器（bin/validate.py）**：逐份数据对 JSON Schema 检查的脚本，不过即逐条报错退出。
 - **payload（原始报文）**：datus 逐条输出的原始消息流，一字不改存档，是一级证据。
 - **三态**：cube 返回的三种类型：answer（有答案）/ ask（反问口径）/ nomatch（能力外）。

@@ -2,7 +2,7 @@
 
 两个使用点：
 - 适配器写卡前内联校验（adapters/*/driver.py）——格式错误在产出时挡住，不流到裁决层；
-- bin/validate.py 命令行——对轮目录全量核查（题库/作答卡/裁决书）+ 根部能力卡。
+- bin/validate.py 命令行——对轮目录全量核查（题库/作答卡/裁决书）。
 """
 
 import json
@@ -89,20 +89,8 @@ def check_verdicts_dir(verdicts_dir: Path) -> list[tuple[str, list[str]]]:
     return out
 
 
-def check_capability_dir(capability_dir: Path) -> list[tuple[str, list[str]]]:
-    """capability/*.json 逐份校验（M2 起才有，不存在则空）。"""
-    out = []
-    if not capability_dir.is_dir():
-        return out
-    for f in sorted(capability_dir.glob("*.json")):
-        probs = _check_file(f, "capability")
-        if probs:
-            out.append((f.name, probs))
-    return out
-
-
-def check_round(round_dir: Path, capability_dir: Path | None = None) -> list[tuple[str, list[str]]]:
-    """轮目录全量核查：questions*.jsonl + answers/<side>/ + verdicts/[ + 根部能力卡]。"""
+def check_round(round_dir: Path) -> list[tuple[str, list[str]]]:
+    """轮目录全量核查：questions*.jsonl + answers/<side>/ + verdicts/。"""
     findings = []
     for qf in sorted(round_dir.glob("questions*.jsonl")):
         probs = check_questions_file(qf)
@@ -113,6 +101,4 @@ def check_round(round_dir: Path, capability_dir: Path | None = None) -> list[tup
         for side_dir in sorted(p for p in answers.iterdir() if p.is_dir()):
             findings += check_cards_dir(side_dir)
     findings += check_verdicts_dir(round_dir / "verdicts")
-    if capability_dir is not None:
-        findings += check_capability_dir(capability_dir)
     return findings

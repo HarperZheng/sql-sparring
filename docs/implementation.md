@@ -21,7 +21,7 @@
 | 角色 | 组件 | 职责 | 输入 → 输出 | 运行环境 | 模型 |
 |---|---|---|---|---|---|
 | 考纲（出题依据） | `syllabus/`（`gen_db_profile.py` + `business.md`） | 编制课本：原始库数据画像 + 业务知识 | ClickHouse 原始库 + 业务文档 → `db_profile.json` + `business.md` | Windows Python（纯解析）+ 人工整理 | 无 |
-| 出题人 | `examiner/`（SKILL.md + `bin/examine.py`） | **只读考纲**出题（盲考，不读能力卡） | `syllabus/` → `questions.jsonl` | Claude Code headless（Windows） | 可配置（`conf/models.json` examiner 节；缺省本机 claude 现配） |
+| 出题人 | `examiner/`（SKILL.md + `bin/examine.py`） | **只读考纲**出题（盲考，不读答题人侧任何产出） | `syllabus/` → `questions.jsonl` | Claude Code headless（Windows） | 可配置（`conf/models.json` examiner 节；缺省本机 claude 现配） |
 | 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | Windows + WSL 桥接（wsl_runner 文件交接） | GLM-5.3-Flash（生产现配，不动） |
 | 答题人·cube | `adapters/ask_cube/` | 逐题驱动 cube 服务并提取作答卡 | `questions.jsonl` → `answers/cube/qNN.json` + 原始留痕 | HTTP `:4100/chat` | Claude Agent SDK（生产现配，不动） |
 | 裁判 | `judge/`（v1 人工在环 → M4 固化服务） | 逐题对出裁决书 + 修正答案 | 双侧作答卡 + 两侧语义层定义切片 → `verdicts/qNN.json` | v1：人 + DeepSeek 辅助；M4：judge 服务（另一接口 DeepSeek） | 可配置（`conf/models.json` judge 节） |
@@ -32,13 +32,13 @@
 1. **组件间只通过 §1.7 四层记录交换数据**（留痕 → 提取 → 裁决 → 回归），不共享内存态、不互相 import。
 2. **适配器是独立的**：提取逻辑按 §2.2 提取规格在本仓重写，不依赖 datus/cube 仓的既有脚本。
 3. **出题人/裁判与答题人模型不对称**（决策 D9，§五）——评测者与被测者不同源，避免相关盲区。
-4. **出题人盲考**：能力卡不进出题人输入，出题只依据考纲（决策点 D3b，§五）。
+4. **出题人盲考**：答题人侧产出（作答卡/留痕）不进出题人输入，出题只依据考纲（决策点 D3b，§五）。
 
 ## 二、出题人启动：四件套
 
 出题人是互搏的起点，也是唯一需要**从零新起**的 agent。启动分四步，每步有独立验收，全部通过才出现第一个机器生成的题库。
 
-**出题依据原则（用户拍板）：根据课本出题，而不是根据答题人的能力出题。** 若按能力卡出题，考卷被答题人现状锚死，能力卡没有的永远不问，互搏就永远发现不了"双侧都没建模"的缺口——v0 的 q26-q30 是反证：预期 nomatch 的 3 题实际可答，这些缺口只有脱离能力卡、从业务与原始库出发才问得出来。因此出题人**只读考纲、不读能力卡**（盲考），能力卡生成器降级换岗到裁决/回灌侧（见本节末）。
+**出题依据原则（用户拍板）：根据课本出题，而不是根据答题人的能力出题。** 若按答题人现有能力出题，考卷被答题人现状锚死，不会的永远不问，互搏就永远发现不了"双侧都没建模"的缺口——v0 的 q26-q30 是反证：预期 nomatch 的 3 题实际可答，这些缺口只有从业务与原始库出发才问得出来。因此出题人**只读考纲**（盲考），答题人侧任何产出不进其输入。
 
 ### Step 0 — 考纲编译器
 
@@ -46,7 +46,7 @@
 
 **原料一：数据画像 `syllabus/db_profile.json`**（`gen_db_profile.py` 纯解析）——直连 ClickHouse（information_schema + 只读聚合，不经 dosi 引擎，无 Code 115 问题），对非税相关表生成：
 
-| 画像内容 | 本项目已知锚点（全部来自原始库，无一来自能力卡） |
+| 画像内容 | 本项目已知锚点（全部来自原始库） |
 |---|---|
 | 表/列/类型/COMMENT 注释 | fne_fund_main 全字段注释 |
 | 行数与时间跨度 | 缴款表 53 个月；min/max 日期 |
@@ -71,7 +71,7 @@
 
 出题人 agent 的系统契约，核心条款：
 
-- **输入**：只给考纲（db_profile + business.md）。不给能力卡（盲考，出题人不知道答题人是谁、有什么能力——双侧天然对称）；不给历史题库原文（防照抄 v0 题）。
+- **输入**：只给考纲（db_profile + business.md）。不给答题人侧任何产出（盲考，出题人不知道答题人是谁、有什么能力——双侧天然对称）；不给历史题库原文（防照抄 v0 题）。
 - **输出**：`questions.jsonl`，每行一题，字段必须含 `syllabus_ref`（回指考纲知识点编号）。
 - **四类题型**（按课本知识点性质）：**事实**（单点指标/维度）、**关联**（跨表/跨环节，如链路状态、单位树下钻）、**辨析**（固有口径歧义，如不加直缴汇缴限定的"缴款金额"；歧义出处须能在课本找到）、**边界**（空值/极端分布/无数据期，如 2025-08 无清分数据、划拨重复计数）。
 - **不标预期**：题库不含 `expect`——"谁该会"由实答揭示，nomatch 本身即登记；预期断言是自我实现的，考不出真东西。
@@ -97,15 +97,15 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 四件套齐 → round-02 题库诞生，互搏起点闭环。
 
-### 能力卡生成器：不删，降级换岗
+### 能力卡生成器：删除（D11，用户拍板 2026-10-22）
 
-原 Step 0 的 `capability/gen_datus.py` / `gen_cube.py`（能力卡仍以各自语义模型为源——datus 解析 `fne_fund_main.yml` + **YAML=引擎=KB 三方一致断言**；cube 走 dictionary/members）从出题人输入中移除，产出 `capability/{datus,cube}.json` 挪到裁决与回灌侧，三用：
+原计划的 `capability/gen_datus.py` / `gen_cube.py`（按语义模型枚举"我能答什么"清单）不再实施。裁决四态只靠两侧作答卡（answer 口径自述 + sql 文本已足够），三个旧用途的替代：
 
-1. **裁判的语义层切片**：裁决时给裁判看两侧指标/member 定义原文（§四）。
-2. **差距分析**：`考纲知识点 × 两侧能力卡` 覆盖差 → **双侧共同建模缺口单**——考纲里有、两侧能力卡都没有的知识点，是互搏最高价值产出（v0 的 q26-q28 即此类），制度化进轮报指标"双侧共同缺口数"。
-3. **答题前健康检查**：三方一致断言保留为每轮开跑前的答题人语义层状态门，挂了先修再考。
+1. **nomatch 归因**：一侧答"能力外"时作答卡无口径无 SQL，裁决时**现查语义层**（datus=`fne_fund_main.yml`、cube=词典 member）——语义层有相关指标→执行/配置事故；没有→建模缺口。
+2. **双侧共同缺口**：退为**被动统计**（同一题两侧均 nomatch/failed），轮报五指标改四指标；代价是覆盖不到"没问到的缺口"，日后需要主动盘点再从 git 复活。
+3. **答题前健康检查**：保留为开跑前断言脚本（datus 三方一致断言：YAML=引擎=KB；cube 词典可达），挂了先修再考，不落卡。
 
-**每轮作答前刷新**，保证能力卡反映语义层当前状态。附带收益：出题人盲了之后，考纲成为双方共同"教学大纲"，将来第三、第四个答题智能体加入，同一张卷子直接复考。
+附带收益不变：出题人盲了之后，考纲成为双方共同"教学大纲"，将来第三、第四个答题智能体加入，同一张卷子直接复考。
 
 ## 三、答题人适配器固化
 
@@ -139,9 +139,9 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 - **v1（round-02）人工在环**：把 v0 的 10 号对账文档逐题结构化为 `verdicts/*.json` 作为**校准集**——裁决书格式、口径卡写法、"只陈述客观差异不预判对错"的文风，先在人手里定型。
 - 裁决四态：`互证通过`（口径同+值同）/ `建模差异`（口径不同→差距单）/ `执行事故`（口径同+值不同→bug 单）/ `待人工`。
-- 裁判输入切片：两侧语义层**定义原文**（datus=YAML 指标定义节选；cube=member 定义节选），只给相关切片，不给全量。
+- **裁判输入=两侧作答卡**（D11）：四态判定只靠两卡（answer 口径自述 + sql 文本已足够）；仅 nomatch 归因时现查语义层相关条目（datus=YAML、cube=词典），不预生成任何能力清单。
 - **M4 固化**为 judge 服务（另一接口 DeepSeek，接口与 key 走 `conf/models.json` judge 节），以 round-02/03 的人工裁决为回归基准。
-- **差距分析（材料包）**：`考纲知识点 × 两侧能力卡` 覆盖差 → **双侧共同建模缺口**（考纲覆盖而两侧能力卡皆无的知识点），按本侧视角写入两侧 issues 文件 §③；轮报指标增至五个：一致率 / 分歧分布 / 差距数 / 闭环率 / **双侧共同缺口数**。
+- **共同缺口（材料包 §③）**：同一题两侧均 nomatch/failed → 判双侧共同缺口，按本侧视角写入两侧 issues 文件 §③（D11 后为被动统计，只覆盖被问到的题）；轮报四指标：一致率 / 分歧分布 / 差距数 / 闭环率。
 
 ### 回灌材料包：轮的终点，不自动回灌
 
@@ -177,8 +177,8 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 |---|---|---|---|
 | D1 | 记录四层分离 | 原始留痕/机器提取/裁决/回归基准各层单一用途，禁止混写 | 设计文档 §1.7 |
 | D2 | 命中指标两级记录 | 工具级 `metrics_hit`（过程证据，机器提取）+ 口径级 `cards`（裁决证据，裁判归一化） | 作答卡 schema |
-| D3a | 能力卡以语义模型为源 | datus 解析 YAML+三方断言；cube 走 dictionary/members；用途=裁判切片/差距分析/答题前健康检查，**不进出题人** | §二 末 |
-| D3b | 出题以考纲为源（用户拍板） | 课本=原始库数据画像+业务知识；**根据课本出题，而非根据答题人能力出题**；能力卡不进出题人输入（盲考） | §二 Step 0 |
+| D3a | ~~能力卡以语义模型为源~~ → **已废除（D11，2026-10-22）** | 原案能力卡三用（裁判切片/差距分析/健康检查）；现裁决只靠作答卡、nomatch 归因现查语义层、健康检查为断言脚本、共同缺口为被动统计 | §二 末、§四 |
+| D3b | 出题以考纲为源（用户拍板） | 课本=原始库数据画像+业务知识；**根据课本出题，而非根据答题人能力出题**；答题人侧产出不进出题人输入（盲考） | §二 Step 0 |
 | D4 | 对账先口径后数值 | 口径不同=建模差异；口径同值同=互证；口径同值异=执行事故 | 裁决四态 |
 | D5 | 回归基准三层 | T1 文档基准（07 号）→ T2 双侧互证 → T3 修正答案+人工确认；沉淀进 `suite/accepted_answers.json` | §六 M4 |
 | D6 | 不自动回灌（用户拍板） | 互搏止于**回灌材料包**（两侧 issues + 回归候选）；语义层修改/口径拍板/复验发起/套件入库均为人工动作 | §四 |
@@ -186,15 +186,16 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | D8 | 适配器永久留本仓（用户拍板） | `ask_datus`/`ask_cube` 固化在 sql-sparring `adapters/`，**不回迁**各自仓库；统一契约单一事实源 | §三 |
 | D9 | 模型不对称与可换配置（用户拍板 2026-10-22） | **答题人**生产现配不动（datus=GLM-5.3-Flash、cube=Claude Agent SDK 现配）；**出题人**经本机 claude 无头调起（现配即 GLM 系；出题受考纲约束，与答题人同源风险低）；**裁判**与出题人/答题人不同接口不同源——用另一接口的 DeepSeek 模型（v1=人 + DeepSeek 辅助，M4 固化）。**裁判与出题人的模型/接口/key 一律走配置文件 `conf/models.json`**：换模型、换接口只改配置不改代码；key 不入库，配置文件只存环境变量名（本仓已公开于 GitHub，真实 key 放本机环境变量） | §一 角色表、§二 Step 2、§四、§七、里程碑 M1/M2/M4 |
 | D10 | M1 契约三拍板（用户 2026-10-22） | ① 作答卡 `status` **六值超集**：answer/ask/nomatch/timeout/error/failed（failed=适配器链路失败，error=智能体答错/中断，timeout=超时截断，两侧共用）；② **口径卡只在裁决书** `cards`，作答卡保持纯机器提取零 LLM；③ 作答卡**以 M0 实卡为底定稿**（`sql`/`sql_count` 双侧同放 SQL），不做 queries 改造、不迁移 M0 证据卡 | §三、设计文档 §1.7、schemas/answer_card.schema.json |
+| D11 | 能力卡删除（用户拍板 2026-10-22） | 裁决四态只靠两侧作答卡；nomatch 归因=裁决时现查语义层；健康检查=开跑前断言脚本（不落卡）；共同缺口=被动统计（两侧均 nomatch/failed 的题），轮报五指标改四指标；`schemas/capability.schema.json` 与 M2 生成器计划一并删除（git 950d4b0 可复活） | §二 末、§四、里程碑 M1/M2/M3、schemas/ |
 
 ## 六、里程碑（M0–M4，答题链路先行）
 
 | 里程碑 | 内容 | 验收 | 产出 |
 |---|---|---|---|
 | **M0 答题链路打通** | Windows 侧 uv 环境初始化（pyproject.toml + uv.lock 入 git，依赖仅 httpx/jsonschema/pydantic）+ `ask_datus`（wsl_runner 桥接 + §2.2 提取器）+ `ask_cube`（:4100 三态 + 拍板政策）+ **最小作答卡结构**（id / question / status / metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path——M1 升格为正式 schema 的底坯） | **对接活体验证**：datus ≥2 道新题活跑（`datus -p`）status=answer 且带数值；cube ≥2 道新题活跑（`:4100/chat`）至少 1 题数值答案 | `adapters/` 双适配器 + `rounds/m0/` 证据 + `pyproject.toml` |
-| **M1 契约定稿** | 四个 JSON Schema（question / answer_card / verdict / capability）+ questions.jsonl 格式定稿；answer_card 以 M0 实卡为底定稿（status 六值、arbiter 全字段；口径卡只在裁决书，D10），适配器写卡前内联 schema 校验 + `bin/validate.py` 全量校验器；`conf/models.json` 骨架落盘（examiner/judge 两节，key 只存环境变量名） | 适配器全量输出过 schema 校验 | `schemas/` + `bin/validate.py` + `conf/models.json` |
-| **M2 出题人启动** | 考纲编译器（db_profile 纯解析 + business.md 剥题整理）+ SKILL.md + `bin/examine.py`（LLM 调用接入 `conf/models.json` examiner 节，缺省本机 claude 现配）；能力卡生成器换岗至裁决/回灌侧 | db_profile 抽查对上 P0/P1 结论；business.md 剥题检查通过；题库覆盖矩阵无漏项；首个机器题库诞生 | `syllabus/` + `examiner/` + `capability/` + round-02 题库 |
-| **M3 首个自动轮** | `bin/round.py` 跑 round-02 全流程（出题→双侧作答→提取）；裁决人工在环 | 一轮完整记录落盘 + 轮报五指标（一致率/分歧分布/差距数/闭环率/双侧共同缺口数） | `rounds/round-02/` + report |
+| **M1 契约定稿** | 三个 JSON Schema（question / answer_card / verdict；第四份 capability 随 D11 删除）+ questions.jsonl 格式定稿；answer_card 以 M0 实卡为底定稿（status 六值、arbiter 全字段；口径卡只在裁决书，D10），适配器写卡前内联 schema 校验 + `bin/validate.py` 全量校验器；`conf/models.json` 骨架落盘（examiner/judge 两节，key 只存环境变量名） | 适配器全量输出过 schema 校验 | `schemas/` + `bin/validate.py` + `conf/models.json` |
+| **M2 出题人启动** | 考纲编译器（db_profile 纯解析 + business.md 剥题整理）+ SKILL.md + `bin/examine.py`（LLM 调用接入 `conf/models.json` examiner 节，缺省本机 claude 现配） | db_profile 抽查对上 P0/P1 结论；business.md 剥题检查通过；题库覆盖矩阵无漏项；首个机器题库诞生 | `syllabus/` + `examiner/` + round-02 题库 |
+| **M3 首个自动轮** | `bin/round.py` 跑 round-02 全流程（出题→双侧作答→提取）；裁决人工在环 | 一轮完整记录落盘 + 轮报四指标（一致率/分歧分布/差距数/闭环率，D11） | `rounds/round-02/` + report |
 | **M4 复验轮与固化** | 复验轮机制跑通：人工按材料包修双侧语义层并清记忆 → 发起复验（`--retest <上轮>`，复验集=上轮分歧题）→ 通过题人工确认入库；材料包格式定稿；裁判固化 judge 服务（模型/接口接 `conf/models.json` judge 节） | 复验轮至少跑通一次且闭环率>0；judge 以人工裁决为回归基准 | 回归套件 + 材料包模板 |
 
 顺序依赖：M0（链路可行性）→ M1（契约定稿）→ M2 → M3 → M4。**M0 先行的理由**：两条答题链路是全系统最大的外部依赖风险（WSL 桥、:4100 活服务、提取规格），先证明"可调用、能答数"，再冻结契约——契约没有跳过，只是延后到有真实输出为底时才定稿。M0 只依赖 §2.2 提取规格与最小作答卡结构，不依赖完整 schema；datus 侧与 cube 侧可并行，datus 侧提取器可对 v0 留痕离线开发调试。
@@ -244,7 +245,6 @@ D:\develop\sql-sparring\
   adapters\{ask_datus, ask_cube}\      M0：双答题驱动器（永久在本仓，D8）
   syllabus\                            M2：考纲=课本（db_profile 数据画像 + business.md 业务课本，出题唯一依据）
   examiner\                            M2：出题人（SKILL.md + bin/examine.py，只读考纲盲考）
-  capability\                          M2：能力卡生成器与产出（裁决/差距分析侧，不进出题人）
   judge\  bin\round.py                 M3/M4：裁判（人工在环→固化服务）+ 一轮编排器（--retest 复验）
   rounds\round-NN\                     每轮记录（§1.7 四层：runs 留痕→answers 提取→verdicts 裁决→feedback 材料包）
     feedback\                          轮终点（D6 不自动回灌）：issues-{datus,cube}.md + suite-candidates.jsonl
