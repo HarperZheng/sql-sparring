@@ -6,7 +6,7 @@
 
 | 程序 | 依赖 | 检查方法 |
 |---|---|---|
-| ask_datus | datus --web 常驻服务在跑（默认 `:8501`，chat API 问数与 UI 同源） | `GET http://localhost:8501/openapi.json` 返回 200（或跑 `bin/preflight.py`） |
+| ask_datus | datus --web 常驻服务在跑（默认 `:8501`，跑在 WSL；chat API 问数与 UI 同源） | `GET http://localhost:8501/openapi.json` 返回 200（或跑 `bin/preflight.py`） |
 | ask_cube | cube 服务 `:4100`（问数）与 `:4000`（编译 SQL）在跑；`D:\develop\cube\.env` 里有 `CUBEJS_API_SECRET` | 浏览器开 `http://localhost:4100/` 返回正常页面 |
 
 两个程序都在本仓根目录用 uv 环境执行（Windows 侧）。
@@ -27,7 +27,7 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 
 ### 两个程序各自的要点
 
-- **ask_datus**：逐题 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，与 UI 同源；agent 配置/语义模型只在服务启动时装一次）。每题新 session_id（题间零污染）；SSE 流的 message 事件内层 payload 与 `datus -p` 同构，提取规则不变。单题超时默认 900 秒，超时截断但保留已收到的部分输出；网络类失败换新 session 重试 3 次（与 ask_cube 同款）。（v0 曾走 WSL 桥接调 `datus -p`，每题冷启慢一个量级，`wsl_runner.py` 保留作回退参考。）
+- **ask_datus**：逐题 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，与 UI 同源；agent 配置/语义模型只在服务启动时装一次）。每题新 session_id（题间零污染）；SSE 流的 message 事件内层 payload 与 `datus -p` 同构，提取规则不变。单题超时默认 900 秒，超时截断但保留已收到的部分输出；网络类失败换新 session 重试 3 次（与 ask_cube 同款）。（v0 曾走 WSL 桥接调 `datus -p`，每题冷启慢一个量级，`wsl_runner.py` 保留作回退参考。）指标路径的 SQL 证据走执行记录取证（`evidence.py` 读 datus 日志 `dosi_sql_executed` 行，按题时间窗提取；取证失败卡 sql 留空、不影响作答）。
 - **ask_cube**：每题新开会话（sessionId，会话标识，题间零污染）；若首答是反问（三态中的 ask），按拍板政策自动把第一个选项原文回发同一会话再取答案，追问与选项记入作答卡 `arbiter` 字段；答案里的语义层查询会再调 `:4000` 换取编译后的 SQL（失败不阻断作答，留注释说明）。
 
 ## 输出在哪
@@ -36,7 +36,7 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 
 | 位置 | 内容 |
 |---|---|
-| `runs/<侧>/` | 原始留痕（一级证据，一字不改）。datus：payload.jsonl（SSE 解出的 MessagePayload 流）/ meta.json（会话、耗时、token 用量）；cube：raw.json（首答+追问）/ sql.txt |
+| `runs/<侧>/` | 原始留痕（一级证据，一字不改）。datus：payload.jsonl（SSE 解出的 MessagePayload 流）/ meta.json（会话、耗时、token 用量、路由与 SQL 取证来源）；cube：raw.json（首答+追问）/ sql.txt |
 | `answers/<侧>/<id>.json` | 作答卡 11 字段：id / question / status / metrics_hit（命中了哪些语义层指标）/ sql / sql_count / answer / errors / elapsed_s / arbiter（自动拍板记录）/ raw_path |
 
 - status 六值枚举（契约，M1 拍板 D10）：`answer`（有答案）/ `ask`（反问）/ `nomatch`（能力外）/ `timeout`（超时截断）/ `error`（智能体答错/中断）/ `failed`（适配器没连上服务）。datus 侧现产 answer/failed，cube 侧 answer/ask/nomatch/failed。
@@ -53,6 +53,8 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 | datus 连接被拒 / 全题报错 | `:8501` 服务没起——先 `datus --web` 启动常驻服务再跑（`bin/preflight.py` 第 2 项即查它） |
 | cube 连接被拒 | `:4100` 服务没起，先启动 cube 服务再跑 |
 | datus 某题很久不出结果 | chat API 通道单题通常十几秒到一分钟；超 900 秒按超时截断并保留部分输出，可用 `--timeout` 加大 |
+| datus 卡 sql 为空但 metrics_hit 有值 | 指标路径返回体本就不含 SQL（datus 工具层剥离）；SQL 由执行记录取证补——若仍为空，多半是 datus 服务未带 v4 日志代码重启（日志无 `dosi_sql_executed` 行）或取证时间窗错位 |
+| datus 服务重启时 uv 全量重装 venv（Removed/Created .venv） | datus 服务跑在 WSL，`.venv` 归 WSL 所有；**Windows 侧不要对 datus 仓跑任何 uv 命令**（会判定 venv 不匹配并损坏它，2026-10-23 踩过）。另：datus 日志时间戳走 WSL 的 UTC，比 Windows 本地慢 8 小时（取证模块已自校准，勿改回本地时间直比） |
 
 ## 术语
 
@@ -66,3 +68,4 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 - **拍板政策**：对口径反问的标准应答规则——本项目取第一个选项原文回发同一会话。
 - **chat API（datus）**：datus --web 常驻服务的 HTTP 接口，本项目指 `:8501` 的 `POST /api/v1/chat/stream`（SSE 流，与 UI 同源）。
 - **WSL 桥接**（已退役）：Windows 侧经 `wsl.exe` 调用 WSL 内命令、以文件交接数据的方式；v0 的 ask_datus 用它跑 `datus -p`，`wsl_runner.py` 保留作回退参考。
+- **执行记录取证**：SQL 证据机制——query_metrics 返回体不含 SQL，由 datus 侧日志（`dosi_sql_executed` 行）记下实际执行原文，`evidence.py` 按题时间窗提取进作答卡（LLM 无感知）。

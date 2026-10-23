@@ -87,6 +87,7 @@ def run_question(qid: str, question: str, runs_dir: Path,
         sid = f"{session_prefix}-{qid}" + ("-m" if route == "metrics" else "")
         archived = _archive_existing(payload)
         t0 = time.time()
+        started_at = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t0))
         timed_out = False
         try:
             lines, summary, session_id, err = _ask(question, sid, timeout_s,
@@ -97,7 +98,9 @@ def run_question(qid: str, question: str, runs_dir: Path,
             limit_s = e.timeout_s  # 状态文案记实际触发的上限（墙钟 180s 而非读超时 900s）
         else:
             limit_s = timeout_s
-        elapsed = round(time.time() - t0, 1)
+        t1 = time.time()
+        elapsed = round(t1 - t0, 1)
+        ended_at = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t1))
         total_elapsed = round(total_elapsed + elapsed, 1)
 
         payload.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
@@ -110,9 +113,12 @@ def run_question(qid: str, question: str, runs_dir: Path,
             extracted["errors"] = [err] if err else []
         final = {"route": route, "extracted": extracted, "session_id": session_id,
                  "timed_out": timed_out, "elapsed_s": elapsed, "summary": summary,
-                 "error": err, "archived": archived}
+                 "error": err, "archived": archived,
+                 "started_at": started_at, "ended_at": ended_at,
+                 "started_epoch": t0, "ended_epoch": t1}
         routes.append({
             "route": route, "subagent_id": subagent, "session_id": session_id,
+            "started_at": started_at, "ended_at": ended_at,
             "timed_out": timed_out, "elapsed_s": elapsed,
             "duration_s": summary.get("duration_s"), "requests": summary.get("requests"),
             "total_tokens": summary.get("total_tokens"), "status": extracted["status"],
@@ -123,6 +129,20 @@ def run_question(qid: str, question: str, runs_dir: Path,
             break  # 该通道出了最终答案，不再降级
 
     assert final is not None  # plan 非空，循环至少执行一次
+
+    # v4 SQL 旁路取证（2026-10-23）：指标路径出答案但卡无 SQL（query_metrics
+    # 返回体不含 SQL 原文，datus 工具层故意剥离）时，从 datus 日志按本题
+    # 时间窗提取实际执行原文。取证在墙钟外；任何失败降级为不填充（sql 保持
+    # ""），不影响作答与状态；chat 路由的 SQL 本就在 payload，不走此路。
+    sql_source = ""
+    if final["extracted"]["sql_count"] == 0 and final["extracted"]["metric_calls"]:
+        from . import evidence
+        window_sqls = evidence.harvest(final["started_epoch"], final["ended_epoch"])
+        if window_sqls:
+            final["extracted"]["sql"] = window_sqls[-1]
+            final["extracted"]["sql_count"] = len(window_sqls)
+            sql_source = "datus-log"
+
     meta = {"channel": "chat-api", "route_used": final["route"], "routes": routes,
             # 以下平铺字段=最终采纳尝试（兼容旧读者）；elapsed_s=全 attempts 总耗时
             "session_id": final["session_id"], "timed_out": final["timed_out"],
@@ -130,7 +150,7 @@ def run_question(qid: str, question: str, runs_dir: Path,
             "duration_s": final["summary"].get("duration_s"),
             "requests": final["summary"].get("requests"),
             "total_tokens": final["summary"].get("total_tokens"),
-            "error": final["error"] or None}
+            "error": final["error"] or None, "sql_source": sql_source}
     meta_f.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {

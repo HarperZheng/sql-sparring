@@ -24,16 +24,18 @@ call-tool / call-tool-result，extractor.py 按此提取）：
             result.result = 命中的指标清单 / 指标定义。
   获得 SQL  call-tool：toolName=query_metrics，输入 toolParams={"metrics":
             ["缴库金额"], "dimensions":[...], "time_start", "time_end",
-            "time_granularity", "dry_run": true}——datus 侧 LLM 只出参数不写
-            SQL，SQL 由 dosi 引擎按语义模型 yml（datus 仓 subject/
-            semantic_models/yunnan0508/fne_fund_main.yml）编译；dry_run=true
-            时配对 call-tool-result 的 result.result.metadata.sql 即编译出的
-            SQL 全文（只编译不执行，不进 ClickHouse query_log）。
-  执行 SQL  同一 query_metrics 不带 dry_run：dosi 引擎在 datus 服务内对
+            "time_granularity"}——datus 侧 LLM 只出参数不写 SQL，SQL 由 dosi
+            引擎按语义模型 yml（datus 仓 subject/semantic_models/yunnan0508/
+            fne_fund_main.yml）编译；SQL 全文不经 LLM、也不出现在返回体
+            （工具层故意剥离，datus 仓 semantic_tools.py:1412——防 LLM 上下文
+            膨胀）；实际执行原文由 datus 侧日志旁路留痕（dosi/runtime.py 的
+            dosi_sql_executed 行，2026-10-23 v4 加），evidence.py 按题时间窗
+            提取进作答卡。datus 另有 dry_run=true 只编译不执行的用法，
+            本适配器不走。
+  执行 SQL  同一 query_metrics 调用内：dosi 引擎在 datus 服务内对
             ClickHouse 执行（连接/账号配在 datus 仓 conf/agent.yml
             datasources.yunnan0508）；配对 call-tool-result 的
-            result.result.data.compressed_data = CSV 数据行，SQL 原文不在
-            返回体（要 SQL 证据走 dry_run 或 ClickHouse system.query_log）。
+            result.result.data.compressed_data = CSV 数据行，回给 LLM 作答。
 
 agent 配置/语义模型只在常驻服务启动时装一次（UI 回答快的根源，也是本通道
 替换 WSL 桥的动机）。

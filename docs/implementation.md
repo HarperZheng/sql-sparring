@@ -161,7 +161,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | D10 | M1 契约三拍板（用户 2026-10-22） | ① 作答卡 `status` **六值超集**：answer/ask/nomatch/timeout/error/failed（failed=适配器链路失败，error=智能体答错/中断，timeout=超时截断，两侧共用）；② **口径卡只在裁决书** `cards`，作答卡保持纯机器提取零 LLM；③ 作答卡**以 M0 实卡为底定稿**（`sql`/`sql_count` 双侧同放 SQL），不做 queries 改造、不迁移 M0 证据卡 | §三、设计文档 §1.7、schemas/answer_card.schema.json |
 | D11 | 出题依据=纯业务（用户 2026-10-22） | 考纲只有业务课本一件，**不读数据项与数据源**（无库表画像、无数据源文档）；库表结构知识由答题人的语义层自行承载；原始资料存档进考纲目录 `syllabus/bussiness/`（出处，非出题输入）；撞库答不出=nomatch 共同缺口，属发现非缺陷。**课本本身同样不含表定义、字段名、数据可得性**（v2 剥离，用户 2026-10-22 当日追加） | §二 Step 0 |
 | D12 | 裁判只判一致与归因（用户 2026-10-22） | 裁判**不产数值真伪结论**：同口径同值=互证通过（同库互证即正确性证据）；口径不同=建模差异，谁补建模记入 `issues[]`（side 支持 both；type 四分：补指标/补维度/改口径/修bug）；口径同值异=执行事故，`type: 修bug`，属排错不属建模。非互证通过的题**默认进下轮复验集**，前提=对应侧补完语义层才发起复验（人工时机保证） | 设计 §1.7③；复验规则 §四 |
-| D13 | 全题指标优先（用户拍板 2026-10-23） | datus 接题后**一律先走 `ask_metrics` 节点**（请求体 `subagent_id` 路由；query_metrics 交 dosi 引擎按语义模型编译 SQL，**metrics_hit 由此有值**），无最终答案（未建模/报错/超时）降级默认 chat 节点再答（表达力兜底）。**路由不读题型**——题型是出题人侧考纲信息，答题人不读题型字段（盲考纪律）；两级尝试全留痕（meta.routes） | 设计 §2.1；`adapters/ask_datus/driver.py` |
+| D13 | 全题指标优先（用户拍板 2026-10-23） | datus 接题后**一律先走 `ask_metrics` 节点**（请求体 `subagent_id` 路由；query_metrics 交 dosi 引擎按语义模型编译 SQL，**metrics_hit 由此有值**），无最终答案（未建模/报错/超时）降级默认 chat 节点再答（表达力兜底）。**路由不读题型**——题型是出题人侧考纲信息，答题人不读题型字段（盲考纪律）；两级尝试全留痕（meta.routes）。**SQL 证据走执行记录取证（v4）**：datus 侧 `dosi_sql_executed` 日志行 + `adapters/ask_datus/evidence.py` 按题时间窗提取，LLM 无感知 | 设计 §2.1；`adapters/ask_datus/driver.py`；`adapters/ask_datus/evidence.py`（v4 取证） |
 
 ## 六、里程碑（M0–M4，答题链路先行）
 
