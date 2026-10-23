@@ -22,7 +22,7 @@
 |---|---|---|---|---|---|
 | 考纲（出题依据） | `syllabus/`（`bussiness/` 原始资料 + `business.md` 课本） | 编制课本：收编业务知识（剥离数据落地内容）+ 知识点编号 | 业务原始资料 → `business.md` | 人工整理 | 无 |
 | 出题人 | `examiner/`（SKILL.md + `bin/examine.py`） | **只读考纲**出题（盲考，不读答题人侧任何产出） | `syllabus/` → `questions.jsonl` | Claude Code headless（Windows） | 可配置（`conf/models.json` examiner 节；缺省本机 claude 现配） |
-| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，datus --web 常驻服务） | GLM-5.3-Flash（生产现配，不动） |
+| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，datus --web 常驻服务）；题型路由 D13（问数族 ask_metrics 节点优先/概念族默认节点） | GLM-5.3-Flash（生产现配，不动） |
 | 答题人·cube | `adapters/ask_cube/` | 逐题驱动 cube 服务并提取作答卡 | `questions.jsonl` → `answers/cube/qNN.json` + 原始留痕 | HTTP `:4100/chat` | Claude Agent SDK（生产现配，不动） |
 | 裁判 | `judge/`（v1 人工在环 → M4 固化服务） | 逐题对出裁决书 + 修正答案 | 双侧作答卡 + 两侧语义层定义切片 → `verdicts/qNN.json` | v1：人 + DeepSeek 辅助；M4：judge 服务（另一接口 DeepSeek） | 可配置（`conf/models.json` judge 节） |
 | 编排器 | `bin/round.py` | 按一轮 SOP 顺序调用上述组件（M4 起支持 `--retest` 复验模式） | 轮号 → 本轮全部记录 | Windows Python | 无 LLM，纯流程 |
@@ -161,6 +161,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | D10 | M1 契约三拍板（用户 2026-10-22） | ① 作答卡 `status` **六值超集**：answer/ask/nomatch/timeout/error/failed（failed=适配器链路失败，error=智能体答错/中断，timeout=超时截断，两侧共用）；② **口径卡只在裁决书** `cards`，作答卡保持纯机器提取零 LLM；③ 作答卡**以 M0 实卡为底定稿**（`sql`/`sql_count` 双侧同放 SQL），不做 queries 改造、不迁移 M0 证据卡 | §三、设计文档 §1.7、schemas/answer_card.schema.json |
 | D11 | 出题依据=纯业务（用户 2026-10-22） | 考纲只有业务课本一件，**不读数据项与数据源**（无库表画像、无数据源文档）；库表结构知识由答题人的语义层自行承载；原始资料存档进考纲目录 `syllabus/bussiness/`（出处，非出题输入）；撞库答不出=nomatch 共同缺口，属发现非缺陷。**课本本身同样不含表定义、字段名、数据可得性**（v2 剥离，用户 2026-10-22 当日追加） | §二 Step 0 |
 | D12 | 裁判只判一致与归因（用户 2026-10-22） | 裁判**不产数值真伪结论**：同口径同值=互证通过（同库互证即正确性证据）；口径不同=建模差异，谁补建模记入 `issues[]`（side 支持 both；type 四分：补指标/补维度/改口径/修bug）；口径同值异=执行事故，`type: 修bug`，属排错不属建模。非互证通过的题**默认进下轮复验集**，前提=对应侧补完语义层才发起复验（人工时机保证） | 设计 §1.7③；复验规则 §四 |
+| D13 | 题型路由"看指标做问数"（用户拍板 2026-10-23） | datus 问数族题型走 `ask_metrics` 节点（请求体 `subagent_id` 路由；query_metrics 交 dosi 引擎按语义模型编译 SQL，**metrics_hit 由此有值**），无最终答案（未建模/报错/超时）降级默认 chat 节点再答；概念族直走默认节点。动机：默认节点工具清单无 query_metrics（round-02 实测 22 题 0 次调用、metrics_hit 恒空=口径保真整轮缺考）；指标通道实测更快（22.8s vs 自由 SQL 30–200s） | 设计 §2.1；`adapters/ask_datus/driver.py`（CONCEPT_TYPES/级联） |
 
 ## 六、里程碑（M0–M4，答题链路先行）
 

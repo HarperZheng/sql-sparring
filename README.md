@@ -2,7 +2,7 @@
 
 两个 NL 问数智能体（datus、cube）就同一批自然语言问题独立作答、互检、由裁判定谳；分歧产出**回灌材料包**（两侧各一份），由人工落入各自的语义层；互搏的副产品是一套不断生长的问数回归套件。
 
-- **datus 侧**：dosi 引擎语义层（`fne_fund_main.yml`，资金链，16 指标/7 数据集），无头驱动 chat API（`POST :8501/api/v1/chat/stream`，`datus --web` 常驻服务），模型 GLM-5.3-Flash。
+- **datus 侧**：dosi 引擎语义层（`fne_fund_main.yml`，资金链，16 指标/7 数据集），无头驱动 chat API（`POST :8501/api/v1/chat/stream`，`datus --web` 常驻服务），问数题走 `ask_metrics` 节点（query_metrics 通道，D13），模型 GLM-5.3-Flash。
 - **cube 侧**：Cube schema 语义层（票据链），无头驱动 `POST :4100/chat`（agent-svc，三态 answer/ask/nomatch）。
 - **同库互证的前提已验证**：双方查询同一 ClickHouse `172.18.166.126:8123/yunnan0508`。
 - 核心机制：**先比口径、后比数值**——口径不同=建模差异（回灌建模），口径同值同=互证通过，口径同值异=执行事故（回灌 bug）。
