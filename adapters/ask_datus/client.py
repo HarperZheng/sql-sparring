@@ -1,11 +1,42 @@
-""":8501 chat API 客户端（SSE 流）→ MessagePayload 行序列（与 ask_cube/client.py 同构）。
+"""datus chat API 客户端——本适配器对 datus 的全部调用就是这一个 HTTP 接口
+（与 ask_cube/client.py 同构：只解 SSE 壳，业务痕迹交 extractor.py 解析）。
 
-链路（2026-10-23 活体实测）：POST http://localhost:8501/api/v1/chat/stream
-{message, session_id, max_turns} → SSE（event: session|message|usage|end|error）。
-message 事件 data = {"type":"createMessage","payload":{MessagePayload}}，内层
-payload 与 datus -p 落盘格式同构——extractor 不改，只解 SSE 壳。
-每问新 session_id（题间零污染，与 cube 同款）；agent 配置/语义模型只在常驻
-服务启动时装一次（UI 回答快的根源，也是本通道替换 WSL 桥的动机）。
+接口  POST http://localhost:8501/api/v1/chat/stream（datus --web 常驻服务）
+输入  body = {"message":     题目原文（自然语言）,
+              "session_id":  "sparring-q01-m"，每问新开（题间零污染）,
+              "max_turns":   30（工具轮上限）,
+              "subagent_id": "ask_metrics"}    # 路由字段：指标问答节点
+                                               # （query_metrics 唯一挂载点）；
+                                               # 缺省=默认 chat 节点
+返回  SSE 流（event: session|message|usage|end|error），逐块解析：
+      message 块 → data["payload"] 是一条 MessagePayload，剥壳后逐行 append 进
+                   返回值 payloads（与 datus -p 落盘同格式）；
+      end 块    → duration/requests/tokens 记入 summary；
+      error 块  → 抛 RuntimeError（网络类，驱动层重试）。
+
+匹配指标 / 获得 SQL / 执行 SQL 三步都在 datus 服务内部完成，本文件只经 :8501、
+零数据库依赖；每步的痕迹落在返回的 MessagePayload 行里（content[].type 分
+call-tool / call-tool-result，extractor.py 按此提取）：
+
+  匹配指标  call-tool：toolName=search_metrics（输入 toolParams={"query_text":
+            "缴库"}，在语义层找有哪些指标）或 get_metric（输入 toolParams=
+            {"name":"缴库金额"}，取该指标定义）；配对 call-tool-result 的
+            result.result = 命中的指标清单 / 指标定义。
+  获得 SQL  call-tool：toolName=query_metrics，输入 toolParams={"metrics":
+            ["缴库金额"], "dimensions":[...], "time_start", "time_end",
+            "time_granularity", "dry_run": true}——datus 侧 LLM 只出参数不写
+            SQL，SQL 由 dosi 引擎按语义模型 yml（datus 仓 subject/
+            semantic_models/yunnan0508/fne_fund_main.yml）编译；dry_run=true
+            时配对 call-tool-result 的 result.result.metadata.sql 即编译出的
+            SQL 全文（只编译不执行，不进 ClickHouse query_log）。
+  执行 SQL  同一 query_metrics 不带 dry_run：dosi 引擎在 datus 服务内对
+            ClickHouse 执行（连接/账号配在 datus 仓 conf/agent.yml
+            datasources.yunnan0508）；配对 call-tool-result 的
+            result.result.data.compressed_data = CSV 数据行，SQL 原文不在
+            返回体（要 SQL 证据走 dry_run 或 ClickHouse system.query_log）。
+
+agent 配置/语义模型只在常驻服务启动时装一次（UI 回答快的根源，也是本通道
+替换 WSL 桥的动机）。
 """
 
 import json
