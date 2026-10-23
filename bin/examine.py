@@ -182,7 +182,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="M2 出题驱动器：考纲 → 题库（契约校验+悬空+覆盖矩阵）")
     ap.add_argument("--syllabus", default="syllabus", help="考纲目录（含 business.md）")
     ap.add_argument("--out", required=True, help="题库输出路径，如 rounds/round-02/questions.jsonl")
-    ap.add_argument("--count", type=int, required=True, help="题目总数")
+    ap.add_argument("--count", type=int, default=30, help="题目总数（缺省 30，round.py 不传参即可出题）")
     ap.add_argument("--mix", default="事实:3,关联:2,辨析:2,边界:2,总量趋势:4,排名对比:4,分布结构:4,超期账龄:3,异常校验:3,环节归因:3",
                     help="题型配比（概念族 9 + 问数族 21 = 30 题，即 30%%/70%%）")
     ap.add_argument("--start-id", default="q01", help="起始题号")
