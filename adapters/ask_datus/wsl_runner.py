@@ -1,5 +1,11 @@
 """WSL 内执行器：跑一题 `datus -p`，payload 流原样落盘。
 
+**已退役（2026-10-23）**：adapter v1 起改走 datus chat API（:8501，常驻服务，
+见 client.py）——每轮一次初始化、单题 11× 提速。本文件保留作回退参考，不再被
+driver.py 调用。
+
+运行环境：WSL（Ubuntu-26.04），datus 仓自带的 .venv/bin/python 执行，纯标准库。
+
 运行环境：WSL（Ubuntu-26.04），datus 仓自带的 .venv/bin/python 执行，纯标准库。
 由 Windows 侧经 `wsl.exe -d Ubuntu-26.04 --` 调起；**题目内容经文件交接，不过命令行**
 （免 Windows→WSL 的引号转写坑）。stdout 逐行输出 MessagePayload JSON，直接以字节

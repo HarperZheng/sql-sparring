@@ -1,31 +1,24 @@
-"""Windows 侧驱动：逐题调度 WSL 内 datus，回收留痕并组装作答卡。
+"""Windows 侧驱动：逐题 POST datus chat API（:8501），回收 payload 并组装作答卡。
 
-链路：题目写文件 → wsl.exe 调 wsl_runner.py（文件交接）→ payload 落盘 →
-extractor 提取 → 11 字段作答卡落盘。
+链路（v1，2026-10-23 起）：client.post_chat_stream（SSE）→ payload 行落盘 →
+extractor 提取 → 11 字段作答卡落盘。datus 常驻服务内 agent 配置/语义模型
+只在服务启动时装一次（每轮一次初始化，不再每题冷启）；每题新 session_id
+保证题间零污染（D7）。
 幂等（§三契约）：--only 子集复跑；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
+（v0 的 WSL 桥接 wsl_runner.py 已退役，文件保留作回退参考。）
 """
 
 import json
 import shutil
-import subprocess
 import time
 from pathlib import Path
 
+from . import client
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUNNER_SCRIPT = Path(__file__).with_name("wsl_runner.py")
-
-# 生产现配（不动，Q1）：datus 在 WSL，GLM-5.3-Flash 经既有 portproxy relay
-WSL_DISTRO = "Ubuntu-26.04"
-WSL_PYTHON = "/mnt/d/develop/datus/Datus-agent/.venv/bin/python"
-DATUS_ROOT = "/mnt/d/develop/datus/Datus-agent"
 DEFAULT_TIMEOUT_S = 900
-WINDOWS_SLACK_S = 60  # Windows 侧兜底超时 = WSL 超时 + 余量，防 wsl.exe 挂死
-
-
-def to_wsl_path(win_path: Path) -> str:
-    """D:\\a\\b → /mnt/d/a/b（仅本仓约定的盘符映射）。"""
-    p = win_path.resolve()
-    return f"/mnt/{p.drive[0].lower()}{p.as_posix()[2:]}"
+RETRY_ATTEMPTS = 3    # 与 ask_cube 同款：网络类失败换新 session 重试
+RETRY_BACKOFF_S = 20.0
 
 
 def _archive_existing(path: Path) -> str | None:
@@ -38,56 +31,64 @@ def _archive_existing(path: Path) -> str | None:
     return archived.name
 
 
-def run_question(qid: str, question: str, runs_dir: Path, timeout_s: int = DEFAULT_TIMEOUT_S) -> dict:
-    """跑一题，返回 {card, extracted, meta}。落盘：题目/留痕/meta 在 runs_dir。"""
+def _ask(question: str, session_id: str, timeout_s: float) -> tuple[list[str], dict, str, str]:
+    """首答（网络类失败换新 sessionId 重试，指数式退避；与 cube _ask_with_retry 同款）。
+
+    返回 (payload 行, summary, 实际用的 session_id, 错误链)。
+    client.ChatTimeout（预算耗尽）不在此重试——重试=再等一个整预算，向上抛。
+    """
+    err = ""
+    for i in range(RETRY_ATTEMPTS):
+        sid = session_id if i == 0 else f"{session_id}-r{i + 1}"
+        try:
+            lines, summary = client.post_chat_stream(question, sid, timeout_s=timeout_s)
+            return lines, summary, sid, ""
+        except client.ChatTimeout:
+            raise
+        except Exception as e:
+            err = (err + " | " if err else "") + str(e)[:300]
+            if i < RETRY_ATTEMPTS - 1:
+                time.sleep(RETRY_BACKOFF_S * (i + 1))
+    return [], {}, session_id, err
+
+
+def run_question(qid: str, question: str, runs_dir: Path,
+                 timeout_s: int = DEFAULT_TIMEOUT_S, session_prefix: str = "sparring") -> dict:
+    """跑一题，返回 {card, extracted, meta}。落盘：payload/meta 在 runs_dir。"""
     runs_dir = Path(runs_dir).resolve()
     runs_dir.mkdir(parents=True, exist_ok=True)
-    q_file = runs_dir / f"{qid}.question.txt"
-    q_file.write_text(question, encoding="utf-8")
     payload = runs_dir / f"{qid}.payload.jsonl"
-    stderr_f = runs_dir / f"{qid}.stderr.txt"
     meta_f = runs_dir / f"{qid}.meta.json"
-
     archived = _archive_existing(payload)
-    archived_err = _archive_existing(stderr_f)
 
-    cmd = [
-        "wsl.exe", "-d", WSL_DISTRO, "--", WSL_PYTHON, to_wsl_path(RUNNER_SCRIPT),
-        "--question-file", to_wsl_path(q_file),
-        "--out-payload", to_wsl_path(payload),
-        "--out-stderr", to_wsl_path(stderr_f),
-        "--out-meta", to_wsl_path(meta_f),
-        "--datus-root", DATUS_ROOT,
-        "--timeout", str(timeout_s),
-    ]
+    t0 = time.time()
+    timed_out = False
     try:
-        proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s + WINDOWS_SLACK_S)
-    except subprocess.TimeoutExpired:
-        # Windows 侧兜底超时（runner 内部 900s 未生效或收尾挂死，round-02 q21 实测发生）：
-        # 不崩——按"超时截断"落卡（D10 六值超集 timeout 一等状态），已写入的部分留痕照常引用
-        from . import extractor
-        partial = payload.read_text(encoding="utf-8").splitlines() if payload.exists() else []
-        elapsed = float(timeout_s + WINDOWS_SLACK_S)
-        return {
-            "extracted": extractor.extract(partial, timed_out=True, timeout_s=timeout_s),
-            "meta": {"timed_out": True, "returncode": None, "elapsed_s": elapsed,
-                     "note": "Windows 侧兜底超时，wsl_runner 未在预算内退出"},
-            "archived": {"payload": archived, "stderr": archived_err},
-            "payload_rel": str(payload.relative_to(REPO_ROOT)).replace("\\", "/"),
-        }
-    if proc.returncode != 0:
-        raise RuntimeError(
-            f"wsl_runner 失败 rc={proc.returncode}: {proc.stderr.decode('utf-8', 'replace')[-500:]}")
+        lines, summary, session_id, err = _ask(question, f"{session_prefix}-{qid}", timeout_s)
+    except client.ChatTimeout as e:
+        lines, summary = e.partial, {"timed_out": True}
+        session_id, err, timed_out = f"{session_prefix}-{qid}", str(e)[:300], True
+    elapsed = round(time.time() - t0, 1)
 
-    meta = json.loads(meta_f.read_text(encoding="utf-8"))
-    lines = payload.read_text(encoding="utf-8").splitlines()
+    payload.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
     from . import extractor
-    extracted = extractor.extract(
-        lines, timed_out=meta["timed_out"], timeout_s=timeout_s)
+    extracted = extractor.extract(lines, timed_out=timed_out, timeout_s=timeout_s)
+    if not lines and not timed_out:
+        # 重试全挂、零 payload：错误链写进提取结果（卡 status=error，D10 一等留痕）
+        extracted["status"] = "报错: chat API 连续失败 | " + err
+        extracted["errors"] = [err] if err else []
+
+    meta = {"channel": "chat-api", "session_id": session_id, "timed_out": timed_out,
+            "elapsed_s": elapsed, "duration_s": summary.get("duration_s"),
+            "requests": summary.get("requests"), "total_tokens": summary.get("total_tokens"),
+            "error": err or None}
+    meta_f.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
     return {
         "extracted": extracted,
         "meta": meta,
-        "archived": {"payload": archived, "stderr": archived_err},
+        "archived": {"payload": archived},
         "payload_rel": str(payload.relative_to(REPO_ROOT)).replace("\\", "/"),
     }
 

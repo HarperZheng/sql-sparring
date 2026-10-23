@@ -3,12 +3,15 @@ metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path
 
 本文件只做"提取结果 → 卡"的组装；写卡前由 schemas.validator.validate_card 过契约。
 status 六值枚举（M1 拍板 D10）：answer|ask|nomatch|timeout|error|failed——
-datus -p 无 ask 追问流（arbiter 恒为 null），本侧现产 answer / failed；
+datus（-p 与 chat API 皆然）无 ask 追问流（arbiter 恒为 null），本侧现产 answer / failed；
 ask/nomatch 是 cube 三态概念，六值为两侧共用的超集。
 """
 
 # v0 状态 → 作答卡 status 枚举
-_SUCCESS_STATUSES = ("成功", "成功(指标路径)")
+# "有答案无SQL"（知识库/概念题直答，无 SQL 无指标调用）属正当作答 → answer：
+# 2026-10-23 烟测修正（曾误标 failed——M0 全数值题时代未出现该形态）；
+# 有无 SQL 由卡上 sql_count 自己说话，裁决可见，不影响 status。
+_SUCCESS_STATUSES = ("成功", "成功(指标路径)", "有答案无SQL")
 
 
 def v0_status_to_card_status(status: str) -> str:
@@ -40,7 +43,7 @@ def build_card(qid: str, question: str, extracted: dict, elapsed_s, raw_path: st
         "answer": extracted["answer"],
         "errors": extracted["errors"],
         "elapsed_s": elapsed_s,
-        "arbiter": None,  # datus -p 无 ask 流，M0 恒空
+        "arbiter": None,  # datus 无 ask 流，M0 恒空
         "raw_path": raw_path,
     }
 

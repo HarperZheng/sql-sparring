@@ -9,3 +9,4 @@ __pycache__/
 
 # 运行时临时物
 *.log
+tmp/

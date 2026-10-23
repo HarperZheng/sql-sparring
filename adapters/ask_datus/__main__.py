@@ -2,7 +2,8 @@
 
 用法（Windows 侧 uv 环境）：
   uv run python -m adapters.ask_datus run --questions rounds/m0/questions.jsonl [--only q01 q02] [--timeout 900]
-      活跑：逐题经 WSL 桥接调 datus，作答卡落 rounds/<轮>/answers/datus/
+      活跑：逐题 POST datus chat API（:8501，常驻服务），作答卡落 rounds/<轮>/answers/datus/
+      前置：datus --web 服务在跑（bin/preflight.py 第 2 项即查它）
 """
 
 import argparse

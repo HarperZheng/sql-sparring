@@ -22,7 +22,7 @@
 |---|---|---|---|---|---|
 | 考纲（出题依据） | `syllabus/`（`bussiness/` 原始资料 + `business.md` 课本） | 编制课本：收编业务知识（剥离数据落地内容）+ 知识点编号 | 业务原始资料 → `business.md` | 人工整理 | 无 |
 | 出题人 | `examiner/`（SKILL.md + `bin/examine.py`） | **只读考纲**出题（盲考，不读答题人侧任何产出） | `syllabus/` → `questions.jsonl` | Claude Code headless（Windows） | 可配置（`conf/models.json` examiner 节；缺省本机 claude 现配） |
-| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | Windows + WSL 桥接（wsl_runner 文件交接） | GLM-5.3-Flash（生产现配，不动） |
+| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，常驻服务；2026-10-23 起替代 WSL 桥） | GLM-5.3-Flash（生产现配，不动） |
 | 答题人·cube | `adapters/ask_cube/` | 逐题驱动 cube 服务并提取作答卡 | `questions.jsonl` → `answers/cube/qNN.json` + 原始留痕 | HTTP `:4100/chat` | Claude Agent SDK（生产现配，不动） |
 | 裁判 | `judge/`（v1 人工在环 → M4 固化服务） | 逐题对出裁决书 + 修正答案 | 双侧作答卡 + 两侧语义层定义切片 → `verdicts/qNN.json` | v1：人 + DeepSeek 辅助；M4：judge 服务（另一接口 DeepSeek） | 可配置（`conf/models.json` judge 节） |
 | 编排器 | `bin/round.py` | 按一轮 SOP 顺序调用上述组件（M4 起支持 `--retest` 复验模式） | 轮号 → 本轮全部记录 | Windows Python | 无 LLM，纯流程 |
@@ -92,7 +92,8 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 ### ask_datus 要点
 
-- **WSL 桥接（文件交接，防 v0 的命令行引号坑）**：Windows 侧 adapter 经 `wsl.exe -d Ubuntu-26.04` 调用仓内 `adapters/ask_datus/wsl_runner.py`（用 datus 现成 `.venv/bin/python` 执行，纯标准库）——runner 在 WSL 内逐题 subprocess 跑 `.venv/bin/datus -p`，原始 payload 流原样落盘 `/mnt/d`（题目内容从不过命令行，免 `MSYS_NO_PATHCONV` 引号转写）；提取与作答卡写盘回到 Windows 侧做。LLM 走既有 portproxy relay。
+- **chat API 通道（2026-10-23 起，与 ask_cube 同构）**：adapter 直接 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，SSE 流）——agent 配置/语义模型只在服务启动时装一次（v0 逐题冷启是回答慢的根源），每题新 `session_id` 保证题间零污染；message 事件内层 payload 与 `datus -p` 落盘格式同构，提取器（extractor.py）不改。单题读超时（默认 900s）按超时截断落卡、保留部分输出；网络类失败换新 session 重试（3 次，与 cube 同款）。前置：`datus --web` 在跑（preflight 第 2 项查）。
+- **历史：WSL 桥接（v0–v1，已退役）**：曾经 `wsl.exe -d Ubuntu-26.04` 调仓内 `wsl_runner.py` 逐题 subprocess 跑 `datus -p`（文件交接防引号坑）；因每题冷启（Python+配置+语义模型+连接，单题 75–155s）被 chat API 替代，`wsl_runner.py` 保留作回退参考。
 - 提取规格 = 设计文档 §2.2 表格（SQL←execute_sql toolParams；命中指标←query_metrics/search_metrics/get_metric；答案←depth-0 markdown；真实错误←FuncToolResult `error` 字段，**正文 "Code NNN" 是 KB 文本，勿扫全文**）。
 - 已知坑内置：深度>0 子代理的调用也要收（v0 教训）；超时题保留部分输出。
 - **验收标准**：提取规格 §2.2 逐条在活跑留痕上有实测例证（rounds/m0/runs/datus/）；作答卡字段与 §三 ask 契约一致。
@@ -188,7 +189,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | 组件入口 | `judge/` | 裁决：v1 人工在环（人读作答卡写 verdicts），M4 固化为 headless 服务 |
 | 被封装 | examiner/judge 的 LLM 调用 | 由上述 Python 入口内部发起（examiner 缺省本机 `claude -p`，judge 为另一接口 DeepSeek），模型/接口/key 一律读 `conf/models.json`，人不直接调 |
 
-典型命令（M2/M3 落地后；**Windows 侧 uv 环境执行**，ask_datus 内部经 wsl_runner 桥接 WSL）：
+典型命令（M2/M3 落地后；**Windows 侧 uv 环境执行**，ask_datus 打 :8501 常驻服务、ask_cube 打 :4100）：
 
 ```bash
 # 跑一整轮：出题→双侧作答→提取→裁决在环→材料包+轮报（SOP 1–6 自动，7–8 留给人）

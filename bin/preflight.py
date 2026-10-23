@@ -8,7 +8,7 @@
 
 检查项（防的都是 M0 实测过的真实事故）：
   1. datus 语义层 YAML 可解析——裁决回灌人工改坏 YAML，下轮开跑才发现；
-  2. datus WSL 桥可用——WSL/venv 失效；
+  2. datus chat API :8501 可达——常驻服务（datus --web）没起/挂了；
   3. cube agent-svc :4100 可达且词典可枚举——常驻服务没起/挂了；
   4. cubejs :4000 可达（编译 SQL 抓取依赖）——同上。
 """
@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 from pathlib import Path
 
@@ -45,17 +44,9 @@ def check_datus_yaml(path: Path) -> tuple[bool, str]:
     return True, f"可解析，顶层键: {top}"
 
 
-def check_wsl_bridge(distro: str, datus_root: str) -> tuple[bool, str]:
-    cmd = ["wsl.exe", "-d", distro, "--", "ls", f"{datus_root}/.venv/bin/datus"]
-    try:
-        proc = subprocess.run(cmd, capture_output=True, timeout=60)
-    except FileNotFoundError:
-        return False, "找不到 wsl.exe"
-    except subprocess.TimeoutExpired:
-        return False, f"wsl 调用超时（>{60}s）"
-    if proc.returncode != 0:
-        return False, (f"exit={proc.returncode} {proc.stderr.decode('utf-8', 'replace')[:200]}")
-    return True, f"{distro} 可调起，datus 可执行文件在位"
+def check_datus_api() -> tuple[bool, str]:
+    """:8501 chat API 存活探针（GET /openapi.json；不发探题、不耗 LLM 调用）。"""
+    return _probe("http://localhost:8501/openapi.json")
 
 
 def _probe(url: str, headers: dict | None = None) -> tuple[bool, str]:
@@ -96,13 +87,11 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="开跑前健康检查（单次执行，退出码 0/1）")
     ap.add_argument("--datus-yaml",
                     default=r"D:\develop\datus\Datus-agent\subject\semantic_models\yunnan0508\fne_fund_main.yml")
-    ap.add_argument("--distro", default="Ubuntu-26.04")
-    ap.add_argument("--datus-root", default="/mnt/d/develop/datus/Datus-agent")
     args = ap.parse_args()
 
     checks = [
         ("datus 语义层 YAML 可解析", lambda: check_datus_yaml(Path(args.datus_yaml))),
-        ("datus WSL 桥可用", lambda: check_wsl_bridge(args.distro, args.datus_root)),
+        ("datus chat API :8501 存活", check_datus_api),
         ("cube agent-svc :4100 存活", check_cube_agent_svc),
         ("cube :4000 网关（meta+词典）", check_cube_gateway),
     ]
