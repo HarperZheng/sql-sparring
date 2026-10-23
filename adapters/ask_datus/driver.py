@@ -17,6 +17,8 @@ from . import client
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_TIMEOUT_S = 900
+WALL_CLOCK_S = 180    # 单题墙钟 3 分钟（2026-10-23 用户拍板）：到点记超时卡换下一题。
+                      # 已知代价：实测成功题最长 200.6s（q12），此类题会被截为超时卡。
 RETRY_ATTEMPTS = 3    # 与 ask_cube 同款：网络类失败换新 session 重试
 RETRY_BACKOFF_S = 20.0
 
@@ -31,17 +33,19 @@ def _archive_existing(path: Path) -> str | None:
     return archived.name
 
 
-def _ask(question: str, session_id: str, timeout_s: float) -> tuple[list[str], dict, str, str]:
+def _ask(question: str, session_id: str, timeout_s: float,
+         wall_clock_s: float) -> tuple[list[str], dict, str, str]:
     """首答（网络类失败换新 sessionId 重试，指数式退避；与 cube _ask_with_retry 同款）。
 
     返回 (payload 行, summary, 实际用的 session_id, 错误链)。
-    client.ChatTimeout（预算耗尽）不在此重试——重试=再等一个整预算，向上抛。
+    client.ChatTimeout（读超时/墙钟到点）不在此重试——重试=再等一个整预算，向上抛。
     """
     err = ""
     for i in range(RETRY_ATTEMPTS):
         sid = session_id if i == 0 else f"{session_id}-r{i + 1}"
         try:
-            lines, summary = client.post_chat_stream(question, sid, timeout_s=timeout_s)
+            lines, summary = client.post_chat_stream(question, sid, timeout_s=timeout_s,
+                                                     wall_clock_s=wall_clock_s)
             return lines, summary, sid, ""
         except client.ChatTimeout:
             raise
@@ -53,7 +57,8 @@ def _ask(question: str, session_id: str, timeout_s: float) -> tuple[list[str], d
 
 
 def run_question(qid: str, question: str, runs_dir: Path,
-                 timeout_s: int = DEFAULT_TIMEOUT_S, session_prefix: str = "sparring") -> dict:
+                 timeout_s: int = DEFAULT_TIMEOUT_S, session_prefix: str = "sparring",
+                 wall_clock_s: float = WALL_CLOCK_S) -> dict:
     """跑一题，返回 {card, extracted, meta}。落盘：payload/meta 在 runs_dir。"""
     runs_dir = Path(runs_dir).resolve()
     runs_dir.mkdir(parents=True, exist_ok=True)
@@ -64,10 +69,12 @@ def run_question(qid: str, question: str, runs_dir: Path,
     t0 = time.time()
     timed_out = False
     try:
-        lines, summary, session_id, err = _ask(question, f"{session_prefix}-{qid}", timeout_s)
+        lines, summary, session_id, err = _ask(question, f"{session_prefix}-{qid}",
+                                               timeout_s, wall_clock_s)
     except client.ChatTimeout as e:
         lines, summary = e.partial, {"timed_out": True}
         session_id, err, timed_out = f"{session_prefix}-{qid}", str(e)[:300], True
+        timeout_s = e.timeout_s  # 状态文案记实际触发的上限（墙钟 180s 而非读超时 900s）
     elapsed = round(time.time() - t0, 1)
 
     payload.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
