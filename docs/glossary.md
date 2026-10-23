@@ -37,3 +37,6 @@
 - **轮驱动器**：`bin/round.py`（M3 建），读题库、逐题调两适配器、收作答卡的串联循环，即答题人的"调派者"。
 - **校验器（bin/validate.py）**：把题库/作答卡/裁决书逐份对 JSON Schema 检查的脚本，不过即逐条报错退出；适配器写卡前也内联校验。
 - **执行记录取证**：SQL 证据机制（v4，2026-10-23）——query_metrics 返回体不含 SQL（datus 工具层防 LLM 上下文膨胀而剥离），实际执行原文由 datus 侧日志（`dosi_sql_executed` 行）留痕，`adapters/ask_datus/evidence.py` 按题时间窗提取进作答卡；旁路观测，LLM 无感知、作答行为零扰动。
+- **AI初步裁决**：裁决阶段的草稿环节（M3-3）——AI 助手逐题读双侧作答卡、按 D4 先口径后数值、按 D12 定四态，产出 `verdicts/qNN.json` 草稿供用户抽查修正，抽查后才算定稿（v1 人工在环）。
+- **问题单**：裁决书里"谁动手、动什么、怎么修"的结构化条目（side/type/target/suggest），落 `verdict_detail` 数组；材料包 issues-*.md 由它渲染，非空题默认进下轮复验集（D12）。
+- **材料包**：裁决后按侧渲染的回灌文档（`feedback/issues-{datus,cube}.md`），分四节列建模差异/执行事故/双侧缺口/待拍板口径，供人工修语义层用。

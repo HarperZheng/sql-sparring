@@ -155,7 +155,7 @@ def load_verdicts(round_dir: Path, todo: list[str]) -> dict[str, dict]:
     if missing:
         print(f"[④裁决] 裁决未完成：缺 {len(missing)} 份（{' '.join(missing)}）")
         print("[④裁决] 人工在环：对照 answers/<侧>/<id>.json 双侧卡逐题写 verdicts/<id>.json"
-              "（Schema schemas/verdict.schema.json；D12：issues[] 记谁补建模/修bug）")
+              "（Schema schemas/verdict.schema.json；D12：问题单 verdict_detail 数组记谁补建模/修bug）")
         sys.exit(2)
     extra = [f.stem for f in verdicts_dir.glob("*.json") if f.stem not in todo]
     if extra:
@@ -167,7 +167,7 @@ def load_verdicts(round_dir: Path, todo: list[str]) -> dict[str, dict]:
 # ---------- ⑤⑥ 轮报 + 材料包 ----------
 
 def _issues_line(v: dict) -> str:
-    parts = [f"{i['side']}·{i['type']}·{i['target']}" for i in v.get("issues") or []]
+    parts = [f"{i['side']}·{i['type']}·{i['target']}" for i in v.get("verdict_detail") or []]
     return "；".join(parts) if parts else "—"
 
 
@@ -232,24 +232,22 @@ def render_feedback(round_dir: Path, name: str, questions: dict, todo: list[str]
         sec1, sec2, sec3, sec4 = [], [], [], []
         for qid in todo:
             v = verdicts[qid]
-            mine = [i for i in (v.get("issues") or []) if i["side"] in (side, "both")]
+            mine = [i for i in (v.get("verdict_detail") or []) if i["side"] in (side, "both")]
+            summary = v.get("comparison", {}).get("summary") or "见 comparison.metrics"
             if _gap_pair({s: cards[s].get(qid) for s in SIDES}) and v["verdict"] != "互证通过":
-                sec3 += [f"### {qid} {questions[qid]}", f"- {v['verdict_detail']}", ""]
+                sec3 += [f"### {qid} {questions[qid]}", f"- 现象：{summary}"]
+                sec3 += [f"- 建议：{i['type']} {i['target']} —— {i['suggest']}" for i in mine] + [""]
             elif v["verdict"] == "建模差异":
                 cd, cc = v["cards"]["datus"], v["cards"]["cube"]
                 body = [f"### {qid} {questions[qid]}",
-                        f"- 现象：{v['verdict_detail']}",
-                        f"- {side} 口径：{cd.get('caliber', '—')}｜时间轴：{cd.get('time_axis', '—')}",
-                        f"- {other} 口径：{cc.get('caliber', '—')}｜时间轴：{cc.get('time_axis', '—')}"]
+                        f"- 现象：{summary}",
+                        f"- {side} 口径：{cd.get('caliber', '—')}｜维度：{cd.get('dimensions', '—')}｜时间窗口：{cd.get('time_window', '—')}",
+                        f"- {other} 口径：{cc.get('caliber', '—')}｜维度：{cc.get('dimensions', '—')}｜时间窗口：{cc.get('time_window', '—')}"]
                 body += [f"- 修法：{i['type']} {i['target']} —— {i['suggest']}" for i in mine]
-                mc = v.get("memory_cleanup")
-                if mc and side == "datus":
-                    body.append(f"- 记忆清理（人工执行，D7）：{mc.get('target')} — {mc.get('note')}")
                 sec1 += body + [""]
             elif v["verdict"] == "执行事故" and mine:
                 sec2 += [f"### {qid} {questions[qid]}",
-                         f"- 现象：{v['verdict_detail']}",
-                         f"- 口径相同证据：{v.get('comparison', {}).get('summary', '见 comparison.metrics')}",
+                         f"- 口径相同证据：{summary}",
                          *[f"- 排错：{i['target']} —— {i['suggest']}" for i in mine], ""]
             elif v["verdict"] == "待人工":
                 cd, cc = v["cards"]["datus"], v["cards"]["cube"]
