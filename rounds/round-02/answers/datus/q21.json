@@ -1,0 +1,13 @@
+{
+  "id": "q21",
+  "question": "执收单位和预算单位是一回事吗？",
+  "status": "answer",
+  "metrics_hit": [],
+  "sql": "SELECT\n  fagenidcode,\n  fagenname,\n  fbgtagenname,\n  fisbgtagen\nFROM yunnan0508.fab_agen\nWHERE fisbgtagen = '1' AND fbgtagenname != '' AND fbgtagenname != fagenname\nLIMIT 5",
+  "sql_count": 2,
+  "answer": "# 不是一回事\n\n这是本项目文档里明确定义过的一对**易混概念**（`development_process_record/non_tax/01-非税业务说明.md` §“执收单位 vs 预算单位”），两者按不同维度划分：\n\n| | **执收单位** | **预算单位** |\n| :--- | :--- | :--- |\n| 划分标准 | **是否依法收非税收入**（业务起点，发起缴款通知书） | **是否纳入部门预算管理、独立编制并执行预算**（经费主要靠财政拨款） |\n| 角色定位 | 资金流向中的业务发起方 | 管理主体（非资金流向角色） |\n\n## 三者的集合关系（文档结论）\n\n- **交集但不重合**：公立学校既是预算单位（领财政拨款）又是执收单位（收学费）；\n- **不是子集**：存在不收非税收入的预算单位（纯财政拨款）；也存在不属于预算单位的执收情形（如代行政府职能的社会团体）；\n- **不是互斥**：同一单位可同时具备双重身份。\n\n## 数据层面印证\n\n在 `fab_agen` 单位表里两者就是**两个独立字段**，且实测存在不一致：\n\n- `fagenname` = 单位自身名称（执收身份），`fagenidcode` 为被各事实表引用的执收单位编码；\n- `fbgtagencode` / `fbgtagenname` = 该单位挂靠的**预算单位**（主管预算单位），`fisbgtagen` 标记其是否自身为预算单位；\n- 实测：295 行（218 个执收单位）中，有 251 行填了预算单位信息，其中**存在执收单位名 ≠ 预算单位名**的记录——即下属执收单位向上归口到主管预算单位。\n\n事实表（如 `fne_paybook_full_high`）同样成对携带：`fchgagenidcode + fchgagenname`（执收单位）与 `fchgbgtagenname`（执收预算单位）。\n\n## 查询时的落点\n\n- 问“谁收的钱” → 用**执收单位**字段（`fchgagen*`，分组必须用 `*_code`）；\n- 问“预算归口/主管部门” → 用**预算单位**字段（`fbgtagen*` / `fchgbgtagen*`）；\n- 两者不可互相替换，此前实测（09-cube 记录 q08）已按此口径拍板过。",
+  "errors": [],
+  "elapsed_s": 1321.1,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q21.payload.jsonl"
+}

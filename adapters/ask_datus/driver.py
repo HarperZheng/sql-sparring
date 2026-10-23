@@ -60,7 +60,21 @@ def run_question(qid: str, question: str, runs_dir: Path, timeout_s: int = DEFAU
         "--datus-root", DATUS_ROOT,
         "--timeout", str(timeout_s),
     ]
-    proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s + WINDOWS_SLACK_S)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s + WINDOWS_SLACK_S)
+    except subprocess.TimeoutExpired:
+        # Windows 侧兜底超时（runner 内部 900s 未生效或收尾挂死，round-02 q21 实测发生）：
+        # 不崩——按"超时截断"落卡（D10 六值超集 timeout 一等状态），已写入的部分留痕照常引用
+        from . import extractor
+        partial = payload.read_text(encoding="utf-8").splitlines() if payload.exists() else []
+        elapsed = float(timeout_s + WINDOWS_SLACK_S)
+        return {
+            "extracted": extractor.extract(partial, timed_out=True, timeout_s=timeout_s),
+            "meta": {"timed_out": True, "returncode": None, "elapsed_s": elapsed,
+                     "note": "Windows 侧兜底超时，wsl_runner 未在预算内退出"},
+            "archived": {"payload": archived, "stderr": archived_err},
+            "payload_rel": str(payload.relative_to(REPO_ROOT)).replace("\\", "/"),
+        }
     if proc.returncode != 0:
         raise RuntimeError(
             f"wsl_runner 失败 rc={proc.returncode}: {proc.stderr.decode('utf-8', 'replace')[-500:]}")

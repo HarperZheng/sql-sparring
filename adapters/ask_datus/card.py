@@ -12,7 +12,13 @@ _SUCCESS_STATUSES = ("成功", "成功(指标路径)")
 
 
 def v0_status_to_card_status(status: str) -> str:
-    return "answer" if status in _SUCCESS_STATUSES else "failed"
+    if status in _SUCCESS_STATUSES:
+        return "answer"
+    if status.startswith("超时"):  # 驱动超时分支产出"超时(900s，部分输出)"
+        return "timeout"
+    if status.startswith("报错"):  # 引擎/工具真实报错（error=智能体答错/中断）
+        return "error"
+    return "failed"
 
 
 def build_card(qid: str, question: str, extracted: dict, elapsed_s, raw_path: str) -> dict:

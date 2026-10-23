@@ -1,0 +1,226 @@
+{
+  "session_id": "m0q-q21",
+  "question": "执收单位和预算单位是一回事吗？",
+  "first": {
+    "elapsed_sec": 38.5,
+    "response": {
+      "type": "answer",
+      "title": "执收单位≠预算单位：两者是缴款两侧不同成员",
+      "plan": [
+        [
+          "定位模型中的\"执收单位\"与\"预算单位\"相关成员",
+          "fiscal_collection_view.chg_agency_code",
+          "成员面 title=执收单位编码（缴款侧票面）"
+        ],
+        [
+          "定位收入侧预算单位类成员",
+          "fiscal_collection_view.rec_bgt_agen_code",
+          "成员面 title=收入方预算归类编码（收入侧）"
+        ],
+        [
+          "实测两侧取值分布对比是否同一实体",
+          "fiscal_collection_view.count",
+          "执收单位 36 个取值；预算归类仅 1 个取值且为空，明显不是同一实体"
+        ]
+      ],
+      "tables": [
+        {
+          "title": "表1：执收单位（chg_agency_code，缴款侧）取值分布——36 个编码，共 1281 行",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.chg_agency_code"
+            ],
+            "filters": [],
+            "timeDimensions": [],
+            "order": {
+              "fiscal_collection_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.chg_agency_code": "124045",
+              "fiscal_collection_view.count": "431"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124994",
+              "fiscal_collection_view.count": "261"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "425103",
+              "fiscal_collection_view.count": "110"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125026",
+              "fiscal_collection_view.count": "87"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "127208",
+              "fiscal_collection_view.count": "59"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125022",
+              "fiscal_collection_view.count": "39"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125032",
+              "fiscal_collection_view.count": "25"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "998015",
+              "fiscal_collection_view.count": "24"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124100",
+              "fiscal_collection_view.count": "22"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124002",
+              "fiscal_collection_view.count": "22"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125019",
+              "fiscal_collection_view.count": "19"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "001",
+              "fiscal_collection_view.count": "17"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124880",
+              "fiscal_collection_view.count": "16"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124576",
+              "fiscal_collection_view.count": "13"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125029",
+              "fiscal_collection_view.count": "12"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "425104",
+              "fiscal_collection_view.count": "11"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "999012",
+              "fiscal_collection_view.count": "11"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "001001",
+              "fiscal_collection_view.count": "11"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124992",
+              "fiscal_collection_view.count": "11"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "427005",
+              "fiscal_collection_view.count": "10"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125020",
+              "fiscal_collection_view.count": "9"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "777001",
+              "fiscal_collection_view.count": "7"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124577",
+              "fiscal_collection_view.count": "7"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124993",
+              "fiscal_collection_view.count": "6"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "135009",
+              "fiscal_collection_view.count": "6"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "425107",
+              "fiscal_collection_view.count": "5"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "425002",
+              "fiscal_collection_view.count": "4"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124200",
+              "fiscal_collection_view.count": "4"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "998021",
+              "fiscal_collection_view.count": "4"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125036",
+              "fiscal_collection_view.count": "3"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "998017",
+              "fiscal_collection_view.count": "3"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "999001",
+              "fiscal_collection_view.count": "3"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "125001",
+              "fiscal_collection_view.count": "3"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "124579",
+              "fiscal_collection_view.count": "2"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "105015",
+              "fiscal_collection_view.count": "2"
+            },
+            {
+              "fiscal_collection_view.chg_agency_code": "427008",
+              "fiscal_collection_view.count": "2"
+            }
+          ],
+          "total": null
+        },
+        {
+          "title": "表2：收入方预算归类（rec_bgt_agen_code，收入侧）取值分布——仅空值 1 组",
+          "query": {
+            "measures": [
+              "fiscal_collection_view.count"
+            ],
+            "dimensions": [
+              "fiscal_collection_view.rec_bgt_agen_code"
+            ],
+            "filters": [],
+            "timeDimensions": [],
+            "order": {
+              "fiscal_collection_view.count": "desc"
+            },
+            "limit": 100
+          },
+          "rows": [
+            {
+              "fiscal_collection_view.rec_bgt_agen_code": "",
+              "fiscal_collection_view.count": "1281"
+            }
+          ],
+          "total": null
+        }
+      ],
+      "answer": "不是一回事。口径声明（依据 fiscal_collection_view 成员面）：\"执收单位\"对应缴款侧的 chg_agency_code/chg_agency_name（缴款书票面执收单位，folders 归 paybook_side 侧）；模型中\"预算单位\"语义落在收入侧的 rec_bgt_agen_code/rec_bgt_agen_name（title=收入方预算归类），另有收入单位 rec_agency_code——三者是不同成员、不同侧，不可混用。实测验证（缴款全量 1281 行）：执收单位有 36 个编码取值，而收入方预算归类当前全部为空（无值），进一步说明两者不是同一字段/同一实体。另注：口径词典中\"执收单位\"词条为 legacy（指向 2026-10 重建前的 daybook，映射同为缴款侧 chg_agen），与新模型 chg_agency 同侧一致；\"预算单位\"无词条。数据范围：fiscal_collection_view 全量（按 pay_date 无时间过滤），无截断。",
+      "assumption": "\"预算单位\"按成员面映射为收入侧 rec_bgt_agen_code（收入方预算归类）；若用户指\"收入单位 rec_agency_code\"则为另一成员（该成员暂无名称列只出编码），可再指定",
+      "truncated": false,
+      "rows": 37,
+      "hitPreAgg": false,
+      "audited": false
+    }
+  },
+  "followups": [],
+  "error_chain": ""
+}

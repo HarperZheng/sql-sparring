@@ -40,14 +40,19 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
     sql, sql_count = "", 0
     if first and first.get("type") == "answer":
         tables = first.get("tables") or []
-        sqls = []
+        sqls, failed_fetch = [], 0
         for i, t in enumerate(tables):
-            if t.get("query"):
+            if not t.get("query"):
+                continue
+            try:
                 sqls.append(f"-- table[{i}] {t.get('title', '')}\n"
                             + client.fetch_compiled_sql(t["query"]))
+            except Exception as e:  # 编译 SQL 抓取失败不崩：答案已到手，SQL 留注释占位
+                sqls.append(f"-- table[{i}] 编译 SQL 抓取失败: {str(e)[:200]}")
+                failed_fetch += 1
         if sqls:
             sql = "\n\n".join(sqls).split("\n\n")[0].split("\n", 1)[-1]  # 首表 SQL（去注释行）
-            sql_count = len(sqls)
+            sql_count = len(sqls) - failed_fetch
         (runs_dir / f"{qid}.sql.txt").write_text("\n\n".join(sqls), encoding="utf-8")
 
     elapsed = round(time.time() - t0, 1)
