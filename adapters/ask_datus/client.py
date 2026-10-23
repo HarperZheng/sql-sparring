@@ -35,17 +35,23 @@ class ChatTimeout(Exception):
 
 
 def post_chat_stream(question: str, session_id: str, timeout_s: float = 900.0,
-                     max_turns: int = 30, wall_clock_s: float = WALL_CLOCK_S) -> tuple[list[str], dict]:
+                     max_turns: int = 30, wall_clock_s: float = WALL_CLOCK_S,
+                     subagent_id: str | None = None) -> tuple[list[str], dict]:
     """一问 → (payload 行列表, 汇总 dict)。HTTP/网络类异常向上抛（驱动层重试）。
 
     payload 行即 extractor.extract() 的输入，与 datus -p 的 payload 文件同格式；
     汇总 dict 记 end/usage 事件的 duration/requests/tokens（驱动层落 meta 留痕）。
     两道闸：读超时=流静默 timeout_s 秒；墙钟=单题总耗时超 wall_clock_s 秒（每行检查）。
     触发任一即抛 ChatTimeout，携带已收到的部分 payload。
+    subagent_id：路由字段（StreamChatInput，"builtin name or DB SubAgent id"）——
+    传内置名 "ask_metrics" 经 node_factory 落到 AskMetricsAgenticNode（唯一
+    query_metrics 挂载点）；缺省 None=默认 chat 节点（自由 SQL 通道）。
     """
     payloads: list[str] = []
     summary: dict = {"duration_s": None, "requests": None, "total_tokens": None}
     body = {"message": question, "session_id": session_id, "max_turns": max_turns}
+    if subagent_id:
+        body["subagent_id"] = subagent_id
     t0 = time.monotonic()
     try:
         with httpx.Client(timeout=httpx.Timeout(timeout_s, connect=10.0), **_CLIENT_KW) as client:

@@ -1,9 +1,11 @@
 """Windows 侧驱动：逐题 POST datus chat API（:8501），回收 payload 并组装作答卡。
 
-链路（v1，2026-10-23 起）：client.post_chat_stream（SSE）→ payload 行落盘 →
+链路（2026-10-23 起）：client.post_chat_stream（SSE）→ payload 行落盘 →
 extractor 提取 → 11 字段作答卡落盘。datus 常驻服务内 agent 配置/语义模型
 只在服务启动时装一次（每轮一次初始化，不再每题冷启）；每题新 session_id
 保证题间零污染（D7）。
+题型路由（2026-10-23 拍板"看指标做问数"）：概念族→默认 chat 节点；问数族→
+ask_metrics 节点（query_metrics 通道）优先、无最终答案降级 chat，meta.routes 全留痕。
 幂等（§三契约）：--only 子集复跑；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
 （v0 的 WSL 桥接 wsl_runner.py 已退役，文件保留作回退参考。）
 """
@@ -22,6 +24,12 @@ WALL_CLOCK_S = 180    # 单题墙钟 3 分钟（2026-10-23 用户拍板）：到
 RETRY_ATTEMPTS = 3    # 与 ask_cube 同款：网络类失败换新 session 重试
 RETRY_BACKOFF_S = 20.0
 
+# 题型路由（2026-10-23 拍板"看指标做问数"，metric 通道管口径保真、自由 SQL 管表达力）：
+# 概念族题型 → 默认 chat 节点（KB 直答）；问数族 → ask_metrics 节点优先（唯一
+# query_metrics 挂载点，node_factory 硬编码映射），无最终答案自动降级 chat 再答。
+CONCEPT_TYPES = {"事实", "关联", "辨析", "边界"}
+METRICS_SUBAGENT = "ask_metrics"
+
 
 def _archive_existing(path: Path) -> str | None:
     """留痕不覆盖：已有文件挪为 <stem>.<时间戳><后缀>，返回归档名。"""
@@ -34,7 +42,7 @@ def _archive_existing(path: Path) -> str | None:
 
 
 def _ask(question: str, session_id: str, timeout_s: float,
-         wall_clock_s: float) -> tuple[list[str], dict, str, str]:
+         wall_clock_s: float, subagent_id: str | None = None) -> tuple[list[str], dict, str, str]:
     """首答（网络类失败换新 sessionId 重试，指数式退避；与 cube _ask_with_retry 同款）。
 
     返回 (payload 行, summary, 实际用的 session_id, 错误链)。
@@ -45,7 +53,8 @@ def _ask(question: str, session_id: str, timeout_s: float,
         sid = session_id if i == 0 else f"{session_id}-r{i + 1}"
         try:
             lines, summary = client.post_chat_stream(question, sid, timeout_s=timeout_s,
-                                                     wall_clock_s=wall_clock_s)
+                                                     wall_clock_s=wall_clock_s,
+                                                     subagent_id=subagent_id)
             return lines, summary, sid, ""
         except client.ChatTimeout:
             raise
@@ -58,44 +67,77 @@ def _ask(question: str, session_id: str, timeout_s: float,
 
 def run_question(qid: str, question: str, runs_dir: Path,
                  timeout_s: int = DEFAULT_TIMEOUT_S, session_prefix: str = "sparring",
-                 wall_clock_s: float = WALL_CLOCK_S) -> dict:
-    """跑一题，返回 {card, extracted, meta}。落盘：payload/meta 在 runs_dir。"""
+                 wall_clock_s: float = WALL_CLOCK_S, qtype: str = "") -> dict:
+    """跑一题，返回 {card, extracted, meta}。落盘：payload/meta 在 runs_dir。
+
+    题型路由（CONCEPT_TYPES）：概念族单走 chat 通道；问数族 ask_metrics 优先，
+    该尝试无最终答案（未建模/报错/超时）时降级 chat 再答一次。每次尝试的 payload
+    先归档再覆盖写（留痕不覆盖），meta.routes 记两次尝试全貌，平铺字段=最终采纳尝试。
+    """
     runs_dir = Path(runs_dir).resolve()
     runs_dir.mkdir(parents=True, exist_ok=True)
     payload = runs_dir / f"{qid}.payload.jsonl"
     meta_f = runs_dir / f"{qid}.meta.json"
-    archived = _archive_existing(payload)
 
-    t0 = time.time()
-    timed_out = False
-    try:
-        lines, summary, session_id, err = _ask(question, f"{session_prefix}-{qid}",
-                                               timeout_s, wall_clock_s)
-    except client.ChatTimeout as e:
-        lines, summary = e.partial, {"timed_out": True}
-        session_id, err, timed_out = f"{session_prefix}-{qid}", str(e)[:300], True
-        timeout_s = e.timeout_s  # 状态文案记实际触发的上限（墙钟 180s 而非读超时 900s）
-    elapsed = round(time.time() - t0, 1)
+    plan = ["chat"] if qtype in CONCEPT_TYPES else ["metrics", "chat"]
+    routes: list[dict] = []
+    final: dict | None = None
+    total_elapsed = 0.0
+    for route in plan:
+        subagent = METRICS_SUBAGENT if route == "metrics" else None
+        sid = f"{session_prefix}-{qid}" + ("-m" if route == "metrics" else "")
+        archived = _archive_existing(payload)
+        t0 = time.time()
+        timed_out = False
+        try:
+            lines, summary, session_id, err = _ask(question, sid, timeout_s,
+                                                   wall_clock_s, subagent)
+        except client.ChatTimeout as e:
+            lines, summary = e.partial, {"timed_out": True}
+            session_id, err, timed_out = sid, str(e)[:300], True
+            limit_s = e.timeout_s  # 状态文案记实际触发的上限（墙钟 180s 而非读超时 900s）
+        else:
+            limit_s = timeout_s
+        elapsed = round(time.time() - t0, 1)
+        total_elapsed = round(total_elapsed + elapsed, 1)
 
-    payload.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+        payload.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
-    from . import extractor
-    extracted = extractor.extract(lines, timed_out=timed_out, timeout_s=timeout_s)
-    if not lines and not timed_out:
-        # 重试全挂、零 payload：错误链写进提取结果（卡 status=error，D10 一等留痕）
-        extracted["status"] = "报错: chat API 连续失败 | " + err
-        extracted["errors"] = [err] if err else []
+        from . import extractor
+        extracted = extractor.extract(lines, timed_out=timed_out, timeout_s=limit_s)
+        if not lines and not timed_out:
+            # 重试全挂、零 payload：错误链写进提取结果（卡 status=error，D10 一等留痕）
+            extracted["status"] = "报错: chat API 连续失败 | " + err
+            extracted["errors"] = [err] if err else []
+        final = {"route": route, "extracted": extracted, "session_id": session_id,
+                 "timed_out": timed_out, "elapsed_s": elapsed, "summary": summary,
+                 "error": err, "archived": archived}
+        routes.append({
+            "route": route, "subagent_id": subagent, "session_id": session_id,
+            "timed_out": timed_out, "elapsed_s": elapsed,
+            "duration_s": summary.get("duration_s"), "requests": summary.get("requests"),
+            "total_tokens": summary.get("total_tokens"), "status": extracted["status"],
+            "answered": bool(extracted["answer"]), "error": err or None,
+            "archived_payload": archived,
+        })
+        if extracted["answer"]:
+            break  # 该通道出了最终答案，不再降级
 
-    meta = {"channel": "chat-api", "session_id": session_id, "timed_out": timed_out,
-            "elapsed_s": elapsed, "duration_s": summary.get("duration_s"),
-            "requests": summary.get("requests"), "total_tokens": summary.get("total_tokens"),
-            "error": err or None}
+    assert final is not None  # plan 非空，循环至少执行一次
+    meta = {"channel": "chat-api", "route_used": final["route"], "routes": routes,
+            # 以下平铺字段=最终采纳尝试（兼容旧读者）；elapsed_s=全 attempts 总耗时
+            "session_id": final["session_id"], "timed_out": final["timed_out"],
+            "elapsed_s": total_elapsed,
+            "duration_s": final["summary"].get("duration_s"),
+            "requests": final["summary"].get("requests"),
+            "total_tokens": final["summary"].get("total_tokens"),
+            "error": final["error"] or None}
     meta_f.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {
-        "extracted": extracted,
+        "extracted": final["extracted"],
         "meta": meta,
-        "archived": {"payload": archived},
+        "archived": {"payload": final["archived"]},
         "payload_rel": str(payload.relative_to(REPO_ROOT)).replace("\\", "/"),
     }
 

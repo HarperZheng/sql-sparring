@@ -27,10 +27,13 @@ def cmd_run(args):
     answers_dir = questions_file.parent / "answers" / "datus"
     for i, q in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] {q['id']} {q['question']}", flush=True)
-        result = run_question(q["id"], q["question"], runs_dir, timeout_s=args.timeout)
+        result = run_question(q["id"], q["question"], runs_dir, timeout_s=args.timeout,
+                              qtype=q.get("type", ""))
         card_path = build_and_write_card(q["id"], q["question"], result, answers_dir)
         st = result["extracted"]["status"]
-        print(f"    -> {st} ({result['meta']['elapsed_s']}s) 卡：{card_path}", flush=True)
+        routes = "→".join(r["route"] for r in result["meta"]["routes"])
+        print(f"    -> {st} ({result['meta']['elapsed_s']}s, 路由={routes}) 卡：{card_path}",
+              flush=True)
 
 
 def main():
