@@ -27,8 +27,7 @@ def cmd_run(args):
     answers_dir = questions_file.parent / "answers" / "datus"
     for i, q in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] {q['id']} {q['question']}", flush=True)
-        result = run_question(q["id"], q["question"], runs_dir, timeout_s=args.timeout,
-                              qtype=q.get("type", ""))
+        result = run_question(q["id"], q["question"], runs_dir, timeout_s=args.timeout)
         card_path = build_and_write_card(q["id"], q["question"], result, answers_dir)
         st = result["extracted"]["status"]
         routes = "→".join(r["route"] for r in result["meta"]["routes"])

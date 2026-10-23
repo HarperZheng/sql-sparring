@@ -4,8 +4,8 @@
 extractor 提取 → 11 字段作答卡落盘。datus 常驻服务内 agent 配置/语义模型
 只在服务启动时装一次（每轮一次初始化，不再每题冷启）；每题新 session_id
 保证题间零污染（D7）。
-题型路由（2026-10-23 拍板"看指标做问数"）：概念族→默认 chat 节点；问数族→
-ask_metrics 节点（query_metrics 通道）优先、无最终答案降级 chat，meta.routes 全留痕。
+路由（D13 全题指标优先）：每题先走 ask_metrics 节点（query_metrics 通道），无最终
+答案降级默认 chat 节点再答，meta.routes 全留痕；路由不读题型（盲考纪律）。
 幂等（§三契约）：--only 子集复跑；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
 （v0 的 WSL 桥接 wsl_runner.py 已退役，文件保留作回退参考。）
 """
@@ -24,10 +24,9 @@ WALL_CLOCK_S = 180    # 单题墙钟 3 分钟（2026-10-23 用户拍板）：到
 RETRY_ATTEMPTS = 3    # 与 ask_cube 同款：网络类失败换新 session 重试
 RETRY_BACKOFF_S = 20.0
 
-# 题型路由（2026-10-23 拍板"看指标做问数"，metric 通道管口径保真、自由 SQL 管表达力）：
-# 概念族题型 → 默认 chat 节点（KB 直答）；问数族 → ask_metrics 节点优先（唯一
-# query_metrics 挂载点，node_factory 硬编码映射），无最终答案自动降级 chat 再答。
-CONCEPT_TYPES = {"事实", "关联", "辨析", "边界"}
+# 路由（D13 全题指标优先，2026-10-23 拍板）：每题先走 ask_metrics 节点（唯一
+# query_metrics 挂载点，node_factory 硬编码映射），无最终答案降级默认 chat 节点再答。
+# 路由不读题型——题型是出题人侧考纲信息，答题人不读题型字段（盲考纪律）。
 METRICS_SUBAGENT = "ask_metrics"
 
 
@@ -67,19 +66,19 @@ def _ask(question: str, session_id: str, timeout_s: float,
 
 def run_question(qid: str, question: str, runs_dir: Path,
                  timeout_s: int = DEFAULT_TIMEOUT_S, session_prefix: str = "sparring",
-                 wall_clock_s: float = WALL_CLOCK_S, qtype: str = "") -> dict:
+                 wall_clock_s: float = WALL_CLOCK_S) -> dict:
     """跑一题，返回 {card, extracted, meta}。落盘：payload/meta 在 runs_dir。
 
-    题型路由（CONCEPT_TYPES）：概念族单走 chat 通道；问数族 ask_metrics 优先，
-    该尝试无最终答案（未建模/报错/超时）时降级 chat 再答一次。每次尝试的 payload
-    先归档再覆盖写（留痕不覆盖），meta.routes 记两次尝试全貌，平铺字段=最终采纳尝试。
+    路由（D13 全题指标优先）：一律先走 ask_metrics，该尝试无最终答案（未建模/
+    报错/超时）时降级默认 chat 再答一次。每次尝试的 payload 先归档再覆盖写
+    （留痕不覆盖），meta.routes 记尝试全貌，平铺字段=最终采纳尝试。
     """
     runs_dir = Path(runs_dir).resolve()
     runs_dir.mkdir(parents=True, exist_ok=True)
     payload = runs_dir / f"{qid}.payload.jsonl"
     meta_f = runs_dir / f"{qid}.meta.json"
 
-    plan = ["chat"] if qtype in CONCEPT_TYPES else ["metrics", "chat"]
+    plan = ["metrics", "chat"]  # D13：全题指标优先，不读题型
     routes: list[dict] = []
     final: dict | None = None
     total_elapsed = 0.0
