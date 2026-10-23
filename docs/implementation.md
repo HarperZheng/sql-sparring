@@ -22,7 +22,7 @@
 |---|---|---|---|---|---|
 | 考纲（出题依据） | `syllabus/`（`bussiness/` 原始资料 + `business.md` 课本） | 编制课本：收编业务知识（剥离数据落地内容）+ 知识点编号 | 业务原始资料 → `business.md` | 人工整理 | 无 |
 | 出题人 | `examiner/`（SKILL.md + `bin/examine.py`） | **只读考纲**出题（盲考，不读答题人侧任何产出） | `syllabus/` → `questions.jsonl` | Claude Code headless（Windows） | 可配置（`conf/models.json` examiner 节；缺省本机 claude 现配） |
-| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，常驻服务；2026-10-23 起替代 WSL 桥） | GLM-5.3-Flash（生产现配，不动） |
+| 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，datus --web 常驻服务） | GLM-5.3-Flash（生产现配，不动） |
 | 答题人·cube | `adapters/ask_cube/` | 逐题驱动 cube 服务并提取作答卡 | `questions.jsonl` → `answers/cube/qNN.json` + 原始留痕 | HTTP `:4100/chat` | Claude Agent SDK（生产现配，不动） |
 | 裁判 | `judge/`（v1 人工在环 → M4 固化服务） | 逐题对出裁决书 + 修正答案 | 双侧作答卡 + 两侧语义层定义切片 → `verdicts/qNN.json` | v1：人 + DeepSeek 辅助；M4：judge 服务（另一接口 DeepSeek） | 可配置（`conf/models.json` judge 节） |
 | 编排器 | `bin/round.py` | 按一轮 SOP 顺序调用上述组件（M4 起支持 `--retest` 复验模式） | 轮号 → 本轮全部记录 | Windows Python | 无 LLM，纯流程 |
@@ -57,7 +57,7 @@
 
 - **输入**：只给考纲（= `business.md` 课本，不读 `bussiness/` 原料）。不给答题人侧任何产出（盲考，出题人不知道答题人是谁、有什么能力——双侧天然对称）；不给历史题库原文（防照抄 v0 题）。
 - **输出**：`questions.jsonl`，每行一题，字段必须含 `syllabus_ref`（回指考纲知识点编号）。
-- **四类题型**（按课本知识点性质）：**事实**（单点指标/维度）、**关联**（跨环节/跨概念，如链路状态、单位树下钻）、**辨析**（固有口径歧义，如不加直缴汇缴限定的"缴款金额"；歧义出处须能在课本找到）、**边界**（适用条件边界/易混场景，出处须在课本，如作废与冲红各自适用什么条件、冲减计入哪个期间）。
+- **题型两族十型**（定义见 `examiner/SKILL.md`）：**概念族**（考业务理解，答案形态是定义/辨析/流程文字）——事实（单点业务事实）、关联（跨环节/跨概念）、辨析（固有口径歧义，歧义出处须能在课本找到）、边界（适用条件边界/易混场景，出处须在课本）；**问数族**（考数据查询，答案形态必须是数值/排名/清单/分布）——总量趋势、排名对比、分布结构、超期账龄、异常校验、环节归因。配比缺省概念族 9 + 问数族 21（30%/70%）。
 - **不标预期**：题库不含 `expect`——"谁该会"由实答揭示，nomatch 本身即登记；预期断言是自我实现的，考不出真东西。
 - **质量门槛**：`syllabus_ref` 引用悬空即打回；出题后做**覆盖矩阵**（考纲知识点 × 题目），漏覆盖的知识点打回补题。
 - 输出不合法（schema 校验失败 / 引用悬空 / 覆盖漏项）→ 自动打回重出，最多 N 次。
@@ -67,7 +67,7 @@
 出题人是 headless 调用的（无交互），封装为命令行：
 
 ```
-uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/questions.jsonl --count 30 --mix 事实:10,关联:10,辨析:5,边界:5
+uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/questions.jsonl --count 30
 ```
 
 内部：读考纲 → 拼 prompt → 按 `conf/models.json` 的 examiner 节调 LLM（缺省本机 `claude -p` headless）→ JSONL 逐行校验（`schemas/question.schema.json` + syllabus_ref 悬空检查）→ 覆盖矩阵检查 → 落盘。校验失败自动重试。
@@ -85,15 +85,14 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 ### 统一 ask 契约（两侧一致）
 
 - **输入**：`rounds/<轮>/questions.jsonl`（题库外置，适配器零题库）。
-- **输出**：`answers/<side>/qNN.json`（统一作答卡）+ `runs/<side>/qNN.raw.*`（原始留痕：datus=payload 流，cube=/chat 响应+日志摘录）。
+- **输出**：`answers/<side>/qNN.json`（统一作答卡）+ `runs/<side>/`（原始留痕：datus=`qNN.payload.jsonl` payload 流 + `qNN.meta.json` 会话/耗时/token；cube=`qNN.raw.json` /chat 响应+日志摘录）。
 - **幂等**：`--only qNN` 子集复跑；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
 - **开跑前健康检查**：datus 三方一致断言（语义层 YAML=引擎=KB 互相印证）与 cube 词典可达，挂了先修再考。
 - **作答卡字段**（`schemas/answer_card.schema.json`，以 rounds/m0 六张实卡为底定稿，M1 拍板 D10 不改写不迁移）：`id / question / status（六值 answer|ask|nomatch|timeout|error|failed）/ metrics_hit（命中指标，机器提取；datus={tool,depth,names}、cube={measures,dimensions} 两形态）/ sql（双侧同放 SQL 文本，cube 为编译后）/ sql_count / answer / errors / elapsed_s / arbiter（ask 自动拍板记录）/ raw_path`。**口径卡只在裁决书，作答卡不设**（D10）——写卡前适配器内联过契约校验，全量核查用 `bin/validate.py`。
 
 ### ask_datus 要点
 
-- **chat API 通道（2026-10-23 起，与 ask_cube 同构）**：adapter 直接 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，SSE 流）——agent 配置/语义模型只在服务启动时装一次（v0 逐题冷启是回答慢的根源），每题新 `session_id` 保证题间零污染；message 事件内层 payload 与 `datus -p` 落盘格式同构，提取器（extractor.py）不改。单题读超时（默认 900s）按超时截断落卡、保留部分输出；网络类失败换新 session 重试（3 次，与 cube 同款）。前置：`datus --web` 在跑（preflight 第 2 项查）。
-- **历史：WSL 桥接（v0–v1，已退役）**：曾经 `wsl.exe -d Ubuntu-26.04` 调仓内 `wsl_runner.py` 逐题 subprocess 跑 `datus -p`（文件交接防引号坑）；因每题冷启（Python+配置+语义模型+连接，单题 75–155s）被 chat API 替代，`wsl_runner.py` 保留作回退参考。
+- **chat API 通道（与 ask_cube 同构）**：adapter 直接 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，SSE 流）——agent 配置/语义模型只在服务启动时装一次，每题新 `session_id` 保证题间零污染；message 事件内层 payload 即 MessagePayload，提取器（extractor.py）按 §2.2 规格解析。单题读超时（默认 900s）按超时截断落卡、保留部分输出；网络类失败换新 session 重试（3 次，与 cube 同款）。前置：`datus --web` 在跑（preflight 第 2 项查）。
 - 提取规格 = 设计文档 §2.2 表格（SQL←execute_sql toolParams；命中指标←query_metrics/search_metrics/get_metric；答案←depth-0 markdown；真实错误←FuncToolResult `error` 字段，**正文 "Code NNN" 是 KB 文本，勿扫全文**）。
 - 已知坑内置：深度>0 子代理的调用也要收（v0 教训）；超时题保留部分输出。
 - **验收标准**：提取规格 §2.2 逐条在活跑留痕上有实测例证（rounds/m0/runs/datus/）；作答卡字段与 §三 ask 契约一致。
@@ -199,7 +198,7 @@ uv run python bin/round.py --round round-02
 uv run python bin/round.py --round round-03 --retest round-02
 
 # 只出题（考纲编译好之后）
-uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/questions.jsonl --count 30 --mix 事实:10,关联:10,辨析:5,边界:5
+uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/questions.jsonl --count 30
 
 # 单侧子集复跑（回归失败题时）
 uv run python -m adapters.ask_datus --round round-02 --only q09
