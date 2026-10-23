@@ -2,7 +2,8 @@
 
 流程（对每轮）：
   ① 出题      题库 rounds/<轮>/questions.jsonl 不存在时调 bin/examine.py；已存在则跳过
-  ② 双侧作答  调 adapters.ask_datus / adapters.ask_cube（已有卡的部分自动跳过，断点续跑）
+  ② 双侧作答  datus/cube 两适配器进程并行（接口、留痕目录互不相干；侧内仍逐题串行；
+              已有卡自动跳过，断点续跑；每侧日志 runs/<侧>.runlog.txt）
   ③ 卡校验    两侧作答卡逐份对 Schema（复用 schemas/validator.py）
   ④ 裁决关口  verdicts/<id>.json 缺任一题 → 打印缺单清单并停（退出码 2），等人工裁决
   ⑤⑥ 轮报+材料包  全部裁决就绪后渲染 report.md + feedback/issues-{datus,cube}.md
@@ -16,9 +17,11 @@
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
+import time
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -62,17 +65,66 @@ def step_examine(round_dir: Path, qpath: Path, name: str) -> None:
          "--out", str(qpath), "--round", name])
 
 
+def _log_tail(path: Path, n: int = 6) -> list[str]:
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return []
+    return [ln for ln in lines if ln.strip()][-n:]
+
+
 def step_answer(round_dir: Path, qpath: Path, todo: list[str]) -> None:
+    """双侧并行作答：datus/cube 接口互不相干（:8501 / :4100）、留痕目录分离，可安全并行；
+    侧内仍逐题串行（题间隔离靠独立会话），并行只发生在侧与侧之间。
+    任一侧失败不砍另一侧：两侧都跑完后统一报失败并退出码 1，已产卡保留（断点续跑可补）。"""
+    procs: dict[str, tuple[subprocess.Popen, object]] = {}
     for side, module in SIDES.items():
         answers_dir = round_dir / "answers" / side
         missing = [qid for qid in todo if not (answers_dir / f"{qid}.json").exists()]
         if not missing:
             print(f"[②作答] {side}：{len(todo)} 卡齐全，跳过")
             continue
-        print(f"[②作答] {side}：待答 {len(missing)} 题（已有 {len(todo) - len(missing)} 卡）")
+        log_path = round_dir / "runs" / f"{side}.runlog.txt"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"[②作答] {side}：待答 {len(missing)} 题（已有 {len(todo) - len(missing)} 卡）"
+              f"→ 并行启动，日志 {log_path.name}")
         cmd = [sys.executable, "-m", module, "run", "--questions", str(qpath),
                "--only", *missing]
-        run(cmd)
+        print(f"[round] $ {' '.join(str(c) for c in cmd)}  > {log_path.name}", flush=True)
+        log_f = log_path.open("w", encoding="utf-8")
+        try:
+            env = {**os.environ, "PYTHONIOENCODING": "utf-8"}  # 子进程输出统一 UTF-8，runlog 可读
+            procs[side] = (subprocess.Popen(cmd, cwd=REPO_ROOT, stdout=log_f,
+                                            stderr=subprocess.STDOUT, env=env), log_f)
+        except Exception:
+            log_f.close()
+            raise
+    if not procs:
+        return
+
+    # 轮询进度：只数卡、不动进程；有变化才打一行
+    last: dict[str, int] = {}
+    while any(p.poll() is None for p, _ in procs.values()):
+        time.sleep(20)
+        counts = {s: len(list((round_dir / "answers" / s).glob("*.json"))) for s in procs}
+        if counts != last:
+            last = counts
+            print("[②作答] 进行中 " + " · ".join(f"{s} {c}/{len(todo)}" for s, c in counts.items()),
+                  flush=True)
+
+    failed = []
+    for side, (p, log_f) in procs.items():
+        rc = p.wait()
+        log_f.close()
+        print(f"[②作答] {side} 结束：退出码 {rc}（日志尾部：）")
+        for ln in _log_tail(round_dir / "runs" / f"{side}.runlog.txt"):
+            print(f"    {side}| {ln}")
+        if rc != 0:
+            failed.append(side)
+    if failed:
+        print(f"[round] 作答失败侧：{'、'.join(failed)}（另一侧已产卡保留，断点续跑可补），终止",
+              file=sys.stderr)
+        sys.exit(1)
 
 
 def check_cards(round_dir: Path, todo: list[str]) -> None:
