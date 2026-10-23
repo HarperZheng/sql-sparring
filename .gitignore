@@ -10,3 +10,6 @@ __pycache__/
 # 运行时临时物
 *.log
 tmp/
+
+# 各轮 runs 原始运行证据（payload/raw/sql/stderr）只留本地，不入库
+rounds/*/runs/
