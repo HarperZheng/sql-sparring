@@ -1,4 +1,4 @@
-"""bin/round.py — 一轮互搏的编排器（M3）：自动跑 SOP ①–⑥，到材料包即停（D6）。
+"""bin/round.py — 一轮互搏的编排器（M3）：自动跑 SOP ①–⑤，到轮报即停（D6）。
 
 流程（对每轮）：
   ① 出题      题库 rounds/<轮>/questions.jsonl 不存在时调 bin/examine.py；已存在则跳过
@@ -6,13 +6,22 @@
               已有卡自动跳过，断点续跑；每侧日志 runs/<侧>.runlog.txt）
   ③ 卡校验    两侧作答卡逐份对 Schema（复用 schemas/validator.py）
   ④ 裁决关口  verdicts/<id>.json 缺任一题 → 打印缺单清单并停（退出码 2），等人工裁决
-  ⑤⑥ 轮报+材料包  全部裁决就绪后渲染 report.md + feedback/issues-{datus,cube}.md
-               + suite-candidates.jsonl，即到轮终点（D6：不自动回灌）
+  ⑤ 轮报      全部裁决就绪后渲染 report.md（四指标+分歧明细+复验集），即到系统段终点
+               （D6：不自动回改；feedback.md 回改单不是本脚本产物——它由回改①创建）
+
+回改五步（round.py 之外：①智能体（人调起）/ ②③⑤人 / ④本脚本）：
+  ① 查证起草  人看过轮报分歧明细后调起智能体，codeqa 逐题查真实字段解法（过滤器+指标+维度+时间锚），
+              由智能体创建 feedback.md 回改单（文件头契约+主表+回改卡；待查证→草案）
+  ② 审定     人逐行审定（草案→已审定）
+  ③ 施工     人按回改卡改双侧语义层+清记忆（→已施工）
+  ④ 复验     本脚本 --retest 只读重跑上轮分歧题（挂→回③，口径错→回①）
+  ⑤ 闭环入库  本脚本 suite-add 读 feedback.md 状态=闭环的行，写入 suite/accepted_answers.json
 
 用法（Windows 侧 uv 环境）：
-  uv run python bin/round.py --round round-02                 # 全流程（①–⑥）
+  uv run python bin/round.py --round round-02                 # 全流程（①–⑤）
   uv run python bin/round.py --round round-02 --only q01 q21  # 小样/子集（不产轮报）
-  uv run python bin/round.py --round round-03 --retest round-02   # M4：复验轮
+  uv run python bin/round.py --round round-03 --retest round-02   # ④ 复验（M4 实现）
+  uv run python bin/round.py suite-add --round round-02       # ⑤ 闭环入库
 """
 
 import argparse
@@ -164,7 +173,7 @@ def load_verdicts(round_dir: Path, todo: list[str]) -> dict[str, dict]:
             for qid in todo}
 
 
-# ---------- ⑤⑥ 轮报 + 材料包 ----------
+# ---------- ⑤ 轮报 ----------
 
 def _issues_line(v: dict) -> str:
     parts = [f"{i['side']}·{i['type']}·{i['target']}" for i in v.get("verdict_detail") or []]
@@ -222,73 +231,47 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
     return out
 
 
-def render_feedback(round_dir: Path, name: str, questions: dict, todo: list[str],
-                    verdicts: dict, cards: dict) -> list[Path]:
-    fb_dir = round_dir / "feedback"
-    fb_dir.mkdir(parents=True, exist_ok=True)
-    outs = []
-    for side in SIDES:
-        other = "cube" if side == "datus" else "datus"
-        sec1, sec2, sec3, sec4 = [], [], [], []
-        for qid in todo:
-            v = verdicts[qid]
-            mine = [i for i in (v.get("verdict_detail") or []) if i["side"] in (side, "both")]
-            summary = v.get("comparison", {}).get("summary") or "见 comparison.metrics"
-            if _gap_pair({s: cards[s].get(qid) for s in SIDES}) and v["verdict"] != "互证通过":
-                sec3 += [f"### {qid} {questions[qid]}", f"- 现象：{summary}"]
-                sec3 += [f"- 建议：{i['type']} {i['target']} —— {i['suggest']}" for i in mine] + [""]
-            elif v["verdict"] == "建模差异":
-                cd, cc = v["cards"]["datus"], v["cards"]["cube"]
-                body = [f"### {qid} {questions[qid]}",
-                        f"- 现象：{summary}",
-                        f"- {side} 口径：{cd.get('caliber', '—')}｜维度：{cd.get('dimensions', '—')}｜时间窗口：{cd.get('time_window', '—')}",
-                        f"- {other} 口径：{cc.get('caliber', '—')}｜维度：{cc.get('dimensions', '—')}｜时间窗口：{cc.get('time_window', '—')}"]
-                body += [f"- 修法：{i['type']} {i['target']} —— {i['suggest']}" for i in mine]
-                sec1 += body + [""]
-            elif v["verdict"] == "执行事故" and mine:
-                sec2 += [f"### {qid} {questions[qid]}",
-                         f"- 口径相同证据：{summary}",
-                         *[f"- 排错：{i['target']} —— {i['suggest']}" for i in mine], ""]
-            elif v["verdict"] == "待人工":
-                cd, cc = v["cards"]["datus"], v["cards"]["cube"]
-                sec4 += [f"### {qid} {questions[qid]}",
-                         f"- {side}：{cd.get('caliber', '—')}（值：{cd.get('values')}）",
-                         f"- {other}：{cc.get('caliber', '—')}（值：{cc.get('values')}）",
-                         "- 拍板后：结论回写课本「已裁定口径」，两侧照改", ""]
-        text = "\n".join([
-            f"# {name} 回灌材料包 · {side} 侧（D6：人工处置，系统到此为止）", "",
-            "## ① 建模差异（谁补建模：side/type 见每条）", *(sec1 or ["（无）", ""]),
-            "## ② 执行事故（口径同值异，修 bug 不动建模）", *(sec2 or ["（无）", ""]),
-            "## ③ 双侧共同缺口（两侧均答不出；被动统计，只覆盖被问到的题）", *(sec3 or ["（无）", ""]),
-            "## ④ 待拍板口径（双方证据并列，拍板结果人工回填 + 课本增补草案）", *(sec4 or ["（无）", ""]),
-        ])
-        p = fb_dir / f"issues-{side}.md"
-        p.write_text(text, encoding="utf-8")
-        outs.append(p)
-
-    suite = []
-    for qid in todo:
-        v = verdicts[qid]
-        if v.get("corrected"):
-            suite.append(json.dumps({
-                "id": qid, "question": questions[qid],
-                "answer": v["corrected"].get("answer"),
-                "basis": v["corrected"].get("basis"), "since_round": name,
-            }, ensure_ascii=False))
-    p = fb_dir / "suite-candidates.jsonl"
-    p.write_text("\n".join(suite) + ("\n" if suite else ""), encoding="utf-8")
-    outs.append(p)
-    return outs
+def cmd_suite_add(name: str) -> None:
+    """回改⑤闭环入库：读 feedback.md 主表状态=闭环的行，合并写入 suite/accepted_answers.json。"""
+    fb_path = REPO_ROOT / "rounds" / name / "feedback.md"
+    if not fb_path.exists():
+        print(f"[suite-add] {fb_path} 不存在", file=sys.stderr)
+        sys.exit(1)
+    closed = []
+    for line in fb_path.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) >= 5 and re.fullmatch(r"q\d+", cells[0]) and cells[4] == "闭环":
+            closed.append((cells[0], cells[1], cells[3]))
+    if not closed:
+        print(f"[suite-add] {fb_path} 主表没有状态=闭环的行，无事可入库")
+        return
+    suite_path = REPO_ROOT / "suite" / "accepted_answers.json"
+    suite = json.loads(suite_path.read_text(encoding="utf-8")) if suite_path.exists() else {}
+    for qid, question, conclusion in closed:
+        suite[qid] = {"question": question, "口径": conclusion, "since_round": name,
+                      "source": f"{name} 回改单闭环行（回改⑤人工确认入库）"}
+    suite_path.parent.mkdir(parents=True, exist_ok=True)
+    suite_path.write_text(json.dumps(suite, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"[suite-add] 入库 {len(closed)} 行：{' '.join(q for q, _, _ in closed)} → {suite_path}")
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="round", description="一轮互搏编排器（SOP ①–⑥，D6 到材料包即停）")
-    ap.add_argument("--round", required=True, help="轮号，如 round-02")
+    ap = argparse.ArgumentParser(prog="round", description="一轮互搏编排器（SOP ①–⑤，D6 到轮报即停）")
+    ap.add_argument("cmd", nargs="?", default=None,
+                    help="子命令：suite-add=回改⑤闭环入库（读 feedback.md 状态=闭环的行）")
+    ap.add_argument("--round", default=None, help="轮号，如 round-02")
     ap.add_argument("--only", nargs="*", default=None, help="只跑这些 id（小样/子集；不产轮报）")
     ap.add_argument("--retest", default=None, help="（M4）复验上轮，复验集=上轮分歧题")
     args = ap.parse_args()
+    if not args.round:
+        ap.error("--round 必填（suite-add 子命令同样需要）")
     if not re.match(r"round-\d+$", args.round):
         ap.error("--round 形如 round-02")
+    if args.cmd:
+        if args.cmd != "suite-add":
+            ap.error(f"未知子命令 {args.cmd}（可用：suite-add）")
+        cmd_suite_add(args.round)
+        return
     if args.retest:
         print("[round] --retest 复验模式属 M4，本版未实现", file=sys.stderr)
         sys.exit(1)
@@ -317,11 +300,9 @@ def main():
         return
 
     report = render_report(round_dir, name, questions, todo, verdicts, cards)
-    feedbacks = render_feedback(round_dir, name, questions, todo, verdicts, cards)
-    print(f"[⑤⑥轮报] {report}")
-    for p in feedbacks:
-        print(f"[⑤⑥材料包] {p}")
-    print("[round] 轮终点（D6）：修语义层/拍板口径/清记忆均为人工动作；复验=M4 --retest")
+    print(f"[⑤轮报] {report}")
+    print("[round] 系统段终点（D6）：到轮报为止；feedback.md 回改单由回改①创建"
+          "（人看过轮报后调起智能体，codeqa 逐题查证）——②审定→③施工→④--retest 复验→⑤suite-add 闭环入库")
 
 
 if __name__ == "__main__":

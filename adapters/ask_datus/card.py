@@ -24,20 +24,27 @@ def v0_status_to_card_status(status: str) -> str:
     return "failed"
 
 
+def _hit(m: dict) -> dict:
+    """metric_calls 条目 → metrics_hit 条目；query_metrics 附带的维度/时间条件透传。"""
+    hit = {"tool": m["tool"], "depth": m["depth"], "names": m["names"]}
+    for k in ("dimensions", "time_start", "time_end"):
+        if k in m:
+            hit[k] = m[k]
+    return hit
+
+
 def build_card(qid: str, question: str, extracted: dict, elapsed_s, raw_path: str) -> dict:
     """提取结果 + 运行元数据 → 11 字段作答卡。
 
-    metrics_hit：工具级命中指标（过程证据）——tool/depth/names 三元组，
+    metrics_hit：工具级命中指标（过程证据）——tool/depth/names，query_metrics
+    条目另带 dimensions/time_start/time_end（调用实参，无则不带键）；
     rows/desc 等展示性内容留在原始留痕（raw_path 可回查）。
     """
     return {
         "id": qid,
         "question": question,
         "status": v0_status_to_card_status(extracted["status"]),
-        "metrics_hit": [
-            {"tool": m["tool"], "depth": m["depth"], "names": m["names"]}
-            for m in extracted["metric_calls"]
-        ],
+        "metrics_hit": [_hit(m) for m in extracted["metric_calls"]],
         "sql": extracted["sql"],
         "sql_count": extracted["sql_count"],
         "answer": extracted["answer"],

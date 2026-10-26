@@ -60,6 +60,17 @@ def _names_of(params):
     return [str(n) for n in names if n]
 
 
+def _qm_extras(params):
+    """query_metrics 调用实参里的维度与时间范围（条件添加：无则不带键）。"""
+    extras = {}
+    if params.get("dimensions"):
+        extras["dimensions"] = [str(x) for x in params["dimensions"] if x]
+    if params.get("time_start") or params.get("time_end"):
+        extras["time_start"] = params.get("time_start")
+        extras["time_end"] = params.get("time_end")
+    return extras
+
+
 def _describe_call(tool, params):
     """指标类工具调用的一行描述（仅 B1 兼容与人工阅读用，作答卡不带）。"""
     bits = []
@@ -143,6 +154,7 @@ def extract(lines, timed_out=False, timeout_s=None):
                             "tool": tool, "depth": d,
                             "desc": _describe_call(tool, params),
                             "names": _names_of(params), "rows": rows,
+                            **_qm_extras(params),
                         })
                     elif tool == "search_metrics":
                         names = []
@@ -174,8 +186,11 @@ def extract(lines, timed_out=False, timeout_s=None):
 
     # 有调用无结果（工具抛错早于返回）仍计为指标使用
     for tool, params, d in pending.values():
-        metric_calls.append({"tool": tool, "depth": d, "desc": _describe_call(tool, params),
-                             "names": _names_of(params), "rows": "(无返回)"})
+        entry = {"tool": tool, "depth": d, "desc": _describe_call(tool, params),
+                 "names": _names_of(params), "rows": "(无返回)"}
+        if tool == "query_metrics":
+            entry.update(_qm_extras(params))
+        metric_calls.append(entry)
 
     if timed_out:
         status = f"超时({timeout_s}s，部分输出)"

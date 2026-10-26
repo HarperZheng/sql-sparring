@@ -10,8 +10,8 @@
     "source": { "type": "string", "description": "出题溯源（M0 手写题库用；机器题库不填）" },
     "round": { "type": "string", "description": "所属轮（可选）" },
     "type": {
-      "enum": ["事实", "关联", "辨析", "边界", "总量趋势", "排名对比", "分布结构", "超期账龄", "异常校验", "环节归因"],
-      "description": "题型（概念族 4 值 + 问数族 6 值，定义见 examiner/SKILL.md；机器题库必带）"
+      "enum": ["总量趋势", "排名对比", "分布结构", "超期账龄", "异常校验"],
+      "description": "题型（问数族 5 值，定义见 examiner/SKILL.md；机器题库必带。概念族 4 值与环节归因本期撤销，后续考虑加入——见 docs/问数双智能体互搏设计.md 文末注记）"
     },
     "category": { "type": "string", "description": "考纲知识点大类（可选）" },
     "syllabus_ref": {

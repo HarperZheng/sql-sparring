@@ -42,7 +42,7 @@
     "verdict_detail": {
       "type": "array",
       "items": { "$ref": "#/$defs/issueItem" },
-      "description": "问题单（原 issues[] 完整迁入，条目结构不变）：回灌问题单的机器形态（0..n 条；互证通过通常为空数组），issues-*.md 由它渲染；非空的题默认进下轮复验集（D12）"
+      "description": "问题单（原 issues[] 完整迁入，条目结构不变）：回改问题单的机器形态（0..n 条；互证通过通常为空数组），回改①的智能体据它起草回改单主表与回改卡；非空的题默认进下轮复验集（D12）"
     },
     "corrected": {
       "anyOf": [
@@ -57,7 +57,7 @@
     },
     "evidence_refs": {
       "type": "array", "minItems": 1, "items": { "type": "string" },
-      "description": "指向双方作答卡（及留痕）的路径"
+      "description": "指向双方作答卡的路径（限 git 库内证据；runs 留痕不入 git，也不入引用）"
     }
   },
   "$defs": {

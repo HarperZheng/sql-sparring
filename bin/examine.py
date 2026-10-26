@@ -6,7 +6,7 @@
 
 用法：
   uv run python bin/examine.py --out rounds/round-02/questions.jsonl --count 30
-      （配比缺省=概念族 30% + 问数族 70%，见 --mix）
+      （配比缺省=问数族 5 型各 6 题，见 --mix）
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ def parse_mix(mix: str) -> dict[str, int]:
         k, _, v = part.partition(":")
         k, v = k.strip(), v.strip()
         if not k or not v.isdigit() or int(v) <= 0:
-            sys.exit(f"[examine] --mix 段不合法: {part!r}（应为 题型:数量，如 事实:10）")
+            sys.exit(f"[examine] --mix 段不合法: {part!r}（应为 题型:数量，如 总量趋势:10）")
         out[k] = int(v)
     return out
 
@@ -183,8 +183,8 @@ def main() -> None:
     ap.add_argument("--syllabus", default="syllabus", help="考纲目录（含 business.md）")
     ap.add_argument("--out", required=True, help="题库输出路径，如 rounds/round-02/questions.jsonl")
     ap.add_argument("--count", type=int, default=30, help="题目总数（缺省 30，round.py 不传参即可出题）")
-    ap.add_argument("--mix", default="事实:3,关联:2,辨析:2,边界:2,总量趋势:4,排名对比:4,分布结构:4,超期账龄:3,异常校验:3,环节归因:3",
-                    help="题型配比（概念族 9 + 问数族 21 = 30 题，即 30%%/70%%）")
+    ap.add_argument("--mix", default="总量趋势:6,排名对比:6,分布结构:6,超期账龄:6,异常校验:6",
+                    help="题型配比（问数族 5 型各 6 = 30 题）")
     ap.add_argument("--start-id", default="q01", help="起始题号")
     ap.add_argument("--round", default=None, help="轮号（缺省从 --out 路径解析 round-NN）")
     ap.add_argument("--max-retries", type=int, default=3, help="打回重出上限")

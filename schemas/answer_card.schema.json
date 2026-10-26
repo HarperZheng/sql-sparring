@@ -18,7 +18,7 @@
         "type": "object",
         "additionalProperties": true,
         "anyOf": [{ "required": ["tool"] }, { "required": ["measures"] }],
-        "description": "datus 形态 {tool,depth,names} / cube 形态 {measures,dimensions}；命中了哪些语义层指标（过程证据，纯机器提取）"
+        "description": "datus 形态 {tool,depth,names}（query_metrics 条目另带 dimensions/time_start/time_end 调用实参） / cube 形态 {measures,dimensions}；命中了哪些语义层指标（过程证据，纯机器提取）"
       }
     },
     "sql": { "type": ["string", "null"], "description": "双侧同放 SQL 文本（cube 为 :4000 编译后）" },

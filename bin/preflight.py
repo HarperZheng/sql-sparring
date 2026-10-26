@@ -7,7 +7,7 @@
   uv run python bin/preflight.py
 
 检查项（防的都是 M0 实测过的真实事故）：
-  1. datus 语义层 YAML 可解析——裁决回灌人工改坏 YAML，下轮开跑才发现；
+  1. datus 语义层 YAML 可解析——裁决回改人工改坏 YAML，下轮开跑才发现；
   2. datus chat API :8501 可达——常驻服务（datus --web）没起/挂了；
   3. cube agent-svc :4100 可达且词典可枚举——常驻服务没起/挂了；
   4. cubejs :4000 可达（编译 SQL 抓取依赖）——同上。
