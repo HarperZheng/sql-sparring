@@ -1,5 +1,149 @@
 {
-  "_note": "指标登记表（D14，2026-10-26 拍板）：拍板口径的机器可读登记。metrics=值行 metric 的合法来源（回改⑤闭环入库逐步沉淀，一条={name,口径,unit,round}）；key_aliases=值行两级判定③待复核的别名审定归宿——审定一条登记一条（alias=一侧写法，canonical=审定正名，round=来源轮，note=审定依据），引擎重算即翻案。空表=尚无登记，引擎只做文本归一（NFKC+去首尾空白+小写）。引擎缺此文件也按空表处理（schemas/valuecmp.py load_registry 兜底）。",
-  "metrics": [],
-  "key_aliases": []
+  "_note": "指标登记表（D14，2026-10-26 拍板）：拍板口径的机器可读登记，一条=一个全局可复用的指标口径（不随题落盘——年份窗口、TopN/排名、题面限定一律不入表，属题面要求由题自带）。metrics 一条={name,expr,filter,dims,time_anchor,unit,round,source}——name=拍板正名（值行 metric 的合法名）；expr=聚合表达式（落库表真实字段）；filter=定义性过滤（判定该指标是什么的全局规则，如 已缴入国库=fenterstatus='1'；无则留空串）；dims=可用维度（成员/分档序列，含全局拍板4 档位）；time_anchor=时间字段（全局拍板1/2 的锚字段，toDate 精度）；unit=计量单位；source=拍板出处（回改单题号+审定状态：草案条目待回改②审定后转正，勿直接施工）。key_aliases 一条={alias,canonical,round,note}=③待复核别名审定归宿，引擎重算即翻案。首轮登记来自 round-02 回改单 15 题拍板（2026-10-26）。",
+  "metrics": [
+    {
+      "name": "缴款金额",
+      "expr": "—（拍板未改判，维持两侧现行指标）",
+      "filter": "",
+      "dims": ["月份", "缴款人（付款方；账号字段不建维度）", "缴款方式 fbustype（'1'直缴/'2'汇缴）"],
+      "time_anchor": "fdate（缴款日期，toDate，全局拍板1）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q10/q12/q14（已审定）"
+    },
+    {
+      "name": "缴库金额",
+      "expr": "SUM(ftotalamt)",
+      "filter": "已缴入国库 fenterstatus='1'（fincomestatus 不参与，全局拍板2）",
+      "dims": ["—（无维度分解）"],
+      "time_anchor": "fenterdate（入库日期，toDate，全局拍板2）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q11（已审定）"
+    },
+    {
+      "name": "代收非税收入金额",
+      "expr": "—（拍板未改判，维持现行指标）",
+      "filter": "",
+      "dims": ["代理银行"],
+      "time_anchor": "fdate（缴款日期，toDate，全局拍板1）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q15（已审定）"
+    },
+    {
+      "name": "执收单位经手收入金额",
+      "expr": "—（拍板未改判，维持现行指标）",
+      "filter": "",
+      "dims": ["执收单位"],
+      "time_anchor": "fdate（缴款日期，toDate，全局拍板1）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q17（已审定）"
+    },
+    {
+      "name": "待划拨金额",
+      "expr": "pending_trans_amt=SUM(ftransamt)（ftransamt=ClickHouse 落地列名；应用库源侧字段=FAMT，落库映射 FAMT→ftransamt，两层不冲突）",
+      "filter": "未划拨 fistransfer!='1'（trans_stats 整列未同步，不作过滤依据）",
+      "dims": ["收入项目"],
+      "time_anchor": "clear_date（清分日期，双侧时间轴对齐）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q16（已审定）；q24 字段纠偏冲突已解除（2026-10-26 分层定谳：源侧 FAMT→落地 ftransamt，datus fne_fund_main.yml:1639 同注）"
+    },
+    {
+      "name": "完成笔数",
+      "expr": "COUNT(DISTINCT fpaycode)（全局拍板5；fid 1:1 不成立——落地实测 1,281 行 fid distinct 1,110 / fpaycode distinct 975）",
+      "filter": "完成缴款 fisreceived='1'（「完成的缴款」判定，不另立 freceiveddate 到账锚）",
+      "dims": ["缴款方式 fbustype（'1'直缴/'2'汇缴，datus 补枚举标签）"],
+      "time_anchor": "fdate（缴款日期，toDate，全局拍板1）",
+      "unit": "笔",
+      "round": "round-02",
+      "source": "回改单 q18（已审定）；笔数键随全局拍板5 更新（2026-10-26）"
+    },
+    {
+      "name": "缴款笔数",
+      "expr": "COUNT(DISTINCT fpaycode)",
+      "filter": "排除作废 fstate!='2'（作废态=fstate='2'，codeqa）",
+      "dims": ["金额档位：单笔金额=缴款书总额 ftotalamt（非明细行 famt），按全局拍板4 10 倍区间 <1千/1千–1万/1万–10万/10万–100万/≥100万"],
+      "time_anchor": "fdate（缴款日期，toDate，全局拍板1）",
+      "unit": "笔",
+      "round": "round-02",
+      "source": "回改单 q19（草案，未审定）"
+    },
+    {
+      "name": "全程耗时天数",
+      "expr": "fenterdate−fdate（跨链逐笔配对 une_paybook.fpaycode=fne_treasury_transfer.fpaycode，TreasuryDao 子查询证实）；辅 笔数 COUNT(DISTINCT fpaycode)",
+      "filter": "",
+      "dims": ["耗时分档：全局拍板4 时长序列 <1天/1–10天/10–100天/≥100天（代码无现成耗时/分档逻辑）"],
+      "time_anchor": "起点 fdate（全局拍板1；codeqa 备查 fconfirmdate=缴款确认日，复验偏差回①）→终点 fenterdate（全局拍板2）",
+      "unit": "天",
+      "round": "round-02",
+      "source": "回改单 q21（草案，未审定）"
+    },
+    {
+      "name": "未缴笔数",
+      "expr": "COUNT(DISTINCT fpaycode)",
+      "filter": "已开具且未缴款 fstate='1'（1未缴款/2作废/3已缴款/4已到账；fstate!='2' 保有效）+fne_paybook 按 fpaycode 左连无记录兜底（防状态未回写脏数据）",
+      "dims": ["未缴时长分档：全局拍板4 时长序列 <1天/1–10天/10–100天/≥100天"],
+      "time_anchor": "ffillDate（开票日期，toDate；未缴时长=开具日至今，无缴款日期可减）",
+      "unit": "笔",
+      "round": "round-02",
+      "source": "回改单 q22（已审定）"
+    },
+    {
+      "name": "滞留金额",
+      "expr": "SUM(fnr_unpaid.famt)（累计未汇缴，报表列 JZQJAMT 直接取）",
+      "filter": "已收 fisreceived='1'（同完成笔数口径）+未汇缴（fisgenerec=0 未生成缴库记录；单位端 fbatchno IS NULL；fbustype 是业务类型勿用作汇缴状态）",
+      "dims": ["滞留时长分档：全局拍板4 时长序列 <1天/1–10天/10–100天/≥100天（代码无现成分档逻辑）"],
+      "time_anchor": "freceiveddate（到账日期，滞留起算锚）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q23（草案，未审定）"
+    },
+    {
+      "name": "在途滞留金额",
+      "expr": "主=SUM(FAMT)（应用库源侧字段名；CH 落地列=ftransamt，datus yml:1639 已按映射施工），辅=在途笔数 COUNT(DISTINCT FTRANSNO)（CH 落地列=ftransno；ftransno 属单据号口径，全局拍板5 笔数键统一不适用），派生=滞留天数（当前日−FTRANSDATE，datus 落地字段 transit_days/transit_duration_bucket）；字段纠偏：应用库源侧无 trans_stats/ftransamt，实为 FSTATS/FAMT",
+      "filter": "在途滞留池：指令已发 fistransfer='1'（配 fstats∈{1,9}）+尚未到账 fiseenter='0'（兜底 fenterdate IS NULL）；落地执行（datus yml:852/1636）只按 fistransfer='1'+fisenter='0'（落地列名，源侧记 fiseenter），fstats 条件落地不可执行（CK 物理列=ftransstats，两候选表全空：transfer_new 129/129、funddivide_transfer 728/728；CK 无名为 trans_stats 的列），ftransdate 仅 2/129 非空且均 2024（池内仅 1/33 行）致「今年下达 FTRANSDATE 落 2026」不可判，故为存量在途池口径（不带年度窗口，题面「今年」按 transdate 过滤会清空在途池属数据现实）；卡内遗留（fstats 7/14 入池、bank/tips 通道）随 ftransstats 整列未同步一并搁置；cube 侧 2026-10-26 同步对齐（fiscal_allocation.is_enter 改 fisenter 直挂+fenterdate 非空兜底，池条件同 datus）。【双侧池基线未对齐，④复验「双侧分档金额一致」前必须解决】datus 锚 fne_transfer_new（划拨指令生命周期表）=33 行/20,924 元/27 单；fne_funddivide_transfer（清分划拨明细）同条件=37 行/24,715 元/27 单（cube 登记基线即此表 raw SUM）——27 个 ftransno 完全相同，funddivide 侧多 4 行生命周期冗余致 4 单金额翻倍（1820→3640/1767→3534/103→206/101→202，虚增 3,791 元），cube 侧须改锚 transfer_new 或对 4 冗余行去重；另 transfer_new 池内 2 对同额行（100×2、10×2，fcollectid 不同，双表一致）使 raw SUM 20,924 与 (ftransno,ftransamt) 去重 20,814 差 110 元，属「同单同额多批次 vs 生命周期冗余」判定，待拍板",
+      "dims": ["滞留时长分档：全局拍板4 时长序列 <1天/1–10天/10–100天/≥100天；datus 落地实测（存量池 33 行）：未知 26 单 20,894 元+≥100天 1 单 30 元（ftransdate 近全空，多数落 未知）"],
+      "time_anchor": "FTRANSDATE（划拨指令下达日，toDate；落地仅 2/129 非空且均 2024、池内 1/33 行——存量池实际无有效时间锚，分档以 未知 兜底）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q24（已审定）；datus 已施工（存量在途池口径，2026-10-26）；双侧池基线对表差异见 filter 注（④复验前须对齐）"
+    },
+    {
+      "name": "清分分入金额",
+      "expr": "SUM(fne_funddivide.fimamt 分入金额)",
+      "filter": "完成清分 fispayenter='Y'（是否到账对账；fpayenterdate 非空兜底）",
+      "dims": ["归属级次：frechgncode（收入区划）→afa_auth_region.fbgtlevel→字典110（1中央/2省/3市/4县/5乡/0共享）；占比=各级金额/总额（导出量）"],
+      "time_anchor": "fdate/fyear（toDate；fcleardate 是清分操作时间，非业务锚）",
+      "unit": "元",
+      "round": "round-02",
+      "source": "回改单 q20（草案，未审定）"
+    },
+    {
+      "name": "命中笔数",
+      "expr": "COUNT(DISTINCT ftransno)+单号明细",
+      "filter": "两层：①对账层 freconcilestatus='1'（0未对账/1成功/2失败）且 fenterstatus≠'1'；②记账层 fincomestatus='1' 且 fenterstatus≠'1'（合全局拍板2）",
+      "dims": ["异常类型（对账/记账）"],
+      "time_anchor": "—（异常存在性校验，无时间锚）",
+      "unit": "笔",
+      "round": "round-02",
+      "source": "回改单 q27（已审定）"
+    }
+  ],
+  "key_aliases": [
+    {
+      "alias": "未划拨金额",
+      "canonical": "待划拨金额",
+      "round": "round-02",
+      "note": "q16 拍板：cube 词典词条「待划拨金额」synonyms=未划拨金额（datus 侧现行名）"
+    },
+    {
+      "alias": "已缴入国库金额",
+      "canonical": "缴库金额",
+      "round": "round-02",
+      "note": "q11 拍板指标正名=缴库金额；round-02 卡内曾用名 已缴入国库金额"
+    }
+  ]
 }

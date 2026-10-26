@@ -1,6 +1,6 @@
 # round-02 回改单
 
-- 日期：2026-10-26　主表 30 行=全题处置：已审定 11 / 草案 4 / 剔除 15（复验集与闭环统计只看非剔除行）
+- 日期：2026-10-26　主表 15 行（剔除 15 题已删除出轮）：已审定 11 / 草案 4
 
 ## 文件头（回改契约）
 
@@ -16,43 +16,28 @@
 2. **「已缴入国库」判定统一 fenterstatus='1'**（资金实际入库态），时间锚统一 **fenterdate**（入库日期，toDate）。涉"缴入国库"判定或缴库环节时间锚的题（q05、q21、q27、q28、q29、q30）一并执行；q27 的"尚未缴入国库"取其否定（fenterstatus≠'1'）。
 3. **字段取数以 codeqa 查证的云南生产源代码为准**（feedback 单所记字段即 codeqa 结论，不再逐处标注存疑）；Oracle 应用库结论落到 ClickHouse 落地表前须先做列名映射验证（属施工核对动作，不改变本单字段结论）。
 4. **档位阈值统一以 10 倍为区间**（2026-10-26）：每档上界=下界×10，首尾开区间兜底；金额类起点 1 千元（<1千/1千–1万/1万–10万/10万–100万/≥100万），时长类起点 1 天（<1天/1–10天/10–100天/≥100天）。涉分档题（q19/q21/q22/q23/q24）一律按此，不再逐题定档。
+5. **笔数键统一 fpaycode**（2026-10-26）：缴款类笔数指标（缴款/完成/未缴/分档/耗时配对）统一 `COUNT(DISTINCT fpaycode)` 去重计数；q18 改法行"fid 1:1 可保留"随之作废——落地库实测 1,281 行 fid distinct 1,110 / fpaycode distinct 975，92 个 fpaycode 拆多明细行，1:1 不成立。涉 q18/q19/q21/q22；q24/q27 的 ftransno 属划拨/缴库单据号口径，不在本拍板内。datus 侧已回③返工（2026-10-26）：非税缴款笔数=975、完成缴款笔数=直缴 570/汇缴 68 合计 638（原 fid 口径 629/99/728）。
 
 ## 主表
 
-| id | 问题 | 修改对象 | codeqa拍板结论 | 状态 |
-|---|---|---|---|---|
-| q01 | 非税收入收缴业务的起点和终点分别是什么？ | 无 | 剔除（概念族，题型已撤销）：不拍板不修改；round-03 剔除出闭环统计 | 剔除 |
-| q02 | 财政部门在代理银行开设的账户有哪几种？各自用来做什么？ | 无 | 剔除（概念族，题型已撤销）：不拍板不修改；round-03 剔除出闭环统计 | 剔除 |
-| q03 | 财政系统里的财政用户和单位用户，分别负责哪些业务？ | 无 | 剔除（概念族，题型已撤销）：不拍板不修改；round-03 剔除出闭环统计 | 剔除 |
-| q04 | 缴款通知书和汇缴通知书分别用在直缴还是汇缴场景？两种通知书下的资金各往哪个方向流？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q05 | 一笔缴款从缴款人缴款开始，到资金最终缴入国库，中间要依次经过哪些环节？ | 无 | 剔除（概念族）：不拍板不修改；若复跑，"缴入国库"环节口径受全局拍板2约束 | 剔除 |
-| q06 | 执收单位和预算单位是一回事吗？两者的区别和联系是什么？ | 无 | 剔除（概念族，题型已撤销）：不拍板不修改；round-03 剔除出闭环统计 | 剔除 |
-| q07 | 统计一笔缴款收了多少钱时，应该按缴款通知书票面的总金额算，还是按各征收项目的金额明细算？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q08 | 财政电子票据能不能作废？票据作废适用于哪些条件？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q09 | 票据冲红开具红字发票后，冲减的收入记在哪个会计期间？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q10 | 今年各月的缴款金额走势怎么样？ | 双侧 | 时间锚统一 FDATE(toDate)：datus 主时间轴 fill_date→fdate；cube pay_date 已符，确认精度到日 | 已审定 |
-| q11 | 今年已经缴入国库的非税资金一共有多少？ | 双侧 | 判定 fenterstatus='1'（fincomestatus 不参与）、锚 fenterdate(toDate)；datus 弃 fstatus='9' 分层与 fmsgdate（云南代码零命中），cube 已符 | 已审定 |
-| q12 | 今年通过直缴方式缴款的资金总额是多少？ | 双侧 | 同 q10（全局拍板1）：datus 年度窗口锚→fdate；cube pay_date 已符、精度到日 | 已审定 |
-| q13 | 近 3 个月，每个月新开具的财政电子票据有多少张？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q14 | 今年缴款金额排名前十的缴款人有哪些？ | 双侧 | 双侧补缴款人（付款方）维度；cube 解除 payer_name 全列脱敏；账号字段不建维度 | 已审定 |
-| q15 | 今年各代理银行代收的非税收入金额排名情况怎么样？ | 双侧 | 同 q10（全局拍板1）：datus"今年"窗口锚→fdate；cube 已锚 FDATE、精度到日 | 已审定 |
-| q16 | 今年按收入项目汇总的待划拨金额，排名前五的收入项目是哪些？ | cube（datus 零修改） | cube 补度量 pending_trans_amt=SUM(ftransamt) WHERE fistransfer!='1'+includes 白名单+词典词条；trans_stats 不作过滤依据 | 已审定 |
-| q17 | 今年各家执收单位经手的收入金额排下来，前十名是哪些单位？ | 双侧 | 同 q10（全局拍板1）：datus"今年"窗口锚→fdate；cube 已锚 FDATE、精度到日 | 已审定 |
-| q18 | 今年完成的缴款里，直缴和汇缴两种方式各有多少笔？占比是多少？ | 双侧 | 完成=fisreceived='1'；笔数 COUNT(DISTINCT fpaycode)（fid 1:1 可保留）；维度 fbustype（'1'直缴/'2'汇缴）；锚 fdate；cube state='3'→fisreceived='1' | 已审定 |
-| q19 | 今年单笔缴款按金额大小分档后，各档的缴款笔数分布是怎样的？ | 双侧 | 过滤器=今年缴款（fdate 落2026）+排除作废 fstate!='2'；单笔金额=缴款书总额 ftotalamt（非明细行 famt）；笔数 COUNT(DISTINCT fpaycode)；维度=金额档位（代码无现成档位标准），按全局拍板4 10 倍区间：<1千/1千–1万/1万–10万/10万–100万/≥100万；锚 fdate（全局拍板1）；另：cube 复验链路 502 属执行事故须修 | 草案 |
-| q20 | 今年完成清分的资金，按中央、省、市、县四级归属的金额占比是怎样的？ | cube | 过滤器=完成清分 fispayenter='Y'（是否到账对账，或 fpayenterdate 非空兜底）+今年 fdate 落2026；指标 SUM(fne_funddivide.fimamt 分入金额)；维度=归属级次 frechgncode（收入区划）→afa_auth_region.fbgtlevel→字典110（1中央/2省/3市/4县/5乡/0共享），占比=各级金额/总额；锚 fdate/fyear（fcleardate 是清分操作时间，非业务锚） | 草案 |
-| q21 | 今年从缴款到资金缴入国库，各笔缴款的全程耗时按时间区间分档后，各档的笔数分布如何？ | 双侧 | 跨链逐笔配对可行：une_paybook.fpaycode=fne_treasury_transfer.fpaycode（TreasuryDao 子查询证实）；耗时=fenterdate−起点；起点=fdate（全局拍板1 统一缴款时间，含耗时起点；codeqa 备查：fconfirmdate 为缴款确认日，复验偏差回①）；终点=fenterdate 入库日（合全局拍板2；fbuilddate=报文建立、ftransdate=报文发送勿混）；笔数 COUNT(DISTINCT fpaycode)；维度=耗时区间分档（代码无现成耗时/分档逻辑），按全局拍板4 时长序列：<1天/1–10天/10–100天/≥100天 | 草案 |
-| q22 | 今年已开具但缴款人一直未缴款的缴款通知书，按未缴时长分档统计，各档有多少笔？ | 双侧 | 未缴款=fstate='1'（fstate!='2' 保有效）+fne_paybook 按 fpaycode 左连无记录兜底；笔数 COUNT(DISTINCT fpaycode)；未缴时长=ffillDate 至今，档位按全局拍板4 时长序列；锚 ffillDate；datus 弃 is_received='0' | 已审定 |
-| q23 | 执收单位已经收上来但还没有汇缴上缴的资金，按滞留时长分档，各档金额是多少？ | cube | 过滤器=已收 fne_paybook.fisreceived='1'（同 q18 完成口径）+未汇缴（财政端 fne_income_daybook.fisgenerec=0 未生成缴库记录；单位端 une_cbill.fbatchno IS NULL；fbustype 是直缴/汇缴业务类型勿用作汇缴状态）；指标=滞留金额 SUM(fnr_unpaid.famt)（累计未汇缴，报表列 JZQJAMT 直接取）；维度=滞留时长分档（代码无现成分档逻辑，全库"滞留"仅专户清分配置命中），按全局拍板4 时长序列：<1天/1–10天/10–100天/≥100天；起算=freceiveddate 到账日期（存量池，题面无"今年"限定） | 草案 |
-| q24 | 今年已下达划拨指令但资金尚未划转到账的部分，按滞留时长分档，各档金额有多大？ | 双侧 | 在途滞留池=fistransfer='1'+fstats∈{1,9}+fiseenter='0'（兜底 fenterdate IS NULL），今年下达 FTRANSDATE 落 2026；指标 SUM(FAMT)/COUNT(DISTINCT FTRANSNO)+滞留天数；字段纠偏 FSTATS/FAMT（无 trans_stats/ftransamt）；datus 修窗口漂移 bug | 已审定 |
-| q25 | 有没有票据已经作废、但对应缴款仍被计入收入的情况？ | 无 | 剔除（票据类）：不拍板不修改，后续改 syllabus 定去留；round-03 剔除出闭环统计 | 剔除 |
-| q26 | 有没有缴款还没完成、财政电子票据却已经先开具出来的情况？ | 无 | 剔除（票据类）：不拍板不修改；其"缴款未完成"判定后续随 q18 口径对齐 | 剔除 |
-| q27 | 有没有资金尚未缴入国库、就已经完成对账或财政记账的记录？ | 双侧 | 两层：对账层=freconcilestatus='1' 且 fenterstatus≠'1'；记账层=fincomestatus='1' 且 fenterstatus≠'1'；datus 补 2 维度弃 is_cleared，cube 补 income_status 维度+词条 | 已审定 |
-| q28 | 今年从缴款到缴入国库整体偏慢的缴款，按环节拆解看，慢在缴款、银行代收、清分汇总，还是划拨缴库？ | 无 | 剔除（环节归因，题型已撤销）：不拍板不修改；若复跑，"缴入国库"时间锚受全局拍板2约束 | 剔除 |
-| q29 | 今年从形成待划拨批次到资金缴入国库、再完成对账记账，各环节的耗时分别是多少？瓶颈在哪一环？ | 无 | 剔除（环节归因）：不拍板不修改；其 trans_date 分布实测（仅 2/1,281 行有值）转入 q24 前置验证 | 剔除 |
-| q30 | 今年直缴和汇缴两条路从缴款到缴入国库的各环节耗时对比，哪条路更慢、慢在哪个环节？ | 无 | 剔除（环节归因，题型已撤销）：不拍板不修改；若复跑，"缴入国库"时间锚受全局拍板2约束 | 剔除 |
-
-## 回改卡（已审定 11 + 草案 4；剔除题无卡）
+| id | 问题 | 修改对象 | 过滤器 | 指标 | 维度 | 时间锚 | 状态 |
+|---|---|---|---|---|---|---|---|
+| q10 | 今年各月的缴款金额走势怎么样？ | 双侧 | 今年缴款（fdate 落 2026） | 缴款金额（双侧现行，不变） | 月份 | FDATE(toDate)（全局拍板1） | 已审定 |
+| q11 | 今年已经缴入国库的非税资金一共有多少？ | 双侧 | fenterstatus='1'（fincomestatus 不参与） | 缴库金额 SUM(ftotalamt) | —（无维度分解） | fenterdate(toDate)（全局拍板2） | 已审定 |
+| q12 | 今年通过直缴方式缴款的资金总额是多少？ | 双侧 | 直缴 fbustype='1' + 今年缴款（fdate 落 2026） | 缴款金额（不变） | —（总量） | FDATE(toDate)（全局拍板1） | 已审定 |
+| q14 | 今年缴款金额排名前十的缴款人有哪些？ | 双侧 | 今年缴款（fdate 落 2026） | 缴款金额 | 缴款人（付款方）Top10（账号字段不建维度） | FDATE(toDate)（全局拍板1） | 已审定 |
+| q15 | 今年各代理银行代收的非税收入金额排名情况怎么样？ | 双侧 | 今年（fdate 落 2026） | 代收非税收入金额（不变） | 代理银行（排名） | FDATE(toDate)（全局拍板1） | 已审定 |
+| q16 | 今年按收入项目汇总的待划拨金额，排名前五的收入项目是哪些？ | cube（datus 零修改） | 未划拨 fistransfer!='1'（trans_stats 整列未同步，不作过滤依据）+今年 | 待划拨金额 pending_trans_amt=SUM(ftransamt)（ftransamt=CH 落地列名，源侧应用库=FAMT，两层不冲突，datus yml:1639） | 收入项目（Top5） | clear_date 清分日期（双侧时间轴对齐） | 已审定 |
+| q17 | 今年各家执收单位经手的收入金额排下来，前十名是哪些单位？ | 双侧 | 今年（fdate 落 2026） | 执收单位经手收入金额（不变） | 执收单位（Top10） | FDATE(toDate)（全局拍板1） | 已审定 |
+| q18 | 今年完成的缴款里，直缴和汇缴两种方式各有多少笔？占比是多少？ | 双侧 | 完成缴款 fisreceived='1' | 完成笔数 COUNT(DISTINCT fpaycode)（fid 1:1 不成立，随全局拍板5；占比=各方式笔数÷完成总笔数，分母不带维度单独全量查） | fbustype（'1'直缴/'2'汇缴，datus 补枚举标签） | fdate(toDate)（"完成的缴款"不另立 freceiveddate 到账锚） | 已审定 |
+| q19 | 今年单笔缴款按金额大小分档后，各档的缴款笔数分布是怎样的？ | 双侧 | 今年缴款（fdate 落 2026）+排除作废 fstate!='2' | 笔数 COUNT(DISTINCT fpaycode) | 金额档位（单笔金额=缴款书总额 ftotalamt，非明细行 famt；代码无现成档位标准，按全局拍板4 10 倍区间：<1千/1千–1万/1万–10万/10万–100万/≥100万） | fdate(toDate)（全局拍板1） | 草案 |
+| q20 | 今年完成清分的资金，按中央、省、市、县四级归属的金额占比是怎样的？ | cube | 完成清分 fispayenter='Y'（fpayenterdate 非空兜底）+今年 fdate 落 2026 | SUM(fne_funddivide.fimamt 分入金额)（占比=各级金额/总额） | 归属级次 frechgncode（收入区划）→afa_auth_region.fbgtlevel→字典110（1中央/2省/3市/4县/5乡/0共享） | fdate/fyear(toDate)（fcleardate 是清分操作时间，非业务锚） | 草案 |
+| q21 | 今年从缴款到资金缴入国库，各笔缴款的全程耗时按时间区间分档后，各档的笔数分布如何？ | 双侧 | —（拍板未涉额外过滤） | 耗时天数=fenterdate−fdate + 笔数 COUNT(DISTINCT fpaycode) | 耗时区间分档（代码无现成耗时/分档逻辑，按全局拍板4 时长序列：<1天/1–10天/10–100天/≥100天）；跨链逐笔配对 une_paybook.fpaycode=fne_treasury_transfer.fpaycode（TreasuryDao 子查询证实） | 起点 fdate(toDate)（全局拍板1；codeqa 备查 fconfirmdate=缴款确认日，复验偏差回①）→终点 fenterdate(toDate)（全局拍板2） | 草案 |
+| q22 | 今年已开具但缴款人一直未缴款的缴款通知书，按未缴时长分档统计，各档有多少笔？ | 双侧 | 已开具且未缴款 fstate='1'（fstate!='2' 保有效）+fne_paybook 按 fpaycode 左连无记录兜底 | 未缴笔数 COUNT(DISTINCT fpaycode) | 未缴时长分档（全局拍板4 时长序列：<1天/1–10天/10–100天/≥100天） | ffillDate(toDate)（未缴时长=开具日至今，无缴款日期可减） | 已审定 |
+| q23 | 执收单位已经收上来但还没有汇缴上缴的资金，按滞留时长分档，各档金额是多少？ | cube | 已收 fisreceived='1'（同 q18 完成口径）+未汇缴（fisgenerec=0 未生成缴库记录；单位端 fbatchno IS NULL；fbustype 是直缴/汇缴业务类型勿用作汇缴状态） | 滞留金额 SUM(fnr_unpaid.famt)（累计未汇缴，报表列 JZQJAMT 直接取） | 滞留时长分档（代码无现成分档逻辑，按全局拍板4 时长序列：<1天/1–10天/10–100天/≥100天） | freceiveddate 到账日（起算锚；存量池，题面无"今年"限定） | 草案 |
+| q24 | 今年已下达划拨指令但资金尚未划转到账的部分，按滞留时长分档，各档金额有多大？ | 双侧 | 在途滞留池：fistransfer='1'（配 fstats∈{1,9}）+fiseenter='0'（兜底 fenterdate IS NULL）+今年下达 FTRANSDATE 落 2026 | 主=在途滞留金额 SUM(FAMT)，辅=在途笔数 COUNT(DISTINCT FTRANSNO)，派生=滞留天数（当前日−FTRANSDATE）；字段纠偏：应用库源侧无 trans_stats/ftransamt，实为 FSTATS/FAMT；落地列名=ftransamt/trans_stats/fisenter（源侧 FAMT/FSTATS/fiseenter 的 CH 映射，datus yml:1639/933 已按映射施工） | 滞留时长分档（全局拍板4 时长序列） | FTRANSDATE(toDate)（下达日） | 已审定 |
+| q27 | 有没有资金尚未缴入国库、就已经完成对账或财政记账的记录？ | 双侧 | 两层：①对账层 freconcilestatus='1'（0未对账/1成功/2失败）且 fenterstatus≠'1'；②记账层 fincomestatus='1' 且 fenterstatus≠'1'（合全局拍板2） | ftransno 去重笔数+单号明细 | 异常类型（对账/记账） | —（异常存在性校验，无时间锚） | 已审定 |
+## 回改卡（已审定 11 + 草案 4）
 
 ### q10 今年各月的缴款金额走势怎么样？
 
@@ -131,7 +116,7 @@
 - 裁决：建模差异（"完成的缴款"界定与笔数粒度）
 - codeqa 证据：2026-10-26 图谱问答——完成=`fne_paybook.fisreceived='1'`（`PayBookServiceImpl.java:750-765` 写入、`UPayBook.xml:46-50` 报表判据）；fid 与 fpaycode 1:1（`PayBookServiceImpl.java:722-729` 唯一性校验）；fbustype '1'直缴/'2'汇缴（`PayBook.java:69`，cube 词典映射获证实）；cube state='3' 与代码字典冲突（`BillStateConsts.java:3-14`：3=已缴款未到账、4=已到账；cube 视图 state 物理映射不在本仓未核）
 - 拍板结论：过滤器 fisreceived='1'；指标 完成笔数 COUNT(DISTINCT fpaycode)；维度 fbustype（'1'直缴/'2'汇缴，datus 补枚举标签）；时间锚 fdate（"完成的缴款"不另立 freceiveddate 到账锚）
-- datus 改法：时间锚 ffilldate→fdate + 补完成态过滤；笔数按 fid 去重可保留（1:1），"笔数粒度"不再列为差异
+- datus 改法：时间锚 ffilldate→fdate + 补完成态过滤；笔数键 fid（原判 1:1 可保留）→ COUNT(DISTINCT fpaycode)（2026-10-26 全局拍板5：1:1 前提经落地实测不成立——92 个 fpaycode 拆多明细行，两笔数指标已回③返工为 fpaycode，实测直缴 570/汇缴 68 合计 638）
 - cube 改法：完成态 state='3'→fisreceived='1'；时间锚 pay_date=fdate 已符。占比=各方式完成笔数÷完成总笔数，分母用不带维度的单独全量查询
 - 前置验证：ClickHouse 落地表 fisreceived 列映射验证（Oracle 应用库结论，未验证）
 - 记忆清理：datus 清"完成缴款=全部缴款/按开票日"类记忆；cube 词典改"完成"词条
@@ -146,6 +131,7 @@
 - datus 改法：核对现行金额取数层（明细 famt vs 缴款书总额 ftotalamt），统一按 ftotalamt；档位改全局拍板4 10 倍区间（弃自定 <1万/1–10万/10–50万/50–100万/≥100万 五档）；年度窗口锚 fdate
 - cube 改法：ask 选项归一为拍板4 10 倍区间序列；另修复验链路 502 Bad Gateway（执行事故，独立于口径修）
 - 前置验证：CH 落地表 fdate/ftotalamt/fstate 列名映射验证（全局拍板3，未验证）
+- 查证实证（2026-10-26 直查落地库）：前置验证① 完成——fdate/ftotalamt/fstate 落地即此名，无需映射；笔数键落地实测 1,281 行 fid distinct 1,110 / fpaycode distinct 975（92 个 fpaycode 拆多明细行），拍板字面 fpaycode 可执行（键冲突已由全局拍板5 统一解决）；2026 池（pay_date 落 2026 + fstate≠'2'）按 fpaycode 分档预览：<1千 44 / 1千–1万 8 / 1万–10万 3 / ≥100万 1（按 fid 口径则 45/13/3/1）；ftotalamt 书级 0 冲突（同 fpaycode 多行总额一致）。施工遗留：档位边界归属（恰 1 千元落 <1千 还是 1千–1万）拍板4 未写明，暂按左闭右开 [下界, 上界) 施工
 - 记忆清理：datus 清"按明细金额分档"类记忆；cube 词典落"单笔缴款金额"词条
 - 验收：④复验 q19 双侧同档位笔数分布一致
 
@@ -157,9 +143,11 @@
 - 拍板结论：过滤器 完成清分 fispayenter='Y' + 今年 fdate 落 2026；指标 SUM(fimamt 分入金额)；维度 归属级次（frechgncode→fbgtlevel→字典110），占比=各级金额/总额；时间锚 fdate/fyear(toDate)
 - datus 改法：现行自创映射（000000=中央、后两位推导）与字典110 有分歧点（字典 0=共享/1=中央），退役改走权威字典110；000000 实际归属以前置验证实测为准
 - cube 改法：fiscal_allocation 补级次维度（区划→级次映射），占比=各级金额/总额
-- 前置验证：① CH 落地表 frechgncode/区划 fbgtlevel 列名映射（全局拍板3，未验证）；② 000000 区划行归属实测（datus 自创口径与字典110 的分歧点）
+- 前置验证（2026-10-26 实测）：① frechgncode/区划 fbgtlevel 列名映射——通过（afa_auth_region.fcode 唯一 191/191，fdt 728 行区划码全命中 5 码；fbgtlevel 存 UUID=afa_res_dictitem.id 非字典码）；② 000000 归属——字典110 判中央级，datus 自创口径一致，分歧未触发；③ **施工新发现——过滤字段 fispayenter/fpayenterdate CK 全库未落地**（system.columns 全业务库 *payenter* 0 列，fne_funddivide_transfer/fne_funddivide_new 均无该列；最近候选 fisenter ''690/'0'37/'1'1、freconcilestatus ''690/'0'33/'1'5 均近全空不可替代）——"完成清分"过滤断供，待 ETL 补列
+- 施工记录（cube 侧，2026-10-26）：真 join 拍板已落地——fiscal_allocation 主 SQL 4 层→6 层（frecrgncode→afa_auth_region.fcode→fbgtlevel(UUID)→afa_res_dictitem 字典110 取 fname，零静态映射，CK 23.3 每层单 join 合规），新维度 bgt_level（归属级次）进 cube+view+词典「归属级次」词条；回归全绿（count=728、im_amt=16,016,079,467.68 与改前分毫不差，区划分组 686/31/8/2/1 不增行）；全量级次分布 省 686 行 160.16 亿/中央 31 行 4,516.12/市 8 行 1,778.70/县 3 行 495.33；**完成清分过滤未施工**（前置验证③字段断供）——补列前 cube 侧该口径只能出全量，复验比对需注明差异根因
+- 查证实证（2026-10-26 直查落地库）：① 前置验证① 完成——落地列名是 `frecrgncode`（主表行 frechgncode 系笔误，codeqa 证据行 FRECRGNCODE 即正确名）；`fbgtlevel` 实为 UUID 外键，须再经 `afa_res_dictitem`（fdictcode='110'）解码出 fcode，比单子所写多一跳；② 前置验证② 完成——000000 区划行 fname='中央'，其级次 UUID 经字典110 解码=fcode'1' 中央级（530000/53→'2'省级、210a…→'3'市级、8da5…→'4'县级，区划表无'0'共享行），datus 自创口径与字典110 对 000000 的归属一致，分歧点解除；③ 前置验证未挂的意外——`fispayenter`/`fpayenterdate` 在落地三表（funddivide_transfer/funddivide_new/paybook_full_high）均不存在，"完成清分"过滤器的落地替代需补拍板（候选：funddivide 有清分记录即视为已清分，或 paybook.is_cleared='1'）；funddivide 侧 frecrgncode 728 行全非空（paybook 宽表侧 553 行空串），级次维度应锚清分侧
 - 记忆清理：datus 清"后两位推导级次"类记忆；cube 词典落"归属级次"词条
-- 验收：④复验 q20 双侧四级金额占比一致
+- 验收：④复验 q20 双侧四级金额占比一致——ETL 补 fispayenter/fpayenterdate 后过滤对齐复验；补列前仅可全量口径比对（cube 侧 bgt_level 维度已就绪）
 
 ### q21 今年从缴款到资金缴入国库，各笔缴款的全程耗时按时间区间分档后，各档的笔数分布如何？
 
@@ -193,6 +181,7 @@
 - datus 改法：现行近似口径与本拍板的差异在"未汇缴"判定（未生成缴库记录 vs 未划拨），修改对象主列 cube，datus 侧复验对齐后定是否随改
 - cube 改法：补"已收未汇缴"口径+滞留时长分档维度；滞留起算改 freceiveddate 到账日（现 trans_date 未回填局限退役）
 - 前置验证：① CH 落地列名映射（fisreceived/fisgenerec/freceiveddate 及 fnr_unpaid 落地表存在性，全局拍板3，未验证）；② fisgenerec 分布实测
+- 查证实证（2026-10-26 直查落地库）：① 前置验证① 完成——`fnr_unpaid` 落地表不存在，拍板指标的直接落点落空；fisreceived/freceiveddate 存在，落地于 `fne_income_daybook`（740 行，freceiveddate 2022–2026 全非空，fimamt 合计 1,472,288.25）；② 前置验证② 完成——income_daybook 的 fisgenerec 全 740 行=0 无区分度，"未汇缴=fisgenerec=0" 过滤在该表上恒真（该表本身即未生成缴库记录的日记账池，与拍板池语义自洽）；③ 新增待拍板：指标落点替代（候选=income_daybook 池直 SUM；其 447 个 fpaycode 与 paybook 已收池 100% 重叠）+ 金额列 fimamt（1,472,288.25）vs fownimamt（1,139,899.98）二选一
 - 记忆清理：datus 清"已收未汇缴=未划拨"类记忆；cube 词典落"已收未汇缴"词条
 - 验收：④复验 q23 双侧分档金额一致
 
@@ -203,7 +192,9 @@
 - 拍板结论：过滤器 在途滞留池 = 指令已发 `fistransfer='1'`（配 `fstats∈{1,9}`）+ 尚未到账 `fiseenter='0'`（兜底 `fenterdate IS NULL`）+ 今年下达 FTRANSDATE 落 2026；指标 主=在途滞留金额 SUM(FAMT)，辅=在途笔数 COUNT(DISTINCT FTRANSNO)，派生=滞留天数（当前日−FTRANSDATE）；维度 滞留时长分档；时间锚 FTRANSDATE(toDate)
 - datus 改法：新增在途口径+分档维度（现"未划拨金额"=fistransfer≠'1' 是 q16 互补池，不得混用；缴款侧 is_received/received_date 探索排除——缴款到账≠划转到账）；修 q24 卡窗口漂移 bug（SQL 年度窗口漂至 2023-11-08~2024-11-02，题问 2026）
 - cube 改法：`trans_stats='1'` 过滤改按滞留池三条件（0 结果根因之一为 trans_stats 列未同步，q16 拍板已注明不作过滤依据）；trans_date 按月近似分档退役改真分档
-- 前置验证：① CH 落地列名映射（同 q22 注记，未验证）；② FTRANSDATE 落地分布——q29 实测 trans_date 仅 2/1,281 行有值，近全空则分档缺起点锚，动手前必跑分布
+- 前置验证（2026-10-26 实测）：① 落地列名映射——CK 物理列=ftransamt/ftransstats/fisenter（源侧 FAMT/FSTATS/fiseenter；CK 无名为 trans_stats 的列，该名系 datus 字段名）；fisenter 分布 ''690/'0'37/'1'1（fistransfer='1' 的 38 行中 37 行='0'、1 行='1'）；ftransstats 728/728 全空（fstats∈{1,9} 配套条件落地不可执行确认）；② FTRANSDATE 落地分布——ftransdate 仅 2/728 行有值（fistransfer='1' 37 行中仅 1 行），分档缺起点锚维持不建
+- 施工记录（cube 侧，2026-10-26）：is_enter 改 fisenter 直挂+fenterdate 非空兜底（sql：if(fisenter='1' OR fenterdate!='','1','0')；原 fenterdate 空兜底口径退役），在途池执行口径与 datus 对齐（metrics.json 登记：fistransfer='1'+fisenter='0'，fstats∈{1,9} 不入过滤）；trans_stats 维度补映射注记（datus 字段名 trans_stats ↔ CK 物理列 ftransstats）；CK 在途池基线实测 37 行/27 张划拨单/24,715 元/2026 下达 0 行（按下达日过滤为空属预期）；trans_bill_count/trans_order_date 成员面不变，metrics.json「在途滞留金额」条目已补 cube 对齐注记。施工坑：cube yml 的 description 内 `{...}` 会被 schema 编译器当模板吞掉、误报 `description=null` 编译错（`fstats∈{1,9}` 即触发），yml 描述一律避免花括号（本卡写作"fstats 1/9"）；REST 冒烟全绿（交叉表 37/1/122/568、池 24,715 元/27 单/37 行、回归 728/160.16 亿不变）
+- 施工记录（datus 侧，2026-10-26）：落点=transfer_new 数据集（fne_transfer_new 划拨指令生命周期表，129 行）+指标 在途滞留金额/在途滞留笔数+字段 enter_flag/enter_date/transit_days/transit_duration_bucket；存量在途池口径 fistransfer='1' AND fisenter='0'（不带年度窗口——ftransdate 仅 2/129 非空且均 2024、池内仅 1/33 行，「今年下达落 2026」不可判，题面「今年」按 transdate 过滤会清空在途池属数据现实；ftransstats 全 129/129 空串，待拍板遗留随整列未同步一并搁置）；datus 基线=33 行/20,924 元/27 个 ftransno，分档 未知 26 单 20,894 元+≥100天 1 单 30 元。对表差异（④复验「双侧分档金额一致」前必须解决）：cube 基线 37 行/27 单/24,715 元锚在 fne_funddivide_transfer（清分划拨明细，728 行），datus 锚 fne_transfer_new——27 个 ftransno 完全相同，但 funddivide 表多 4 行生命周期冗余致 4 单金额翻倍（1820→3640/1767→3534/103→206/101→202，虚增 3,791 元），须 cube 改锚 transfer_new 或对 4 冗余行去重；另 transfer_new 池内 2 对同额行（100×2、10×2，fcollectid 不同，双表一致）使 raw SUM 20,924 与 (ftransno,ftransamt) 去重 20,814 差 110 元，属「同单同额多批次 vs 生命周期冗余」判定，待拍板
 - 记忆清理：datus 清"未划拨金额=在途滞留"类记忆（两池互补不得混用）；cube 词典落"在途滞留"词条
 - 验收：④复验 q24 双侧分档金额一致
 - 待拍板遗留：失败(7)/校验不通过(14) 是否入池、bank/tips 两通道是否都入池（滞留档位已按全局拍板4 时长序列落定，2026-10-26）
