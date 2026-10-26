@@ -6,22 +6,24 @@
               已有卡自动跳过，断点续跑；每侧日志 runs/<侧>.runlog.txt）
   ③ 卡校验    两侧作答卡逐份对 Schema（复用 schemas/validator.py）
   ④ 裁决关口  verdicts/<id>.json 缺任一题 → 打印缺单清单并停（退出码 2），等人工裁决
-  ⑤ 轮报      全部裁决就绪后渲染 report.md（四指标+分歧明细+复验集），即到系统段终点
-               （D6：不自动回改；feedback.md 回改单不是本脚本产物——它由回改①创建）
+  ⑤ 轮报      全部裁决就绪后渲染 report.md（双侧状态+值行一致率 D14+分歧明细+复验集），
+               即到系统段终点（D6：不自动回改；feedback.md 回改单不是本脚本产物——它由回改①创建）
 
 回改五步（round.py 之外：①智能体（人调起）/ ②③⑤人 / ④本脚本）：
   ① 查证起草  人看过轮报分歧明细后调起智能体，codeqa 逐题查真实字段解法（过滤器+指标+维度+时间锚），
               由智能体创建 feedback.md 回改单（文件头契约+主表+回改卡；待查证→草案）
   ② 审定     人逐行审定（草案→已审定）
-  ③ 施工     人按回改卡改双侧语义层+清记忆（→已施工）
-  ④ 复验     本脚本 --retest 只读重跑上轮分歧题（挂→回③，口径错→回①）
-  ⑤ 闭环入库  本脚本 suite-add 读 feedback.md 状态=闭环的行，写入 suite/accepted_answers.json
+  ③ 施工     人按回改卡改双侧语义层（cube 拍板口径落词典属施工；→已施工）
+  ④ 复验     本脚本 --retest 一条命令自动：清 datus chat memory（全量，不可逆、不做备份，用户拍板
+              2026-10-26）→ 自动重启两服务 → 复验集=上轮分歧∩非剔除行、原题原 ID 重跑 → 裁决关口
+              → 轮报（挂→回③，口径错→回①）
+  ⑤ 闭环     人复验通过且确认后置 feedback.md 行状态=闭环（无独立套件文件——
+              feedback.md 即闭环账本，用户拍板 2026-10-26）
 
 用法（Windows 侧 uv 环境）：
   uv run python bin/round.py --round round-02                 # 全流程（①–⑤）
   uv run python bin/round.py --round round-02 --only q01 q21  # 小样/子集（不产轮报）
   uv run python bin/round.py --round round-03 --retest round-02   # ④ 复验（M4 实现）
-  uv run python bin/round.py suite-add --round round-02       # ⑤ 闭环入库
 """
 
 import argparse
@@ -42,6 +44,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from schemas.validator import check_cards_dir, check_verdicts_dir  # noqa: E402
+from schemas.valuecmp import compare_round  # noqa: E402
 
 SIDES = {"datus": "adapters.ask_datus", "cube": "adapters.ask_cube"}
 NO_ANSWER_STATUSES = {"nomatch", "failed"}  # 共同缺口判定：两侧均此二态（implementation §四）
@@ -189,8 +192,8 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
                   verdicts: dict, cards: dict) -> str:
     vc = Counter(v["verdict"] for v in verdicts.values())
     total = len(todo)
-    passed = vc.get("互证通过", 0)
     gaps = [qid for qid in todo if _gap_pair({s: cards[s].get(qid) for s in SIDES})]
+    vcr = compare_round(round_dir)  # 一致率=两级判定（D14）；分歧明细列用明细口径（diag_*）展示
     status_lines = []
     for side in SIDES:
         sc = Counter((cards[side].get(qid) or {}).get("status", "?") for qid in todo)
@@ -210,20 +213,33 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
         "",
         "| 指标 | 值 |",
         "|---|---|",
-        f"| 一致率（互证通过/总题） | {passed}/{total} = {passed / total:.1%} |",
-        f"| 分歧分布 | 建模差异 {vc.get('建模差异', 0)} / 执行事故 {vc.get('执行事故', 0)} / 待人工 {vc.get('待人工', 0)} |",
+        f"| 一致率（值行两级判定：一致/题数，D14） | {vcr['一致率']['一致']}/{vcr['一致率']['分母']}"
+        f" = {vcr['一致率']['ratio']:.1%}（待复核 {vcr['待复核']['题数']} 题） |",
+        f"| 分歧分布（裁决四态） | 建模差异 {vc.get('建模差异', 0)} / 执行事故 {vc.get('执行事故', 0)}"
+        f" / 待人工 {vc.get('待人工', 0)} |",
         f"| 差距数（双侧共同缺口） | {len(gaps)}（{' '.join(gaps) if gaps else '无'}） |",
         "| 闭环率 | —（首轮，无上轮分歧题） |",
         "",
+        "一致率为值行两级判定（D14，2026-10-26 拍板）：①数列快筛（金额换算成元、剔导出量、"
+        "null 不进列，排序不去重，数列不等即判不一致）；②键比对（同名行逐行比，行级三态 同/异/缺）；"
+        "③键名对不上标待复核（AI 提议别名→人审定→登记表→重算翻案）。"
+        "行级明细与单侧行清单：`python -m schemas.valuecmp --round <轮>`。",
+        "",
         "## 分歧明细",
         "",
-        "| id | 问题 | 裁决 | 问题单 |",
-        "|---|---|---|---|",
+        "| id | 问题 | 裁决 | 值行比对 | 问题单 |",
+        "|---|---|---|---|---|",
     ]
     for qid in divergent:
         v = verdicts[qid]
         qtext = questions[qid] if len(questions[qid]) <= 30 else questions[qid][:29] + "…"
-        lines.append(f"| {qid} | {qtext} | {v['verdict']} | {_issues_line(v)} |")
+        qcmp = vcr["questions"].get(qid)
+        if qcmp:
+            cell = (f"{qcmp['diag_verdict']}（{qcmp['diag_reason']}；"
+                    f"附加行 datus {len(qcmp['extra_datus'])}/cube {len(qcmp['extra_cube'])}）")
+        else:
+            cell = "—"
+        lines.append(f"| {qid} | {qtext} | {v['verdict']} | {cell} | {_issues_line(v)} |")
     lines += ["", f"## 复验集（默认进 {retest_round}）", "",
               "、".join(divergent) if divergent else "（无——全部互证通过）", ""]
     out = round_dir / "report.md"
@@ -231,47 +247,17 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
     return out
 
 
-def cmd_suite_add(name: str) -> None:
-    """回改⑤闭环入库：读 feedback.md 主表状态=闭环的行，合并写入 suite/accepted_answers.json。"""
-    fb_path = REPO_ROOT / "rounds" / name / "feedback.md"
-    if not fb_path.exists():
-        print(f"[suite-add] {fb_path} 不存在", file=sys.stderr)
-        sys.exit(1)
-    closed = []
-    for line in fb_path.read_text(encoding="utf-8").splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 5 and re.fullmatch(r"q\d+", cells[0]) and cells[4] == "闭环":
-            closed.append((cells[0], cells[1], cells[3]))
-    if not closed:
-        print(f"[suite-add] {fb_path} 主表没有状态=闭环的行，无事可入库")
-        return
-    suite_path = REPO_ROOT / "suite" / "accepted_answers.json"
-    suite = json.loads(suite_path.read_text(encoding="utf-8")) if suite_path.exists() else {}
-    for qid, question, conclusion in closed:
-        suite[qid] = {"question": question, "口径": conclusion, "since_round": name,
-                      "source": f"{name} 回改单闭环行（回改⑤人工确认入库）"}
-    suite_path.parent.mkdir(parents=True, exist_ok=True)
-    suite_path.write_text(json.dumps(suite, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"[suite-add] 入库 {len(closed)} 行：{' '.join(q for q, _, _ in closed)} → {suite_path}")
-
-
 def main():
     ap = argparse.ArgumentParser(prog="round", description="一轮互搏编排器（SOP ①–⑤，D6 到轮报即停）")
-    ap.add_argument("cmd", nargs="?", default=None,
-                    help="子命令：suite-add=回改⑤闭环入库（读 feedback.md 状态=闭环的行）")
     ap.add_argument("--round", default=None, help="轮号，如 round-02")
     ap.add_argument("--only", nargs="*", default=None, help="只跑这些 id（小样/子集；不产轮报）")
-    ap.add_argument("--retest", default=None, help="（M4）复验上轮，复验集=上轮分歧题")
+    ap.add_argument("--retest", default=None,
+                    help="（M4）复验上轮：清记忆+重启两服务+原题重跑到轮报；闭环=人置 feedback.md 行状态")
     args = ap.parse_args()
     if not args.round:
-        ap.error("--round 必填（suite-add 子命令同样需要）")
+        ap.error("--round 必填")
     if not re.match(r"round-\d+$", args.round):
         ap.error("--round 形如 round-02")
-    if args.cmd:
-        if args.cmd != "suite-add":
-            ap.error(f"未知子命令 {args.cmd}（可用：suite-add）")
-        cmd_suite_add(args.round)
-        return
     if args.retest:
         print("[round] --retest 复验模式属 M4，本版未实现", file=sys.stderr)
         sys.exit(1)
@@ -302,7 +288,8 @@ def main():
     report = render_report(round_dir, name, questions, todo, verdicts, cards)
     print(f"[⑤轮报] {report}")
     print("[round] 系统段终点（D6）：到轮报为止；feedback.md 回改单由回改①创建"
-          "（人看过轮报后调起智能体，codeqa 逐题查证）——②审定→③施工→④--retest 复验→⑤suite-add 闭环入库")
+          "（人看过轮报后调起智能体，codeqa 逐题查证）——②审定→③施工→④--retest 复验→"
+          "⑤闭环（人置 feedback.md 行状态=闭环，无套件文件）")
 
 
 if __name__ == "__main__":

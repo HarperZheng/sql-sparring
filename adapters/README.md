@@ -37,7 +37,7 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 | 位置 | 内容 |
 |---|---|
 | `runs/<侧>/` | 原始留痕（一级证据，一字不改）。datus：payload.jsonl（SSE 解出的 MessagePayload 流）/ meta.json（会话、耗时、token 用量、路由与 SQL 取证来源）；cube：raw.json（首答+追问）/ sql.txt |
-| `answers/<侧>/<id>.json` | 作答卡 11 字段：id / question / status / metrics_hit（命中了哪些语义层指标）/ sql / sql_count / answer / errors / elapsed_s / arbiter（自动拍板记录）/ raw_path |
+| `answers/<侧>/<id>.json` | 作答卡：id / question / status / metrics_hit（命中了哪些语义层指标）/ sql / sql_count / values（值行，答案唯一载体，D14，适配器提取步 `adapters/value_extract.py` 直产：散文→LLM 结构化，模型走 `conf/models.json` extractor 节）/ errors / elapsed_s / arbiter（自动拍板记录）/ raw_path；answer 散文不落卡（全文留 runs/；m0 存档卡原样保留） |
 
 - status 六值枚举（契约，M1 拍板 D10）：`answer`（有答案）/ `ask`（反问）/ `nomatch`（能力外）/ `timeout`（超时截断）/ `error`（智能体答错/中断）/ `failed`（适配器没连上服务）。datus 侧现产 answer/failed，cube 侧 answer/ask/nomatch/failed。
 - 幂等：`--only` 可复跑子集；作答卡覆盖写，原始留痕按时间戳归档不覆盖。
@@ -60,7 +60,7 @@ uv run python -m adapters.ask_cube run --questions rounds/m0/questions-cube.json
 
 （全文定义与 `docs/glossary.md` 一致，此处为速查）
 
-- **作答卡**：每题的机器提取结果（统一 11 字段结构），从原始留痕提取而来。
+- **作答卡**：每题的机器提取结果（统一结构），从原始留痕提取而来；round-02 起值行为答案唯一载体（D14，适配器提取步直产），散文留 runs/。
 - **契约（schemas/）**：角色间交接数据的固定格式（题库/作答卡/裁决书三份 JSON Schema），适配器输出必须过它。
 - **校验器（bin/validate.py）**：逐份数据对 JSON Schema 检查的脚本，不过即逐条报错退出。
 - **payload（原始报文）**：datus 逐条输出的原始消息流，一字不改存档，是一级证据。

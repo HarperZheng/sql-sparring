@@ -14,7 +14,6 @@
   ],
   "sql": "",
   "sql_count": 0,
-  "answer": "口径声明：\"完成\"=缴款书状态 state='3'（已缴款确认）；\"今年\"=缴款日期 pay_date 2026-01-01 至 2026-12-31；\"笔数\"=缴款书笔数 paybook_count（countDistinct fpaycode，一票多项目行不重复计）。歧义拍板：bus_type 编码 1=直缴、2=汇缴（用户拍板，已回写口径词典\"直缴汇缴\"）。数据范围：直缴 44 笔、汇缴 12 笔，合计 56 笔（全量单独查询确认，无截断），占比分别为 78.57% 和 21.43%。",
   "errors": [],
   "elapsed_s": 36.7,
   "arbiter": {
@@ -107,5 +106,23 @@
       }
     ]
   },
-  "raw_path": "rounds/round-02/runs/cube/q18.raw.json"
+  "raw_path": "rounds/round-02/runs/cube/q18.raw.json",
+  "values": [
+    {
+      "metric": "缴款笔数",
+      "unit": "笔",
+      "dims": {
+        "缴款方式": "直缴"
+      },
+      "value": 44
+    },
+    {
+      "metric": "缴款笔数",
+      "unit": "笔",
+      "dims": {
+        "缴款方式": "汇缴"
+      },
+      "value": 12
+    }
+  ]
 }

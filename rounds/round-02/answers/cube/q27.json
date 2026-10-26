@@ -26,9 +26,16 @@
   ],
   "sql": "SELECT count(*) `fiscal_treasury_view__count`, COUNT(DISTINCT `fiscal_treasury`.`ftransno`) `fiscal_treasury_view__bill_count`, sum(`fiscal_treasury`.`famt`) `fiscal_treasury_view__amt` \nFROM  (SELECT * FROM (\n  SELECT fid,\n         any(fpid) AS fpid, any(ftransno) AS ftransno,\n         any(fsubcode) AS fsubcode, any(fsubname) AS fsubname,\n         any(fsublevel) AS fsublevel, any(fsublevelname) AS fsublevelname,\n         any(fstatus) AS fstatus, any(fenterstatus) AS fenterstatus,\n         any(freconcilestatus) AS freconcilestatus, any(fsharerate) AS fsharerate,\n         any(fchgrgncode) AS fchgrgncode, any(frecrgncode) AS frecrgncode,\n         any(fchgagencode) AS fchgagencode,\n         any(fpayacctname) AS fpayacctname, any(frecacctname) AS frecacctname,\n         any(fdate) AS fdate, any(fenterdate) AS fenterdate,\n         any(freconciledate) AS freconciledate,\n         any(famt) AS famt, any(ftotalamt) AS ftotalamt\n  FROM fne_treasury_transfer_new\n  GROUP BY fid\n) t\nLEFT JOIN (SELECT fsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n           FROM fne_treasury_transfer_new WHERE fsubcode != '' GROUP BY fsubcode) s\nON t.fsubcode = s.fsubcode\n)  AS `fiscal_treasury`\nWHERE (`fiscal_treasury`.`freconcilestatus` = ?) AND (`fiscal_treasury`.`fenterstatus` = ?)\nORDER BY  3  DESC\nLIMIT 10010",
   "sql_count": 2,
-  "answer": "口径声明：以缴库入库视图（fiscal_treasury_view）为准，“完成对账”取 reconcile_status='1'，“尚未缴入国库”取 enter_status='0'。数据范围：全量缴库数据（不设时间范围）。拍板结论：meta 成员面无独立的“财政记账”状态成员（三环节为缴库回执 status、入库 enter_status、对账 reconcile_status），“财政记账”无单独建模，以“对账成功”口径覆盖。查询结果：同时满足两条件的记录为 0 笔（明细笔数 0、缴库单数 0、金额 null），即当前不存在资金未缴入国库却已完成对账的记录；明细下钻同样为空集。按空结果直接拍板，未做反向探测。",
   "errors": [],
   "elapsed_s": 24.7,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/cube/q27.raw.json"
+  "raw_path": "rounds/round-02/runs/cube/q27.raw.json",
+  "values": [
+    {
+      "metric": "对账成功且未缴入国库笔数",
+      "unit": "笔",
+      "dims": {},
+      "value": 0
+    }
+  ]
 }

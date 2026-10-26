@@ -1,7 +1,9 @@
 """作答卡（11 字段，契约=schemas/answer_card.schema.json）：id / question / status /
-metrics_hit / sql / sql_count / answer / errors / elapsed_s / arbiter / raw_path。
+metrics_hit / sql / sql_count / values / errors / elapsed_s / arbiter / raw_path。
 
 本文件只做"提取结果 → 卡"的组装；写卡前由 schemas.validator.validate_card 过契约。
+答案唯一载体=值行 values（D14）：散文由 adapters/value_extract.py 结构化后传入，
+卡上不再落 answer 散文（散文全文在 runs/ 留痕，raw_path 指认）。
 status 六值枚举（M1 拍板 D10）：answer|ask|nomatch|timeout|error|failed——
 datus（-p 与 chat API 皆然）无 ask 追问流（arbiter 恒为 null），本侧现产 answer / failed；
 ask/nomatch 是 cube 三态概念，六值为两侧共用的超集。
@@ -33,12 +35,14 @@ def _hit(m: dict) -> dict:
     return hit
 
 
-def build_card(qid: str, question: str, extracted: dict, elapsed_s, raw_path: str) -> dict:
-    """提取结果 + 运行元数据 → 11 字段作答卡。
+def build_card(qid: str, question: str, extracted: dict, values: list,
+               elapsed_s, raw_path: str) -> dict:
+    """提取结果 + 值行 + 运行元数据 → 11 字段作答卡。
 
     metrics_hit：工具级命中指标（过程证据）——tool/depth/names，query_metrics
     条目另带 dimensions/time_start/time_end（调用实参，无则不带键）；
-    rows/desc 等展示性内容留在原始留痕（raw_path 可回查）。
+    values：值行数组（答案唯一载体，D14），由适配器提取步（adapters/value_extract.py）
+    从答案散文结构化而来；rows/desc 等展示性内容留在原始留痕（raw_path 可回查）。
     """
     return {
         "id": qid,
@@ -47,7 +51,7 @@ def build_card(qid: str, question: str, extracted: dict, elapsed_s, raw_path: st
         "metrics_hit": [_hit(m) for m in extracted["metric_calls"]],
         "sql": extracted["sql"],
         "sql_count": extracted["sql_count"],
-        "answer": extracted["answer"],
+        "values": values,
         "errors": extracted["errors"],
         "elapsed_s": elapsed_s,
         "arbiter": None,  # datus 无 ask 流，M0 恒空

@@ -1,6 +1,6 @@
 # sql-sparring — 问数双智能体互搏
 
-两个 NL 问数智能体（datus、cube）就同一批自然语言问题独立作答、互检、由裁判定谳；分歧经**回改五步**（查证起草→审定→施工→复验→闭环）落到两侧语义层；互搏的副产品是一套不断生长的问数回归套件。
+两个 NL 问数智能体（datus、cube）就同一批自然语言问题独立作答、互检、由裁判定谳；分歧经**回改五步**（查证起草→审定→施工→复验→闭环）落到两侧语义层；互搏的副产品是 `conf/metrics.json` = 指标登记表——一张目前空着的机器可读登记文件，登记两类结论：①拍板定案的指标正名（metrics），②审定过的键名别名对照（key_aliases）。
 
 - **datus 侧**：dosi 引擎语义层（`fne_fund_main.yml`，资金链，16 指标/7 数据集），无头驱动 chat API（`POST :8501/api/v1/chat/stream`，`datus --web` 常驻服务），全题先走 `ask_metrics` 节点（query_metrics 通道，D13），模型 GLM-5.3-Flash。
 - **cube 侧**：Cube schema 语义层（票据链），无头驱动 `POST :4100/chat`（agent-svc，三态 answer/ask/nomatch）。
@@ -19,10 +19,10 @@
 
 | 层 | 文件 | 环节 | 职责 |
 |---|---|---|---|
-| 主入口 | `bin/round.py` | ①–⑤ 串联 | 一轮全流程：①出题→②双侧作答→③提取→④裁决关口→⑤轮报，到轮报即停；`suite-add` 子命令做回改⑤闭环入库；人日常只碰这一个 |
+| 主入口 | `bin/round.py` | ①–⑤ 串联 | 一轮全流程：①出题→②双侧作答→③提取→④裁决关口→⑤轮报，到轮报即停；`--retest` 复验模式：清记忆+自动重启两服务+重跑上轮分歧题到轮报（回改④）；人日常只碰这一个 |
 | 组件入口 | `bin/examine.py` | ① 出题 | 只出题（读考纲→出题→schema/覆盖矩阵校验→落盘题库）；round.py 内部也调它 |
-| 组件入口 | `adapters/ask_datus` | ②③ datus 侧 | 逐题驱动 datus（:8501 chat API，全题指标优先 D13）+ 提取出作答卡 + SQL 执行记录取证；可单跑 `--only qNN` |
-| 组件入口 | `adapters/ask_cube` | ②③ cube 侧 | 逐题驱动 cube（:4100/chat，三态分流 + ask 自动拍板）+ 提取出作答卡；可单跑 `--only qNN` |
+| 组件入口 | `adapters/ask_datus` | ②③ datus 侧 | 逐题驱动 datus（:8501 chat API，全题指标优先 D13）+ 提取出作答卡（值行为答案载体，D14）+ SQL 执行记录取证；可单跑 `--only qNN` |
+| 组件入口 | `adapters/ask_cube` | ②③ cube 侧 | 逐题驱动 cube（:4100/chat，三态分流 + ask 自动拍板）+ 提取出作答卡（值行为答案载体，D14）；可单跑 `--only qNN` |
 | 组件入口 | `judge/` | ④ 裁决 | 逐题出裁决书；v1=人工在环（目录 M4 才建），M4 固化为 headless 服务 |
 | 辅助工具 | `bin/preflight.py` | 环节外·开跑前 | 健康检查：双侧服务可达、语义层文件可解析；单次执行，不进轮循环、不留档 |
 | 辅助工具 | `bin/validate.py` | 环节外·质检 | 全量契约校验：题库/作答卡/裁决书逐份对 schema，不过即逐条报错退出 |
@@ -34,10 +34,10 @@
 | 主入口 | `bin/round.py` | `rounds/<轮>/report.md` | 轮报：双侧状态、四指标、分歧明细、下轮复验集，一页看懂本轮 |
 | 回改①（人调起智能体） | | `rounds/<轮>/feedback.md` | 回改单：文件头（契约+状态机+冲突规则+全局拍板）+主表（id/问题/修改对象/codeqa拍板结论/状态）+回改卡（证据/双侧改法/前置验证/记忆清理/验收）；人看过轮报后由智能体创建，非 round.py 产物 |
 | 组件入口 | `bin/examine.py` | `rounds/<轮>/questions.jsonl` | 题库，每行一题：`id`/`question`/`syllabus_ref`（回指课本知识点），不含预期答案字段（盲考） |
-| 组件入口 | `adapters/ask_datus` | `rounds/<轮>/answers/datus/qNN.json`（×30） | datus 作答卡：status/metrics_hit/sql/sql_count/answer/errors/elapsed_s/arbiter/raw_path 等机器提取字段 |
+| 组件入口 | `adapters/ask_datus` | `rounds/<轮>/answers/datus/qNN.json`（×30） | datus 作答卡：status/metrics_hit/sql/sql_count/values（值行，答案唯一载体 D14，适配器提取步直产）/errors/elapsed_s/arbiter/raw_path 等机器提取字段；answer 字段已自契约删除（m0 存档卡原样保留） |
 | | | `rounds/<轮>/runs/datus/qNN.payload.jsonl` | 该题 datus agent 循环的原始报文流，一字不改存档，一级证据 |
 | | | `rounds/<轮>/runs/datus/qNN.meta.json` | 该题运行元数据：会话 id、耗时、token、路由记录（meta.routes 两级尝试） |
-| 组件入口 | `adapters/ask_cube` | `rounds/<轮>/answers/cube/qNN.json`（×30） | cube 作答卡，与 datus 侧同构 11 字段 |
+| 组件入口 | `adapters/ask_cube` | `rounds/<轮>/answers/cube/qNN.json`（×30） | cube 作答卡，与 datus 侧同构 |
 | | | `rounds/<轮>/runs/cube/qNN.raw.json` | 该题 `:4100/chat` 原始响应留痕（含日志摘录） |
 | 组件入口 | `judge/`（v1=人工在环） | `rounds/<轮>/verdicts/qNN.json`（×30） | 裁决书：四态结论 + `cards` 双侧口径卡对照 + `verdict_detail` 问题单（side/type/target/suggest） |
 | 辅助工具 | `bin/preflight.py` | 无 | 只在终端打印健康检查结论，明确不留档 |
@@ -57,8 +57,8 @@
 **M0 已完成（2026-10-22）**：双适配器落地（`adapters/ask_datus` WSL 桥 + `adapters/ask_cube` :4100 三态）；对接活体验证通过——datus 3 题、cube 3 题新题真打均出数值答案；证据见 `rounds/m0/`。
 **M1 已完成（2026-10-22）**：契约定稿——三份 JSON Schema（题库/作答卡/裁决书）+ 校验器 `bin/validate.py` + `conf/models.json` 模型配置骨架（D9/D10）；M0 全量证据过校验，适配器写卡前内联校验。
 **M2 已完成（2026-10-22）**：考纲自包含（`syllabus/bussiness/` 原始资料 + `business.md` 课本 B01–B21，只含业务知识——表定义/字段名/数据可得性已剥离，D11）+ 出题人契约 `examiner/SKILL.md`（题型问数族 5 型；概念族与环节归因已撤销，见设计文档 §五）+ 出题驱动 `bin/examine.py` + 健康检查 `bin/preflight.py`（单次执行）。机器题库：round-02 共 30 题过契约校验（21 知识点全覆盖、零表名泄漏）。
-**M3 进行中（2026-10-23）**：轮驱动器 `bin/round.py`（出题→双侧作答→卡校验→裁决关口→轮报，D6 到轮报即停）+ datus 适配器 chat API 化（与 cube 同构）+ round-02 全量双侧作答。
+**M3 进行中（2026-10-23）**：轮驱动器 `bin/round.py`（出题→双侧作答→卡校验→裁决关口→轮报，D6 到轮报即停）+ datus 适配器 chat API 化（与 cube 同构）+ round-02 全量双侧作答。**D14 值行契约已落地（2026-10-26）**：适配器提取步（`adapters/value_extract.py`）直产值行卡、answer 字段自契约删除、round-02 卡迁移值行（15 题，剔除题已删除出轮）、值行一致率引擎两级判定（`schemas/valuecmp.py`：①数列快筛②键比对③待复核，round-02 一致 1/15=6.7%、待复核 0）、轮报接线（覆盖率已删）、指标登记表 `conf/metrics.json` 空壳。下一步（M4）：--retest 复验一条命令（清记忆→自动重启两服务→原题重跑到轮报，闭环率=复验集通过率）+ 登记表随回改⑤闭环沉淀 + 值行提取步活跑验证。
 
-实施路线 M0（答题链路打通）→ M1（契约定稿）→ M2（出题人四件套）→ M3（首个自动轮+人工裁决）→ M4（复验闭环+回归套件+裁判固化），见实施设计 §六。
+实施路线 M0（答题链路打通）→ M1（契约定稿）→ M2（出题人四件套）→ M3（首个自动轮+人工裁决）→ M4（复验闭环+裁判固化），见实施设计 §六。
 
-已议定决策 D1–D12（含不自动回改、记忆隔离细化、适配器永久留本仓、模型不对称与可换配置——出题人/裁判的模型、接口、key 走 `conf/models.json`、出题依据=纯业务、裁判只判一致与归因）；待确认清零，见实施设计 §五。
+已议定决策 D1–D14（含不自动回改、记忆隔离细化、适配器永久留本仓、模型不对称与可换配置——出题人/裁判的模型、接口、key 走 `conf/models.json`、出题依据=纯业务、裁判只判一致与归因、答案唯一载体=值行）；待确认清零，见实施设计 §五。

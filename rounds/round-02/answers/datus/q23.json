@@ -86,9 +86,58 @@
   ],
   "sql": "SELECT sum(CASE WHEN funddivide_transfer.fistransfer <> '1' THEN funddivide_transfer.ftransamt END) AS \"未划拨金额\" FROM yunnan0508.fne_funddivide_transfer AS funddivide_transfer LEFT JOIN yunnan0508.fne_paybook_full_high AS paybook_full_high ON funddivide_transfer.fpaybooksubid = paybook_full_high.fid WHERE paybook_full_high.fisreceived = 1 AND toDate(nullIf(paybook_full_high.freceiveddate, '')) <= '2024-10-22' SETTINGS join_use_nulls = 1",
   "sql_count": 9,
-  "answer": "# 已收未上缴资金按滞留时长分档\n\n**问题解读**：执收单位已收上来（资金已到账）但尚未汇缴划拨上缴的资金，即\"收缴→划拨\"环节的滞留资金。取 **未划拨金额**（`fistransfer!='1'`）并叠加到账约束 `is_received=1`（\"已收上来\"），按资金到账日 `received_date` 距快照日 **2026-10-23** 的天数分档。\n\n## 分档结果\n\n| 滞留时长 | 到账日区间 | 滞留金额（元） |\n|---|---|---|\n| ≤15 天 | 2026-10-09 ~ 10-23 | 0 |\n| 16–30 天 | 2026-09-24 ~ 10-08 | 0 |\n| 31–90 天 | 2026-07-25 ~ 09-23 | 0 |\n| 91–180 天 | 2026-04-24 ~ 07-24 | 0 |\n| **>180 天** | 到账日 ≤ 2026-04-23 | **56,117.26** |\n| **合计** | — | **56,117.26** |\n\n**>180 天大档内部细分**（看清滞留深度）：\n\n| 细分档 | 到账日区间 | 金额（元） | 占比 |\n|---|---|---|---|\n| 0.5–1 年 | 2025-10-23 ~ 2026-04-23 | 100.00 | 0.2% |\n| 1–2 年 | 2024-10-23 ~ 2025-10-22 | 140.00 | 0.2% |\n| 2 年以上 | ≤ 2024-10-22 | 55,877.26 | **99.6%** |\n\n## 结论\n\n- 当前已收未划拨资金共 **56,117.26 元**，**全部滞留超过 180 天**，其中 99.6%（55,877.26 元）到账已超过 2 年（主要落在 2022 年到账的老批次）。\n- 近半年（≤180 天）到账的资金**没有未划拨记录**——与既往结论一致：2026 年资金链瓶颈在清分批次→划拨→缴库报文环节的流程侧，而非新收资金积压。\n\n## 口径说明与局限\n\n- 指标无内置\"滞留时长\"分档维度，分档按到账日 `received_date` 的日粒度区间模拟，滞留起点取资金到账日；划转日期字段（`trans_date`）在当前数据中几乎未回填，无法用\"应划拨日\"精确计逾期。\n- 部分到账但未划拨的记录无对应明细金额（返回为空），分档金额按可计量明细合计，笔数口径会大于金额口径。\n- 结果为 2026-10-23 快照，滞留天数随日期推移每日增长。",
   "errors": [],
   "elapsed_s": 86.0,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/datus/q23.payload.jsonl"
+  "raw_path": "rounds/round-02/runs/datus/q23.payload.jsonl",
+  "values": [
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": "≤15天"
+      },
+      "value": 0
+    },
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": "16–30天"
+      },
+      "value": 0
+    },
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": "31–90天"
+      },
+      "value": 0
+    },
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": "91–180天"
+      },
+      "value": 0
+    },
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": ">180天"
+      },
+      "value": 56117.26
+    },
+    {
+      "metric": "滞留在途金额",
+      "unit": "元",
+      "dims": {
+        "滞留时长档": ">180天中超2年"
+      },
+      "value": 55877.26
+    }
+  ]
 }

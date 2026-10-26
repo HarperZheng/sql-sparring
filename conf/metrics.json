@@ -1,0 +1,5 @@
+{
+  "_note": "指标登记表（D14，2026-10-26 拍板）：拍板口径的机器可读登记。metrics=值行 metric 的合法来源（回改⑤闭环入库逐步沉淀，一条={name,口径,unit,round}）；key_aliases=值行两级判定③待复核的别名审定归宿——审定一条登记一条（alias=一侧写法，canonical=审定正名，round=来源轮，note=审定依据），引擎重算即翻案。空表=尚无登记，引擎只做文本归一（NFKC+去首尾空白+小写）。引擎缺此文件也按空表处理（schemas/valuecmp.py load_registry 兜底）。",
+  "metrics": [],
+  "key_aliases": []
+}

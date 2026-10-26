@@ -1,16 +1,6 @@
-{"id": "q01", "question": "非税收入收缴业务的起点和终点分别是什么？", "round": "round-02", "type": "事实", "category": "业务总览", "syllabus_ref": ["B01"]}
-{"id": "q02", "question": "财政部门在代理银行开设的账户有哪几种？各自用来做什么？", "round": "round-02", "type": "事实", "category": "账户", "syllabus_ref": ["B02"]}
-{"id": "q03", "question": "财政系统里的财政用户和单位用户，分别负责哪些业务？", "round": "round-02", "type": "事实", "category": "系统角色", "syllabus_ref": ["B03"]}
-{"id": "q04", "question": "缴款通知书和汇缴通知书分别用在直缴还是汇缴场景？两种通知书下的资金各往哪个方向流？", "round": "round-02", "type": "关联", "category": "缴款方式", "syllabus_ref": ["B05", "B06", "B07"]}
-{"id": "q05", "question": "一笔缴款从缴款人缴款开始，到资金最终缴入国库，中间要依次经过哪些环节？", "round": "round-02", "type": "关联", "category": "资金主链", "syllabus_ref": ["B10", "B14"]}
-{"id": "q06", "question": "执收单位和预算单位是一回事吗？两者的区别和联系是什么？", "round": "round-02", "type": "辨析", "category": "角色辨析", "syllabus_ref": ["B04", "B19"]}
-{"id": "q07", "question": "统计一笔缴款收了多少钱时，应该按缴款通知书票面的总金额算，还是按各征收项目的金额明细算？", "round": "round-02", "type": "辨析", "category": "金额口径", "syllabus_ref": ["B20"]}
-{"id": "q08", "question": "财政电子票据能不能作废？票据作废适用于哪些条件？", "round": "round-02", "type": "边界", "category": "票据作废", "syllabus_ref": ["B08", "B17"]}
-{"id": "q09", "question": "票据冲红开具红字发票后，冲减的收入记在哪个会计期间？", "round": "round-02", "type": "边界", "category": "票据冲红", "syllabus_ref": ["B09", "B21"]}
 {"id": "q10", "question": "今年各月的缴款金额走势怎么样？", "round": "round-02", "type": "总量趋势", "category": "缴款金额", "syllabus_ref": ["B20"]}
 {"id": "q11", "question": "今年已经缴入国库的非税资金一共有多少？", "round": "round-02", "type": "总量趋势", "category": "缴库", "syllabus_ref": ["B14"]}
 {"id": "q12", "question": "今年通过直缴方式缴款的资金总额是多少？", "round": "round-02", "type": "总量趋势", "category": "直缴", "syllabus_ref": ["B06"]}
-{"id": "q13", "question": "近 3 个月，每个月新开具的财政电子票据有多少张？", "round": "round-02", "type": "总量趋势", "category": "电子票据", "syllabus_ref": ["B17"]}
 {"id": "q14", "question": "今年缴款金额排名前十的缴款人有哪些？", "round": "round-02", "type": "排名对比", "category": "缴款人口径", "syllabus_ref": ["B18"]}
 {"id": "q15", "question": "今年各代理银行代收的非税收入金额排名情况怎么样？", "round": "round-02", "type": "排名对比", "category": "代理银行", "syllabus_ref": ["B02"]}
 {"id": "q16", "question": "今年按收入项目汇总的待划拨金额，排名前五的收入项目是哪些？", "round": "round-02", "type": "排名对比", "category": "汇总划拨", "syllabus_ref": ["B12"]}
@@ -22,9 +12,4 @@
 {"id": "q22", "question": "今年已开具但缴款人一直未缴款的缴款通知书，按未缴时长分档统计，各档有多少笔？", "round": "round-02", "type": "超期账龄", "category": "欠缴", "syllabus_ref": ["B16"]}
 {"id": "q23", "question": "执收单位已经收上来但还没有汇缴上缴的资金，按滞留时长分档，各档金额是多少？", "round": "round-02", "type": "超期账龄", "category": "汇缴欠缴", "syllabus_ref": ["B07", "B16"]}
 {"id": "q24", "question": "今年已下达划拨指令但资金尚未划转到账的部分，按滞留时长分档，各档金额有多大？", "round": "round-02", "type": "超期账龄", "category": "划拨在途", "syllabus_ref": ["B13"]}
-{"id": "q25", "question": "有没有票据已经作废、但对应缴款仍被计入收入的情况？", "round": "round-02", "type": "异常校验", "category": "票据与收入", "syllabus_ref": ["B08", "B21"]}
-{"id": "q26", "question": "有没有缴款还没完成、财政电子票据却已经先开具出来的情况？", "round": "round-02", "type": "异常校验", "category": "票据与缴款", "syllabus_ref": ["B17"]}
 {"id": "q27", "question": "有没有资金尚未缴入国库、就已经完成对账或财政记账的记录？", "round": "round-02", "type": "异常校验", "category": "缴库与记账", "syllabus_ref": ["B14", "B15"]}
-{"id": "q28", "question": "今年从缴款到缴入国库整体偏慢的缴款，按环节拆解看，慢在缴款、银行代收、清分汇总，还是划拨缴库？", "round": "round-02", "type": "环节归因", "category": "环节归因", "syllabus_ref": ["B10", "B11", "B13"]}
-{"id": "q29", "question": "今年从形成待划拨批次到资金缴入国库、再完成对账记账，各环节的耗时分别是多少？瓶颈在哪一环？", "round": "round-02", "type": "环节归因", "category": "环节归因", "syllabus_ref": ["B12", "B13", "B15"]}
-{"id": "q30", "question": "今年直缴和汇缴两条路从缴款到缴入国库的各环节耗时对比，哪条路更慢、慢在哪个环节？", "round": "round-02", "type": "环节归因", "category": "直缴汇缴对比", "syllabus_ref": ["B06", "B07", "B10"]}

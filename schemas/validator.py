@@ -28,20 +28,42 @@ def _fmt(errors) -> str:
     )
 
 
-def validate_card(card: dict, where: str = "") -> None:
+def _card_semantic_problems(card: dict, legacy: bool = False) -> list[str]:
+    """schema 之外作答卡的语义规则：
+    1. values 值行为答案唯一载体（D14，2026-10-26 拍板 answer 自契约删除）；
+       m0 存档卡（legacy=True）内保留 answer 散文，豁免缺 values（D10 不改写不迁移）；
+    2. 值行 metric 不得是导出量（合计/占比/排名可由原始行算出，落行即重复登记）。"""
+    probs = []
+    if "values" not in card:
+        if legacy and "answer" in card:
+            pass  # m0 存档卡：契约已删 answer 字段，存档原样保留，不再要求 values
+        else:
+            probs.append("缺答案载体 values（D14 唯一载体；散文只在 runs/ 留痕）")
+    for i, row in enumerate(card.get("values") or []):
+        name = row.get("metric", "")
+        if name.split(":")[-1].startswith(("合计", "占比", "排名")):
+            probs.append(f"values[{i}] metric={name!r} 是导出量，不落值行（由代码导出比对）")
+    return probs
+
+
+def validate_card(card: dict, where: str = "", legacy: bool = False) -> None:
     """作答卡校验，不过抛 ContractError（适配器写卡前调用）。"""
     errors = list(_validator("answer_card").iter_errors(card))
+    errors += _card_semantic_problems(card, legacy)
     if errors:
         raise ContractError(f"作答卡不合契约{where}（id={card.get('id')}）: {_fmt(errors)}")
 
 
-def _check_file(path: Path, schema_name: str) -> list[str]:
+def _check_file(path: Path, schema_name: str, legacy: bool = False) -> list[str]:
     try:
         obj = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         return [f"不是合法 JSON: {e}"]
-    return [f"{'/'.join(map(str, e.absolute_path)) or '<根>'}: {e.message}"
-            for e in _validator(schema_name).iter_errors(obj)]
+    probs = [f"{'/'.join(map(str, e.absolute_path)) or '<根>'}: {e.message}"
+             for e in _validator(schema_name).iter_errors(obj)]
+    if schema_name == "answer_card":
+        probs += _card_semantic_problems(obj, legacy)
+    return probs
 
 
 def check_questions_file(path: Path) -> list[str]:
@@ -72,12 +94,15 @@ def validate_question(q: dict) -> list[str]:
 
 
 def check_cards_dir(answers_side_dir: Path) -> list[tuple[str, list[str]]]:
-    """answers/<side>/*.json 逐份校验。返回 [(文件名, 问题清单)]，目录不存在返回空。"""
+    """answers/<side>/*.json 逐份校验。返回 [(文件名, 问题清单)]，目录不存在返回空。
+    m0 为 D14 前存档轮（D10 不改写不迁移）：卡内 answer 散文豁免缺 values。"""
     out = []
     if not answers_side_dir.is_dir():
         return out
+    legacy = answers_side_dir.parent.name == "answers" \
+        and answers_side_dir.parent.parent.name == "m0"
     for f in sorted(answers_side_dir.glob("*.json")):
-        probs = _check_file(f, "answer_card")
+        probs = _check_file(f, "answer_card", legacy=legacy)
         if probs:
             out.append((f.name, probs))
     return out

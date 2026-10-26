@@ -162,14 +162,27 @@ def run_question(qid: str, question: str, runs_dir: Path,
 
 
 def build_and_write_card(qid: str, question: str, result: dict, answers_dir: Path) -> Path:
-    """提取结果 → 作答卡（契约校验，不过不落盘）→ 落盘（覆盖写）。返回卡片路径。"""
+    """提取结果 → 值行提取步 → 作答卡（契约校验，不过不落盘）→ 落盘（覆盖写）。返回卡片路径。
+
+    值行提取步（D14）：答案散文（extracted["answer"]，全文已留 runs/）交 LLM 结构化为
+    值行（adapters/value_extract.py，模型走 conf/models.json extractor 节）；提取问题清单
+    追加进卡 errors。失败降级 values=[]，不影响作答状态。
+    """
     from .card import build_card
     from schemas.validator import validate_card
+    from ..value_extract import extract_values
+    extracted = result["extracted"]
+    values, vprobs = [], []
+    if (extracted.get("answer") or "").strip():
+        names = [n for m in extracted.get("metric_calls") or [] for n in m.get("names") or []]
+        values, vprobs = extract_values(question, extracted["answer"], names)
     card = build_card(
-        qid, question, result["extracted"],
+        qid, question, extracted, values,
         elapsed_s=result["meta"]["elapsed_s"],
         raw_path=result["payload_rel"],
     )
+    if vprobs:
+        card["errors"] = list(card.get("errors") or []) + vprobs
     validate_card(card, where="（ask_datus 写卡前）")
     answers_dir.mkdir(parents=True, exist_ok=True)
     out = answers_dir / f"{qid}.json"

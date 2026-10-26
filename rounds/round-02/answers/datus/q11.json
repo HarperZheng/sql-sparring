@@ -13,9 +13,32 @@
   ],
   "sql": "SELECT sum(treasury_transfer_dedup.ftotalamt) AS \"缴库金额\" FROM (SELECT * FROM (SELECT *, row_number() OVER (PARTITION BY fid) AS _rn FROM yunnan0508.fne_treasury_transfer_new) WHERE _rn = 1) AS treasury_transfer_dedup WHERE treasury_transfer_dedup.fstatus = '9' AND toDate(treasury_transfer_dedup.fmsgdate) >= CAST('2026-01-01' AS DATE) AND toDate(treasury_transfer_dedup.fmsgdate) < CAST('2026-10-24' AS DATE) SETTINGS join_use_nulls = 1",
   "sql_count": 1,
-  "answer": "## 查询结果\n\n**问题解读**：统计今年（2026-01-01 至 2026-10-23）已缴入国库的非税资金总额，口径为缴库动作已完成（缴库状态 fstatus='9'）的资金。\n\n**使用指标**：`缴库金额`（非税收入 / 资金链 / 缴库，treasury_transfer_dedup 数据集，按 fid 去重口径，单位：元）\n\n**结果**：今年已缴入国库的非税资金合计 **33,306.09 元**（多次查询结果稳定一致）。\n\n按国库入库确认状态细分（沿用首轮查询结果）：\n\n| 状态 | 金额（元） | 含义 |\n|---|---|---|\n| fstatus=9, income_status=1 | 100.00 | 已缴库且国库已确认入库 |\n| fstatus=9, income_status=0 | 33,206.09 | 已缴库、待国库确认（中间态） |\n| **合计（fstatus=9）** | **33,306.09** | 已缴入国库 |\n\n**说明与局限**：\n- 若以国库确认入库（income_status='1'）为最严格口径，今年确认入库仅 **100.00 元**，其余 3.32 万元处于“已缴库、待国库确认”的中间态。\n- 今年另有约 2,933.89 万元缴库报文停留在“未缴库”状态（fstatus=0），未计入上述金额，与此前发现的“瓶颈在清分批次→划拨→缴库报文环节”的结论一致。",
   "errors": [],
   "elapsed_s": 6.0,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/datus/q11.payload.jsonl"
+  "raw_path": "rounds/round-02/runs/datus/q11.payload.jsonl",
+  "values": [
+    {
+      "metric": "已缴入国库金额",
+      "unit": "元",
+      "dims": {},
+      "value": 33306.09
+    },
+    {
+      "metric": "已缴入国库金额",
+      "unit": "元",
+      "dims": {
+        "缴库状态": "国库已确认"
+      },
+      "value": 100.0
+    },
+    {
+      "metric": "已缴入国库金额",
+      "unit": "元",
+      "dims": {
+        "缴库状态": "已缴库待确认"
+      },
+      "value": 33206.09
+    }
+  ]
 }

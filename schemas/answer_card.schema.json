@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "answer_card（作答卡，每题每方一份；以 rounds/m0/answers 六张实卡为底定稿，M1 拍板 D10 不改写不迁移）",
+  "title": "answer_card（作答卡，每题每方一份；答案唯一载体=值行 values，D14，2026-10-26 拍板：answer 字段自契约删除，散文只在 runs/ 留痕；m0 存档卡内的 answer 为历史遗留，不再被契约描述）",
   "type": "object",
   "additionalProperties": true,
   "required": ["id", "question", "status", "metrics_hit", "sql", "sql_count",
-               "answer", "errors", "elapsed_s", "arbiter", "raw_path"],
+               "errors", "elapsed_s", "arbiter", "raw_path"],
   "properties": {
     "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
     "question": { "type": "string", "minLength": 1 },
@@ -23,7 +23,27 @@
     },
     "sql": { "type": ["string", "null"], "description": "双侧同放 SQL 文本（cube 为 :4000 编译后）" },
     "sql_count": { "type": "integer", "minimum": 0, "description": "执行 SQL 条数" },
-    "answer": { "type": "string", "description": "提取出的答案正文" },
+    "values": {
+      "type": "array",
+      "description": "值行数组——答案唯一载体（D14，round-02 起迁移/round-03 起新卡必带）：每行 指标×维度成员→一个数+单位；只登记原始计量，合计/占比/排名等导出量不落行",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "unit", "dims", "value"],
+        "properties": {
+          "metric": { "type": "string", "minLength": 1,
+                      "description": "指标名，取指标登记表 conf/metrics.json；登记表未收录时标 未登记:<名>，禁自造正名" },
+          "unit": { "enum": ["元", "万元", "亿元", "笔", "张", "个", "天", "%"],
+                    "description": "计量单位（枚举）；元/万元/亿元属金额量纲，比对时换算为元" },
+          "dims": { "type": "object", "maxProperties": 2,
+                    "additionalProperties": { "type": "string", "minLength": 1 },
+                    "description": "维度成员（≤2 个），如 {\"月份\": \"2026-06\"}；无维度分解为空对象" },
+          "value": { "type": ["number", "null"],
+                     "description": "数值；null=该侧行存在但无数（如名单为空）" },
+          "note": { "type": "string", "description": "可选旁注：成员名原文、口径说明等" }
+        }
+      }
+    },
     "errors": { "type": "array", "items": { "type": "string" }, "description": "真实错误（非 KB 文本里的 Code NNN）" },
     "elapsed_s": { "type": "number", "minimum": 0 },
     "arbiter": {

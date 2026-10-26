@@ -13,9 +13,29 @@
   ],
   "sql": "SELECT dim_agen.fagenname AS fagenname, sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high LEFT JOIN (SELECT fagenidcode, fagencode, fagenname, flevel, ftypecode, fpidcode, toString(fisleaf) AS fisleaf FROM (SELECT fagenidcode, fagencode, fagenname, flevel, ftypecode, fpidcode, toString(fisleaf) AS fisleaf, row_number() OVER (PARTITION BY fagenidcode ORDER BY fupdatetime DESC) AS _rn FROM yunnan0508.fab_agen) WHERE _rn = 1) AS dim_agen ON paybook_full_high.fchgagenidcode = dim_agen.fagenidcode WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY dim_agen.fagenname ORDER BY \"非税缴款金额\" DESC LIMIT 10 SETTINGS join_use_nulls = 1",
   "sql_count": 1,
-  "answer": "## 查询结果\n\n**问题**：2026 年（2026-01-01 ~ 2026-12-31）各执收单位经手的收入金额排名前十。\n\n**使用指标**：`非税缴款金额`（缴款通知书明细口径，paybook_full_high.famt 直 SUM，单位：元），按执收单位（dim_agen.fagenname）分组、按金额降序。\n\n### 2026 年执收单位收入金额排行\n\n今年实际只有 **9 家**执收单位有缴款记录（不足 10 家，全部列出）：\n\n| 排名 | 执收单位 | 缴款金额（元） |\n|---|---|---|\n| 1 | 测试云南测试环境 | 14,916,711.37 |\n| 2 | 智能核销五华区测试单位 | 50,712.00 |\n| 3 | 云南发展改革委员会 | 7,622.00 |\n| 4 | 云南医保测试单位改名 | 5,987.48 |\n| 5 | 云南信息中心 | 1,732.00 |\n| 6 | 云南通用测试单位0801 | 1,000.00 |\n| 7 | （单位维度表中无登记，名称为空） | 805.28 |\n| 8 | 通用单位168 | 600.00 |\n| 9 | 云南体育彩票中心 | 100.00 |\n\n### 说明与局限\n\n- **测试数据污染明显**：榜首「测试云南测试环境」一家即约 1,491.67 万元，占今年全部缴款金额的 99% 以上；多数单位名称含「测试」字样，该排行反映的是测试环境数据，不宜作为真实业务结论。\n- **口径提示**：该金额为缴款通知书明细金额（开票口径），锚定缴款书开票日（fill_date），非资金实际到账口径。\n- 排名第 7 的 805.28 元对应单位在执收单位维度表中无对应记录，名称为空，属未匹配事实行。",
   "errors": [],
   "elapsed_s": 10.3,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/datus/q17.payload.jsonl"
+  "raw_path": "rounds/round-02/runs/datus/q17.payload.jsonl",
+  "values": [
+    {
+      "metric": "榜首缴款金额",
+      "unit": "元",
+      "dims": {},
+      "value": 14916711.37,
+      "note": "测试云南测试环境"
+    },
+    {
+      "metric": "有缴款单位数",
+      "unit": "个",
+      "dims": {},
+      "value": 9
+    },
+    {
+      "metric": "未匹配行金额",
+      "unit": "元",
+      "dims": {},
+      "value": 805.28
+    }
+  ]
 }

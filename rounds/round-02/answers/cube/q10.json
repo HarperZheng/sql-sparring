@@ -15,9 +15,42 @@
   ],
   "sql": "SELECT toDateTime64(toStartOfMonth(toTimeZone(toDateTime64(toDateOrNull(`fiscal_collection`.`fdate`), 0), 'UTC'), 'UTC'), 0, 'UTC') `fiscal_collection_view__pay_date_month`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1\nORDER BY  1  ASC\nLIMIT 1002026-01-01T00:00:00.000Z2026-12-31T23:59:59.999Z",
   "sql_count": 1,
-  "answer": "口径：缴款金额=fiscal_collection_view.amt（缴款明细口径），时间轴为缴款日期 pay_date，范围2026-01-01至2026-12-31，按月分组。走势：全年8个月有缴款记录，2月/3月/11月/12月无数据；6月为绝对峰值（14,909,895.85 元、21 笔），10月次之（50,712 元），其余月份均在万元以下（1月4,632 元最高，8月最低700.66 元），整体呈单峰形态、6月前后金额骤降。数据范围以本次查询返回为准，truncated=false（8行全量）。",
   "errors": [],
   "elapsed_s": 26.3,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/cube/q10.raw.json"
+  "raw_path": "rounds/round-02/runs/cube/q10.raw.json",
+  "values": [
+    {
+      "metric": "非税缴款金额",
+      "unit": "元",
+      "dims": {
+        "月份": "2026-01"
+      },
+      "value": 4632.0
+    },
+    {
+      "metric": "非税缴款金额",
+      "unit": "元",
+      "dims": {
+        "月份": "2026-06"
+      },
+      "value": 14909895.85
+    },
+    {
+      "metric": "非税缴款金额",
+      "unit": "元",
+      "dims": {
+        "月份": "2026-08"
+      },
+      "value": 700.66
+    },
+    {
+      "metric": "非税缴款金额",
+      "unit": "元",
+      "dims": {
+        "月份": "2026-10"
+      },
+      "value": 50712.0
+    }
+  ]
 }

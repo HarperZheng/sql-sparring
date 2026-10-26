@@ -42,9 +42,26 @@
   ],
   "sql": "SELECT funddivide_transfer.fitemname AS fitemname, sum(funddivide_transfer.ftransamt) AS \"划拨金额\", sum(CASE WHEN funddivide_transfer.fistransfer = '1' THEN funddivide_transfer.ftransamt END) AS \"划拨完成金额\" FROM yunnan0508.fne_funddivide_transfer AS funddivide_transfer WHERE toDate(funddivide_transfer.fcleardate) >= CAST('2026-01-01' AS DATE) AND toDate(funddivide_transfer.fcleardate) < CAST('2027-01-01' AS DATE) GROUP BY funddivide_transfer.fitemname ORDER BY \"划拨金额\" DESC SETTINGS join_use_nulls = 1",
   "sql_count": 3,
-  "answer": "核验完成,结果与数据逻辑完全自洽。以下是最终报告:\n\n---\n\n## 问题解读\n\n- **问题**:2026 年(今年)按收入项目汇总的**待划拨金额**,排名前五的收入项目\n- **时间范围**:2026-01-01 ~ 2026-12-31(截至当前日期 2026-10-23)\n- **使用指标**:`未划拨金额`(非税收入/资金链/划拨;定义:划拨金额按 `fistransfer != '1'` 收窄,即尚未完成划拨的金额,单位:元),按 `funddivide_transfer.fitemname`(非税收入项目名称)分组,按金额降序取前五\n\n## 查询结果\n\n2026 年按收入项目分组共返回 6 个项目,其中只有第 1 名有实际金额:\n\n| 排名 | 收入项目 | 未划拨金额(元) |\n|---|---|---|\n| 1 | **高等学校住宿费** | **100.00** |\n| 2 | 港口建设费收入 | —(空值,无未划拨事实) |\n| 3 | 民航发展基金收入 | —(空值,无未划拨事实) |\n| 4 | 乡村农网还贷资金收入 | —(空值,无未划拨事实) |\n| 5 | 国家电影事业发展专项资金收入 | —(空值,无未划拨事实) |\n| (6) | 农网还贷资金收入a | —(空值,无未划拨事实) |\n\n**交叉核验**(同一时间范围、同一分组查询 `划拨金额` 与 `划拨完成金额`):\n\n- 高等学校住宿费:划拨金额 424.00 元 = 已划拨 324.00 元 + 未划拨 100.00 元,勾稽一致;\n- 其余 5 个收入项目在 2026 年的划拨批次数据中**没有任何事实记录**(划拨金额、划拨完成金额均为空),因此未划拨金额为空值属于\"无数据\",并非金额为零的欠拨项目。\n\n## 结论\n\n- 2026 年**实际存在待划拨金额的收入项目只有 1 个**:高等学校住宿费,未划拨金额 **100.00 元**,即排名榜首;\n- 严格意义上的\"前五名\"无法凑齐——其余 4~5 个项目无未划拨事实,不构成实质排名。\n\n## 局限说明\n\n- 空值组按指标定义如实返回(未划拨金额无事实),未做替零填充;\n- 结论基于测试库 `yunnan0508` 当前数据,该库划拨侧数据量较小(全表 728 行),结果可能随数据更新而变化。",
   "errors": [],
   "elapsed_s": 23.5,
   "arbiter": null,
-  "raw_path": "rounds/round-02/runs/datus/q16.payload.jsonl"
+  "raw_path": "rounds/round-02/runs/datus/q16.payload.jsonl",
+  "values": [
+    {
+      "metric": "待划拨金额",
+      "unit": "元",
+      "dims": {
+        "收入项目": "高等学校住宿费"
+      },
+      "value": 100.0
+    },
+    {
+      "metric": "待划拨金额",
+      "unit": "元",
+      "dims": {
+        "收入项目": "其余项目"
+      },
+      "value": null
+    }
+  ]
 }

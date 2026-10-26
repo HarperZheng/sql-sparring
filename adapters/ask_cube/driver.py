@@ -67,11 +67,24 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
 
     first_type = (first or {}).get("type", "error") if first else "error"
     final_resp = first if first_type != "ask" else (followups[-1]["response"] if followups else None)
+
+    # 值行提取步（D14）：终答散文（全文已留 raw.json）交 LLM 结构化为值行
+    # （adapters/value_extract.py，模型走 conf/models.json extractor 节）；提取问题
+    # 清单追加进卡 errors；失败降级 values=[]，不影响作答状态。
+    values, vprobs = [], []
+    if (final_resp or {}).get("type") == "answer" and ((final_resp or {}).get("answer") or "").strip():
+        names = [m for t in final_resp.get("tables") or []
+                 for m in ((t.get("query") or {}).get("measures") or [])]
+        from ..value_extract import extract_values
+        values, vprobs = extract_values(question, final_resp["answer"], names)
+
     card = build_card(
         qid, question, first_type, first or {}, followups, final_resp or {},
-        elapsed_s=elapsed, raw_path=str(raw_path.relative_to(REPO_ROOT)).replace("\\", "/"),
+        values, elapsed_s=elapsed, raw_path=str(raw_path.relative_to(REPO_ROOT)).replace("\\", "/"),
         sql=sql, sql_count=sql_count,
     )
+    if vprobs:
+        card["errors"] = list(card.get("errors") or []) + vprobs
     from schemas.validator import validate_card
     validate_card(card, where="（ask_cube 写卡前）")
     return {"card": card, "first_type": first_type, "raw_rel": str(raw_path)}

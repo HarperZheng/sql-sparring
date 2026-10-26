@@ -5,7 +5,6 @@
   "metrics_hit": [],
   "sql": "",
   "sql_count": 0,
-  "answer": "",
   "errors": [],
   "elapsed_s": 36.5,
   "arbiter": {
@@ -30,5 +29,6 @@
       }
     ]
   },
-  "raw_path": "rounds/round-02/runs/cube/q19.raw.json"
+  "raw_path": "rounds/round-02/runs/cube/q19.raw.json",
+  "values": []
 }

@@ -16,7 +16,6 @@
   ],
   "sql": "",
   "sql_count": 0,
-  "answer": "口径声明：模型无\"待划拨金额\"度量（fiscal_allocation_view 划转状态 trans_stats 2026 年全空、词典亦无约定），经用户拍板改查已划拨口径——2026 年（pay_date 2026-01-01~12-31）按收入项目汇总划拨金额 trans_amt，降序取前五。数据范围：2026 年清分记录共 64 笔、划拨金额合计 424 元，其中仅 1 个项目（高等学校住宿费 103042758，2 笔 424 元）有划拨金额，其余 4 个上榜项目划拨金额为空（有清分记录但金额为 null）。结果仅前 5 组（limit=5 截断），但全年有划拨金额的项目实际仅 1 个，排名实质完整。",
   "errors": [],
   "elapsed_s": 61.0,
   "arbiter": {
@@ -124,5 +123,23 @@
       }
     ]
   },
-  "raw_path": "rounds/round-02/runs/cube/q16.raw.json"
+  "raw_path": "rounds/round-02/runs/cube/q16.raw.json",
+  "values": [
+    {
+      "metric": "待划拨金额",
+      "unit": "元",
+      "dims": {
+        "收入项目": "高等学校住宿费"
+      },
+      "value": 424.0
+    },
+    {
+      "metric": "待划拨金额",
+      "unit": "元",
+      "dims": {
+        "收入项目": "其余项目"
+      },
+      "value": null
+    }
+  ]
 }
