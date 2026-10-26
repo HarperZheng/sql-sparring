@@ -13,3 +13,6 @@ tmp/
 
 # 各轮 runs 原始运行证据（payload/raw/sql/stderr）只留本地，不入库
 rounds/*/runs/
+
+# round-03 整轮产物暂不入库，先留本地（round 完结后再决定是否入库）
+rounds/round-03/
