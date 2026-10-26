@@ -1,0 +1,53 @@
+{
+  "id": "q27",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "资金未缴入国库但已完成对账/记账的记录排查（全库）",
+      "caliber": "'对账/记账完成'=缴款侧已清分 is_cleared=1，'资金未缴入国库'=未到账/未划拨/未缴库三态交叉；命中 119 笔 159.87 亿元（已清分+资金未到账，与 2022 年清分 cohort 吻合，属历史存量）；另 444 笔 3,057.36 万元已到账已清分未划拨；缴库侧交叉验证未发现反向异常（不存在 fstatus=0 未缴库但 income_status=1 已确认入库的记录）",
+      "dimensions": "按 is_cleared×is_received×fistransfer 状态组合；缴库侧按 fstatus×income_status",
+      "time_window": "全库（截至 2026-10-23，无时间过滤）",
+      "values": {
+        "已清分且资金未到账_笔数": 119,
+        "已清分且资金未到账_金额(亿元)": 159.87,
+        "已到账已清分未划拨_笔数": 444,
+        "已到账已清分未划拨_金额(万元)": 3057.36,
+        "缴库侧反向异常_笔数": 0
+      }
+    },
+    "cube": {
+      "metric": "资金未缴入国库但已完成对账/记账的记录排查（fiscal_treasury_view 全量）",
+      "caliber": "以缴库入库视图为准：'完成对账'=reconcile_status='1'，'尚未缴入国库'=enter_status='0'；meta 无独立'财政记账'状态成员（三环节=缴库回执 status、入库 enter_status、对账 reconcile_status），以'对账成功'覆盖'财政记账'；实测 0 笔，按空结果直接拍板未做反向探测",
+      "dimensions": null,
+      "time_window": "无时间过滤（全量缴库数据）",
+      "values": {
+        "对账成功且未缴入国库_笔数": 0
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "先记账后资金异常排查",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "两侧都在排查此类异常但落点不同：datus 落在缴款侧清分环节（is_cleared=1 且资金未到账 → 119 笔 159.87 亿元），cube 落在缴库侧对账环节（reconcile_status=1 且 enter_status=0 → 0 笔）。缴库侧两侧行政结论一致（datus 亦验证缴库侧不存在反向异常）——矛盾不是数据冲突，而是'对账/财政记账'发生在哪个环节的建模分歧。"
+      }
+    ],
+    "summary": "排查落点不同（缴款侧清分 is_cleared vs 缴库侧 reconcile_status）：119 笔 159.87 亿元 vs 0 笔；判建模差异，待拍板'对账/财政记账'业务落点后复验。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'对账'与'财政记账'的业务落点（datus=缴款侧清分环节 is_cleared；cube=缴库侧对账环节 reconcile_status，且'财政记账'无独立建模）",
+      "suggest": "拍板'对账'与'财政记账'各对应哪个环节、哪张表哪个字段，写双侧 ai_context；若'财政记账'确指国库入库确认，缴库侧应补 income_status 相关口径后再复验"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q27.json",
+    "rounds/round-02/answers/cube/q27.json"
+  ]
+}

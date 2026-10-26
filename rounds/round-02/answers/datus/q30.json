@@ -1,0 +1,63 @@
+{
+  "id": "q30",
+  "question": "今年直缴和汇缴两条路从缴款到缴入国库的各环节耗时对比，哪条路更慢、慢在哪个环节？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额_同比",
+        "缴库金额_环比",
+        "清分金额_同比",
+        "非税缴款金额_同比",
+        "清分金额_环比"
+      ]
+    },
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额_环比",
+        "清分金额_环比",
+        "汇总批次数",
+        "非税缴款金额_环比",
+        "清分金额_同比"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数",
+        "非税缴款金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.fbustype"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    }
+  ],
+  "sql": "SELECT paybook_full_high.fbustype AS fbustype, COUNT(DISTINCT paybook_full_high.fid) AS \"非税缴款笔数\", sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY paybook_full_high.fbustype SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 结论：该问题目前无法用现有指标回答\n\n**问题理解**：2026 年（1-1 至 10-23），按缴款业务类型（直缴 fbustype='1' / 汇缴 fbustype='2'）对比“缴款 → 清分 → 划拨 → 缴入国库”各环节的耗时，找出哪条路更慢、瓶颈在哪个环节。\n\n**拒答原因——目录中不存在环节耗时类指标**：\n\n- 资金链四个节点（缴款/清分/划拨/缴库）下全部是**金额、笔数及其同比环比**，没有任何“耗时、时效、周转天数”类指标；\n- 耗时需要“环节日期差”才能计算，但关键日期字段在当前数据里不可用：\n  - **划转日期** trans_date：仅 2/1,281 行有值 → 划拨环节时效无数据；\n  - **到账/入库日期** enter_date：仅 1/1,281 行有值 → 入库环节时效无数据；\n  - **缴库金额锚定报文日期（msg_date）**，与开票 cohort 不同轴，不能与缴款侧直接相减对账；\n  - 缴库侧（treasury_transfer_dedup）**没有 fbustype 维度**，即使算出缴库时效也无法按直缴/汇缴拆分。\n\n## 现有指标能提供的部分\n\n**① 2026 年两条路的业务量级**（非税缴款笔数/非税缴款金额，fill_date 口径，按 fbustype 切片）：\n\n| 缴款类型 | 笔数 | 金额 |\n|---|---|---|\n| 汇缴（fbustype='2'） | 17 笔 | 1,496.76 万元 |\n| 直缴（fbustype='1'） | 45 笔 | 1.77 万元 |\n\n2026 年金额上汇缴占绝对主导（99.9%），直缴仅笔数多、单笔金额极小（约 393 元/笔 vs 88 万元/笔）。\n\n**② 可作为时效代理的维度（仅缴款环节内）**：clear_date（清分日）、received_date（资金到账日）存在，理论上可算“缴款→清分”间隔，但同样没有对应的耗时类目录指标，且无法延伸到划拨/缴库环节。\n\n## 补齐该分析需要什么\n\n需要新建指标，例如：按 fbustype 切片的 `received_date−pay_date`（缴款→到账）、`clear_date−fill_date`（到账→清分）、`msg_date−开票日`（划拨→缴库）的间隔均值/中位数；但前提是先修复划拨、到账日期字段的回填（当前近全空），否则新建了指标也无数据可算。",
+  "errors": [],
+  "elapsed_s": 20.2,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q30.payload.jsonl"
+}

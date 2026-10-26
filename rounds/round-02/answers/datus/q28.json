@@ -1,0 +1,317 @@
+{
+  "id": "q28",
+  "question": "今年从缴款到缴入国库整体偏慢的缴款，按环节拆解看，慢在缴款、银行代收、清分汇总，还是划拨缴库？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "清分金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "清分率"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨完成金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "paybook_full_high.is_received",
+        "paybook_full_high.is_cleared",
+        "paybook_full_high.fistransfer"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "清分金额",
+        "清分率",
+        "非税缴款金额"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "划拨金额",
+        "划拨完成金额",
+        "未划拨金额",
+        "汇总批次数"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库批次数"
+      ],
+      "dimensions": [
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "paybook_full_high.frecrgnname",
+        "paybook_full_high.fbustype"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比",
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比"
+      ],
+      "dimensions": [
+        "metric_time:month"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "dimensions": [
+        "metric_time:month"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比"
+      ],
+      "dimensions": [
+        "metric_time:month",
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "dimensions": [
+        "metric_time:month",
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额_月同比"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款金额_同比"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比",
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款金额_同比",
+        "清分金额",
+        "清分金额_同比"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库金额_同比"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ],
+      "time_start": "2025-01-01",
+      "time_end": "2025-01-01"
+    }
+  ],
+  "sql": "SELECT sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2025-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2025-01-01' AS DATE) SETTINGS join_use_nulls = 1",
+  "sql_count": 8,
+  "answer": "## 分析结论：慢点集中在**划拨—缴库末端**，缴款与银行代收环节不慢\n\n### 一、问题口径与时间范围\n- **“今年\"** = 2026-01-01 至 2026-10-23（当前日）；2026 开票缴款书数据实际截至 10 月上旬。\n- 资金链五环节：开票缴款 → 银行代收/资金到账 → 清分汇总 → 划拨 → 缴库（国库入库确认）。\n- 使用指标：非税缴款金额/笔数、清分金额/清分率（含同比）、划拨金额/划拨完成金额/未划拨金额/汇总批次数、缴库金额/缴库批次数（按 fstatus×income_status 拆解）。\n\n### 二、按环节拆解（2026 年）\n\n| 环节 | 关键数据 | 判断 |\n|---|---|---|\n| ① 开票缴款 | 缴款金额 **1,498.53 万元**、63 笔（fid 去重）；同比上年同期 3,075.44 万元（**-51.3%**） | 量缩但非“慢\"，开票当日即缴款为主 |\n| ② 银行代收/到账 | 63 笔中 **61 笔已到账**（96.8%）；未到账 19 笔（1,496.62 万元，其中 10 笔 1,496.32 万元集中于归属区划为空串的汇缴大票）+2 笔已清分未到账 | **不慢**：到账在开票当日完成（received_date 与 fill_date 同日），未到账大票为区划信息缺失的挂起票，非银行处理延迟 |\n| ③ 清分汇总 | 清分率 **0.0884%**（清分 1.32 万 ÷ 缴款 1,498.53 万）；按笔数 **39/63 笔已清分（62%）**；清分金额同比 **-18.3%**（1.32 万 vs 1.62 万） | 技术上多数笔已清分；金额口径清分率极低主因 1,496 万元未到账大票无法进入清分，卡点在上游到账而非清分本身 |\n| ④ 划拨 | 划拨金额 424 元，**划拨完成 324 元（76.4%）**、未划拨 100 元；27 个清分汇总批次 | **开始偏慢**：2026 cohort 中\"已到账已清分但未划拨”37 笔/1.64 万元（全库该滞留态共 444 笔/3,057.36 万元，滞留普遍超 180 天） |\n| ⑤ 缴库（国库入库确认） | 缴库金额 2,937.22 万元、17 个批次：**未缴库（fstatus=0）2,933.89 万元/15 批次，占 99.89%**；已缴库待国库确认 3.32 万元/1 批次；**走完全链条（已缴库+国库确认）仅 100 元/1 批次**；缴库金额同比为空（**2025 年无缴库报文**） | **最慢环节**：末端几乎全停在“未缴库”，确认入库近乎为零 |\n\n### 三、根因定位\n1. **缴款、银行代收环节不构成瓶颈**——到账当日完成、96.8% 笔已到账。\n2. **清分汇总环节仅“名义慢”**——笔数层面 62% 已清分；金额清分率 0.09% 是被 1,496 万元未到账汇缴大票拖累的结构性结果。\n3. **真正的堵点在划拨→缴库末端**：已到账已清分的资金大量滞留在“未划拨”（滞留超半年），而缴库侧 99.9% 金额停在“未缴库”、全年仅 1 笔 100 元获国库确认入库；且今年才首次形成缴库报文（2025 年为零），说明**财政内部汇总→划拨→缴库→国库确认的末端链条是整体偏慢的集中区**。\n\n### 四、限制说明\n- 划拨、缴库金额锚定**各自环节报文日期**（非开票 cohort），跨环节金额不可直接相加对账；缴库侧“未缴库”2,933.9 万元主要为往年 cohort 资金按 2026 年报文汇总。\n- 划拨指令日期（transdate）与入库日期（enter_date）字段近乎全空，环节内具体耗时（天数）无法计算，只能以状态占比定位堵点。\n- 数据为测试环境，约 16% 缴款行来自“测试”字样单位，结论解释时需留意。",
+  "errors": [],
+  "elapsed_s": 130.5,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q28.payload.jsonl"
+}

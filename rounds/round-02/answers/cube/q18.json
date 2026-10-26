@@ -1,0 +1,111 @@
+{
+  "id": "q18",
+  "question": "今年完成的缴款里，直缴和汇缴两种方式各有多少笔？占比是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.bus_type"
+      ]
+    }
+  ],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "口径声明：\"完成\"=缴款书状态 state='3'（已缴款确认）；\"今年\"=缴款日期 pay_date 2026-01-01 至 2026-12-31；\"笔数\"=缴款书笔数 paybook_count（countDistinct fpaycode，一票多项目行不重复计）。歧义拍板：bus_type 编码 1=直缴、2=汇缴（用户拍板，已回写口径词典\"直缴汇缴\"）。数据范围：直缴 44 笔、汇缴 12 笔，合计 56 笔（全量单独查询确认，无截断），占比分别为 78.57% 和 21.43%。",
+  "errors": [],
+  "elapsed_s": 36.7,
+  "arbiter": {
+    "mode": "auto",
+    "policy": "option-1",
+    "first_type": "ask",
+    "ask_question": "缴款方式维度 bus_type（fbustype，直缴/汇缴）在数据里是编码 '1'/'2'，但 meta 口径与词典均未写明 1、2 与直缴/汇缴的对应关系，映射直接决定两笔数与占比归属，需要您拍板。另确认口径：\"完成\"已按缴款书状态=3 已缴款确认、\"今年\"按缴款日期 2026 全年、笔数用缴款书笔数（paybook_count）计，如不符请一并指出。",
+    "options": [
+      "1=直缴，2=汇缴（直缴 44 笔占 78.57%，汇缴 12 笔占 21.43%）",
+      "2=直缴，1=汇缴（直缴 12 笔占 21.43%，汇缴 44 笔占 78.57%）",
+      "查询数据库字典表确认后再回答",
+      "\"完成\"不应按状态=3 过滤，改为其他状态口径"
+    ],
+    "followups": [
+      {
+        "question": "就按第一个选项的口径来（1=直缴，2=汇缴（直缴 44 笔占 78.57%，汇缴 12 笔占 21.43%）），直接出答案。",
+        "response_type": "answer",
+        "response": {
+          "type": "answer",
+          "title": "2026年已缴款确认缴款书：直缴44笔占78.57%，汇缴12笔占21.43%",
+          "plan": [
+            [
+              "今年完成的缴款（状态=3已缴款确认，缴款日期2026全年）按缴款方式分组，笔数用缴款书笔数",
+              "fiscal_collection_view.paybook_count / fiscal_collection_view.bus_type",
+              "bus_type=fbustype（直缴/汇缴）；用户拍板 1=直缴，2=汇缴，已回写词典"
+            ],
+            [
+              "占比=各方式笔数÷全量笔数（不带维度的全量查询为分母）",
+              "fiscal_collection_view.paybook_count",
+              "铁律：合计用单独查询，46+? 以全量查询 56 为分母"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "2026年已完成缴款按缴款方式（直缴/汇缴）笔数与占比（口径：state=3已缴款确认，pay_date 2026全年，缴款书笔数）",
+              "query": {
+                "measures": [
+                  "fiscal_collection_view.paybook_count"
+                ],
+                "dimensions": [
+                  "fiscal_collection_view.bus_type"
+                ],
+                "filters": [
+                  {
+                    "member": "fiscal_collection_view.state",
+                    "operator": "equals",
+                    "values": [
+                      "3"
+                    ]
+                  }
+                ],
+                "timeDimensions": [
+                  {
+                    "dimension": "fiscal_collection_view.pay_date",
+                    "dateRange": [
+                      "2026-01-01",
+                      "2026-12-31"
+                    ]
+                  }
+                ],
+                "order": {
+                  "fiscal_collection_view.paybook_count": "desc"
+                },
+                "limit": 100
+              },
+              "rows": [
+                {
+                  "fiscal_collection_view.bus_type": "1",
+                  "缴款方式": "直缴",
+                  "fiscal_collection_view.paybook_count": 44,
+                  "占比": 78.57
+                },
+                {
+                  "fiscal_collection_view.bus_type": "2",
+                  "缴款方式": "汇缴",
+                  "fiscal_collection_view.paybook_count": 12,
+                  "占比": 21.43
+                }
+              ],
+              "total": 56
+            }
+          ],
+          "answer": "口径声明：\"完成\"=缴款书状态 state='3'（已缴款确认）；\"今年\"=缴款日期 pay_date 2026-01-01 至 2026-12-31；\"笔数\"=缴款书笔数 paybook_count（countDistinct fpaycode，一票多项目行不重复计）。歧义拍板：bus_type 编码 1=直缴、2=汇缴（用户拍板，已回写口径词典\"直缴汇缴\"）。数据范围：直缴 44 笔、汇缴 12 笔，合计 56 笔（全量单独查询确认，无截断），占比分别为 78.57% 和 21.43%。",
+          "assumption": "bus_type 1=直缴、2=汇缴（用户拍板 2026-10-23）；\"完成\"=state='3'；笔数=paybook_count",
+          "truncated": false,
+          "rows": 2,
+          "hitPreAgg": false,
+          "audited": false
+        }
+      }
+    ]
+  },
+  "raw_path": "rounds/round-02/runs/cube/q18.raw.json"
+}

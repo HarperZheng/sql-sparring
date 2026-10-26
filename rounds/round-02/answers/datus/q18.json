@@ -1,0 +1,21 @@
+{
+  "id": "q18",
+  "question": "今年完成的缴款里，直缴和汇缴两种方式各有多少笔？占比是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ]
+    }
+  ],
+  "sql": "SELECT paybook_full_high.fbustype AS fbustype, COUNT(DISTINCT paybook_full_high.fid) AS \"非税缴款笔数\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY paybook_full_high.fbustype SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 查询结果\n\n**问题解读**：2026 年（今年）完成的缴款，按缴款方式（直缴 / 汇缴）统计笔数及占比。\n\n**所用指标**：`非税缴款笔数`（fid 去重口径），按 `paybook_full_high.fbustype` 切片（1=直缴，2=汇缴）\n- 时间范围：2026-01-01 ~ 2026-12-31（指标主时间轴 fill_date 开票日）\n\n| 缴款方式 | 笔数 | 占比 |\n|---|---|---|\n| 直缴（fbustype='1'） | 45 笔 | 72.6% |\n| 汇缴（fbustype='2'） | 17 笔 | 27.4% |\n| **合计** | **62 笔** | 100% |\n\n**说明**\n- 今年完成的缴款以**直缴为主**，笔数约为汇缴的 2.6 倍。\n- 口径注：笔数锚定缴款书**填开日**落在 2026 年；如需改按实际缴款日（`pay_date`）口径，可再出一版，结果可能略有差异。",
+  "errors": [],
+  "elapsed_s": 14.1,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q18.payload.jsonl"
+}

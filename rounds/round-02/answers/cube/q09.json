@@ -1,0 +1,24 @@
+{
+  "id": "q09",
+  "question": "票据冲红开具红字发票后，冲减的收入记在哪个会计期间？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.pay_date",
+        "fiscal_collection_view.fill_date"
+      ]
+    }
+  ],
+  "sql": "SELECT toTimeZone(toDateTime64(toDateOrNull(`fiscal_collection`.`fdate`), 0), 'UTC') `fiscal_collection_view__pay_date`, toTimeZone(toDateTime64(toDateOrNull(`fiscal_collection`.`ffilldate`), 0), 'UTC') `fiscal_collection_view__fill_date`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, count(*) `fiscal_collection_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (`fiscal_collection`.`fbustype` = ?)\nGROUP BY 1, 2\nORDER BY  1  ASC\nLIMIT 1002",
+  "sql_count": 1,
+  "answer": "口径声明：本模型没有独立的\"红字发票/冲红\"标记成员，冲红业务按口径词典词条（bus_type=2=退付，legacy:false）识别。模型将每笔冲红记录为一张独立缴款书，其金额落在该红字票据自身的缴款日期 pay_date（fdate）所属会计期间；模型金额及同比/环比的默认时间轴即 pay_date，实际缴款另有 received_date，票据生效日 eff_date 仅作参考。数据范围：bus_type=2 共 216 笔明细、26 个缴款月（2022-11 至 2026-10），金额合计 2,284,852,272.66（不带 dimensions 的全量查询，非分组行加总）。关键证据：开票日 fill_date 在 2022-11 的红票其 eff_date 迟至 2025-08，但金额仍按 pay_date 记在 2022-11 所属期间——即冲减收入记在红字票据开具（缴款）当期，不追溯调整原开票期间。表格 rows 为按 pay_date 月份归并展示（明细行按日分组 75 组、limit 100 内无截断）。assumption：\"冲红\"按词典映射为 bus_type=2（退付）；\"会计期间\"取模型默认金额时间轴 pay_date 所属月，未采用 received_date/eff_date 口径。truncated:false",
+  "errors": [],
+  "elapsed_s": 51.9,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q09.raw.json"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "q20",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "已清分资金按中央/省/市/县四级归属的金额占比（2026 年）",
+      "caliber": "清分金额指标：sum(fimamt)，已清分 fisclear='1'，按 收款区划 frecrgncode 分组；四级映射口径自述：000000=中央、530000=省、非 000000 且后两位 00=市、非 00 结尾=县；空归属区划行不计金额",
+      "dimensions": "按归属级次（frecrgncode 映射四级）分组",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "中央": 0,
+        "省(530000)": 12753.53,
+        "市": 0,
+        "县(530102)": 495.33,
+        "合计": 13248.86,
+        "省占比": "96.26%",
+        "县占比": "3.74%"
+      }
+    },
+    "cube": {
+      "metric": "已清分资金按中央/省/市/县四级归属的金额占比（2026 年）",
+      "caliber": "cube 侧 nomatch：语义层无清分归属级次知识（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（无作答）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "四级归属占比",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 nomatch，无口径可比；datus 以 fisclear='1'+fimamt+frecrgncode 映射作答完整（省 96.26%、县 3.74%，中央/市无记录）。"
+      }
+    ],
+    "summary": "单侧作答（cube nomatch），无法互证，待人工确认 datus 答案与四级映射规则作为回归基准。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补维度",
+      "target": "清分归属级次维度（中央/省/市/县四级映射）",
+      "suggest": "清分主题补归属级次维度：区划编码→级次映射规则（000000=中央、省本级、后两位 00=市、非 00=县）写入 ai_context/词典，复验时该题应可作答"
+    }
+  ],
+  "corrected": {
+    "answer": "今年完成清分的资金合计 13,248.86 元：省级（530000）12,753.53 元占 96.26%，县级（530102 五华区）495.33 元占 3.74%，中央、市两级无记录。四级映射按收款区划 frecrgncode：000000=中央、530000=省、非 000000 且后两位 00=市、非 00 结尾=县。",
+    "basis": "倾向采纳 datus 作答卡（fisclear='1' + sum(fimamt) + frecrgncode 映射，SQL 有执行记录取证）；cube 侧 nomatch，无对照证据"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q20.json",
+    "rounds/round-02/answers/cube/q20.json"
+  ]
+}

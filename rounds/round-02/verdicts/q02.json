@@ -1,0 +1,51 @@
+{
+  "id": "q02",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "财政部门在代理银行开设的账户种类及用途（制度口径）",
+      "caliber": "按非税收入收缴通行制度作答（自述：当前指标目录无账户类指标，无法用本库数据量化）：①非税收入汇缴专户——直缴/汇缴款项先归集入该专户，按清分结果划解国库/财政专户并办理退付；②零余额账户——财政资金支付清算（支出端），不作收入过渡户；③特设专户——经批准为特定专项资金开设（个别情形）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "财政部门在代理银行开设的账户种类及用途（数据字典口径，rec_acct_type）",
+      "caliber": "按 fiscal_collection_view.rec_acct_type（字典136：0虚拟/1财政专户/2汇缴专户/3待解缴/4单位监管/5国库/7单位清分/9其他）分组作答；实际数据仅出现 3 类——1 财政专户（非税收入收缴专户，绝对主体）、5 国库（少量）、3 待解缴（暂存待划转）；用途按账户类型×收入分类的承接分布呈现",
+      "dimensions": "按收款账户类型 frecaccttype 分组，交叉收入分类",
+      "time_window": "无时间过滤（全量数据范围）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "账户种类分类体系",
+        "caliber_same": false,
+        "value_same": null,
+        "note": "两侧各执一套分类：datus 用制度口径三类（非税收入汇缴专户/零余额账户/特设专户），cube 用数据字典 frecaccttype（财政专户/国库/待解缴；字典 8 类中仅 3 类有数据）。'非税收入汇缴专户'与字典'2 汇缴专户'名称相近但该字典类在数据中无行；制度三类与字典三类之间无字段级映射，属同题不同口径。"
+      }
+    ],
+    "summary": "同题两套口径：datus 答制度账户（自述无法用本库量化），cube 答数据字典账户类型（有指标有数）。分类体系不对齐，需拍板统一口径后两侧补建模。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "datus",
+      "type": "补维度",
+      "target": "收款账户类型维度（fne_paybook_full_high.frecaccttype → 字典136）",
+      "suggest": "datus 语义层补'收款账户类型'维度（含字典 8 类标签），使账户类问题可路由到数据口径作答，而非只能引用制度条文"
+    },
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "词典/ai_context 缺'代理银行账户'制度词条（cube 卡内自述：词典'代理银行账户'无词条）",
+      "suggest": "cube 侧 ai_context 增补制度账户（非税收入汇缴专户/零余额账户/特设专户）与 frecaccttype 数据字典的对应关系及各自用途说明"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q02.json",
+    "rounds/round-02/answers/cube/q02.json"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "q15",
+  "question": "今年各代理银行代收的非税收入金额排名情况怎么样？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    }
+  ],
+  "sql": "SELECT paybook_full_high.frecbankname AS frecbankname, sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY paybook_full_high.frecbankname ORDER BY \"非税缴款金额\" DESC SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 各代理银行代收非税收入排名（2026 年）\n\n**问题解读**：统计今年（2026-01-01 至 2026-10-23，即 2026 全年 `2026-01-01 ~ 2027-01-01` 半开区间）各代理银行代收的非税收入金额，并按金额降序排名。\n\n**使用指标**：`非税缴款金额`（缴款通知书明细口径，单位：元，时间轴锚定开票日 fill_date），按 `收款银行名称（frecbankname）` 作为代理银行口径分组。\n\n### 排名结果\n\n| 排名 | 代理银行 | 2026 年代收金额（元） | 占比 |\n|:---:|:---|---:|---:|\n| 1 | 中国工商银行 | 14,913,182.37 | 99.52% |\n| 2 | 人民银行 | 51,157.00 | 0.34% |\n| 3 | 中国建设银行 | 18,948.44 | 0.13% |\n| 4 | 中国邮政储蓄银行 | 1,981.32 | 0.01% |\n| 5 | 支付宝 | 1.00 | ≈0% |\n| — | **合计** | **14,985,270.13**（约 1,498.53 万元） | 100% |\n\n### 要点\n\n- **工商银行一家独大**：代收金额占今年非税缴款总额约 99.5%，其余渠道合计不足 0.5%。\n- 人民银行作为国库收款渠道位列第二；建设银行、邮储银行规模很小；支付宝仅 1 笔 1 元，疑似测试数据。\n\n### 说明与局限\n\n- 银行名称源数据带尾部空格（如“中国工商银行 ”），上表已整理显示；全库共 9 个 distinct 银行取值，今年有缴款发生的仅上述 5 家。\n- 数据来自当前测试环境目录（yunnan0508），含少量疑似测试数据（如支付宝 1 元），排名供参考。\n- “今年”按指标默认的开票日（fill_date）口径统计；如需按实际缴款日（pay_date）口径或与 2025 年对比，请告知，我可重新统计。",
+  "errors": [],
+  "elapsed_s": 9.1,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q15.payload.jsonl"
+}

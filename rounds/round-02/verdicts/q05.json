@@ -1,0 +1,45 @@
+{
+  "id": "q05",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "缴款→缴入国库的资金链环节序列（业务流程题）",
+      "caliber": "①缴款（fne_paybook_full_high，银行代收，钱进过渡/汇缴账户）→②清分（fne_funddivide_new，定中央/省/市/县归属）→③汇总（fne_funddivide_transfer，归入清分汇总批次 fcollectid）→④划拨（fne_funddivide_transfer+fne_transfer_new，划拨指令与银行划转）→⑤缴库（fne_treasury_transfer_new）→⑥对账/财政记账（本库无落地表，数据空缺）。旁路：une_ 汇缴支线（fne_agen_treasury_new）、退付（fne_backpay）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "缴款→缴入国库的资金链环节序列（业务流程题）",
+      "caliber": "①开票（fill_date）→②缴款（pay_date，直缴/汇缴）→③缴款确认（confirm_date，fstate=3，975 笔中 965 笔已确认）→④资金到账/对账（received_date/reconcile_date，meta 明示两者无严格先后）→⑤财政开具缴库单（build_date，缴库单科目=清分归属口径）→⑥缴库回执 status='9'→入国库（enter_date）→⑦到账对账（reconcile_status='1'）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "资金链环节序列",
+        "caliber_same": false,
+        "value_same": null,
+        "note": "缴款→缴库主向顺序双侧一致；环节切分不同（客观记录）：datus 按资金批次环节（清分、汇总单列），cube 链条未单列清分/汇总（清分仅以缴库单科目口径出现），而以单据状态环节（确认/到账/回执）展开，datus 链条未列；对账环节载体表述相异——datus 称无落地表（仅散落 freconcilestatus 字段），cube 以宽表字段 reconcile_date/reconcile_status 承载。"
+      }
+    ],
+    "summary": "主链方向一致，环节切分两侧不同（资金批次环节 vs 单据状态环节），对账环节载体表述相异；需拍板 canonical 环节链后两侧对齐。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "资金链环节模型（datus：缴款→清分→汇总→划拨→缴库；cube：开票→缴款→确认→到账/对账→缴库单→回执→入国库）",
+      "suggest": "以课本 B10/B14 拍板 canonical 环节链与命名（资金环节与单据状态环节如何并存对应），两侧 ai_context 对齐：datus 补确认/到账/回执状态环节，cube 补清分/汇总环节；对账/记账的数据空缺与字段载体差异一并明示"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q05.json",
+    "rounds/round-02/answers/cube/q05.json"
+  ]
+}

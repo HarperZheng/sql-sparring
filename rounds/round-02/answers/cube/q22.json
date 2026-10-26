@@ -1,0 +1,20 @@
+{
+  "id": "q22",
+  "question": "今年已开具但缴款人一直未缴款的缴款通知书，按未缴时长分档统计，各档有多少笔？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": []
+    }
+  ],
+  "sql": "SELECT toDateTime64(toStartOfDay(toTimeZone(toDateTime64(toDateOrNull(`fiscal_collection`.`ffilldate`), 0), 'UTC'), 'UTC'), 0, 'UTC') `fiscal_collection_view__fill_date_day`, COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`ffilldate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`ffilldate`) <= parseDateTimeBestEffort(?)) AND (`fiscal_collection`.`fstate` = ?)\nGROUP BY 1\nORDER BY  1  ASC\nLIMIT 3662026-01-01T00:00:00.000Z2026-10-23T23:59:59.999Z1",
+  "sql_count": 1,
+  "answer": "口径声明：'已开具但一直未缴款'取缴款书状态 state='1'（正常/待缴款），'今年'按开具日期 fill_date 落在 2026-01-01～2026-10-23，笔数用缴款书笔数 paybook_count（distinct 票，非明细行数）。查询返回空集（totalRows=0）：该时间范围内不存在待缴款状态的缴款书，因此各档（≤7天/8–30天/31–60天/>60天，分档边界为拍板假设）均为 0 笔。数据范围以本次查询为准（状态 1 + 今年开具）。",
+  "errors": [],
+  "elapsed_s": 31.4,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q22.raw.json"
+}

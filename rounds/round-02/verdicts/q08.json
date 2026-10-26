@@ -1,0 +1,48 @@
+{
+  "id": "q08",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "财政电子票据能否作废及作废条件（业务边界题）",
+      "caliber": "电子票据不能作废（业务规则+数据反向印证：作废落地仅 ube_stock_invalid 未使用票据库存作废 39 行；电子票主表 une_cbill_new 无作废状态码；冲红表 une_writeoff_new 本库 0 行）。作废=纸质票据专属异常处理，须同时满足：①开票当月未跨月；②业务未生效（缴款人未完成缴款或业务未记账）；③全联次可收回并注明作废。不满足条件的替代路径=开红字发票冲红（跨月/已认证已记账/电子票据一律只能冲红）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "财政电子票据能否作废及作废条件（业务边界题）",
+      "caliber": "cube 侧 nomatch：语义层无票据作废/冲红知识（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "作废可行性与条件",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 nomatch，无口径可比；datus 依据业务文档作答并以 une_writeoff_new 空表、ube_stock_invalid 39 行、une_cbill_new 无作废状态码做数据反向印证。"
+      }
+    ],
+    "summary": "单侧作答（cube nomatch），无法互证，待人工确认 datus 答案作为回归基准。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "语义层缺票据作废/冲红知识（une_writeoff_new 空表、ube_stock_invalid 未建模）",
+      "suggest": "ai_context 增补：电子票据不能作废、纸质票作废三条件（当月/业务未生效/全联次可收回）、超条件走冲红；本库冲红数据空缺（une_writeoff_new 0 行）需明示"
+    }
+  ],
+  "corrected": {
+    "answer": "财政电子票据不能作废；作废是纸质票据专属的异常处理，须同时满足：开票当月未跨月、缴款人未完成缴款或业务未记账、全联次可收回并注明作废。不满足条件的替代路径是开红字发票冲红（跨月、对方已认证/已记账、电子票据一律只能冲红）。",
+    "basis": "倾向采纳 datus 作答卡（业务文档 + 库内实测：ube_stock_invalid 39 行、une_writeoff_new 0 行、电子票主表无作废状态码）；cube 侧 nomatch，无对照证据"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q08.json",
+    "rounds/round-02/answers/cube/q08.json"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "q27",
+  "question": "有没有资金尚未缴入国库、就已经完成对账或财政记账的记录？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库批次数"
+      ]
+    },
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "清分金额_同比",
+        "缴库金额_同比",
+        "缴库金额_环比",
+        "清分金额_环比",
+        "汇总批次数",
+        "清分金额",
+        "非税缴款金额_同比",
+        "非税缴款金额_环比",
+        "清分率",
+        "未划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库批次数"
+      ],
+      "dimensions": [
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额",
+        "非税缴款笔数",
+        "清分金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.is_cleared",
+        "paybook_full_high.is_received",
+        "paybook_full_high.fistransfer"
+      ]
+    }
+  ],
+  "sql": "SELECT paybook_full_high.fisclear AS is_cleared, paybook_full_high.fisreceived AS is_received, paybook_full_high.fistransfer AS fistransfer, sum(paybook_full_high.famt) AS \"非税缴款金额\", COUNT(DISTINCT paybook_full_high.fid) AS \"非税缴款笔数\", sum(paybook_full_high.fimamt) AS \"清分金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high GROUP BY paybook_full_high.fisclear, paybook_full_high.fisreceived, paybook_full_high.fistransfer SETTINGS join_use_nulls = 1",
+  "sql_count": 2,
+  "answer": "## 分析报告：资金未入国库但已完成对账/财政记账的记录排查\n\n**解读的问题**：是否存在资金尚未缴入国库（未到账/未划拨/未缴库），但清分对账或财政记账环节已完成的记录？范围：全库（yunnan0508），截至 2026-10-23。\n\n**使用的指标**：非税缴款金额 / 非税缴款笔数 / 清分金额（缴款书口径，fid 去重）；缴库金额 / 缴库批次数（缴库报文口径，fid 去重）。\n\n### 结论：存在，集中在缴款侧的\"已清分记账但资金未上缴国库\"\n\n按 `is_cleared`（是否已清分=对账/记账完成）× `is_received`（资金是否到账）× `fistransfer`（是否已划拨）交叉：\n\n| 状态组合 | 笔数 | 缴款金额 |\n|---|---|---|\n| **已清分 + 资金未到账**（最异常） | **119 笔** | **159.87 亿元** |\n| 已清分 + 已到账 + 未划拨（fistransfer=0 或空） | 444 笔 | 3,057.36 万元 |\n\n- **119 笔已清分但资金从未到账**：金额与 2022 年清分 cohort（159.87 亿）完全吻合，属历史存量——清分记账完成但资金链条未闭环，是最典型的\"先记账、后资金\"记录。\n- **444 笔已到账、已清分、但未划拨上缴**：资金滞留在收缴侧未进入国库环节（其中 349 笔划拨标志为空、未回填，不能 100% 断定未划拨，但均未出现\"已划拨\"标志）。\n\n### 缴库侧交叉验证：未发现反向异常\n\n缴库报文 fstatus × income_status 全量组合仅 3 种，**不存在\"未缴库(fstatus=0)但国库已确认入库(income_status=1)\"的记录**：\n\n| fstatus | income_status | 金额 | 批次数 |\n|---|---|---|---|\n| 0 未缴库 | 0 未确认 | 2,948.88 万 | 44 |\n| 9 已缴库 | 1 已确认入库 | 1.11 万 | 23 |\n| 9 已缴库 | 0 待国库确认 | 3.52 万 | 3 |\n\n### 附注\n- 1 笔已到账但未清分的记录（is_cleared=0）出现 111 元已清分金额，为标志与金额的轻微错位。\n- 缴款金额合计口径为明细行 SUM；\"未划拨\"中 349 笔因划拨标志未回填存在不确定性。",
+  "errors": [],
+  "elapsed_s": 71.8,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q27.payload.jsonl"
+}

@@ -1,0 +1,60 @@
+{
+  "id": "q25",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "票据已作废但对应缴款仍计入收入的排查",
+      "caliber": "timeout：188.3s 超出 180s 墙钟上限（自述'连续两次超时，拆小查询重试'），仅留下按 fstate 分组的探索 SQL，无结论",
+      "dimensions": null,
+      "time_window": "不适用（超时无作答）",
+      "values": null
+    },
+    "cube": {
+      "metric": "票据已作废但对应缴款仍计入收入的排查（fiscal_collection_view 全量）",
+      "caliber": "'票据作废'=缴款书状态 state='2'（meta ai_context：1=待缴款、2=作废、3=已缴款确认）；'计入收入'以双金额口径并列审视：amt（缴款明细金额）与 entered_amt（到账金额，freceiveddate 非空的 fimamt）；全量无时间过滤",
+      "dimensions": "按缴款书状态分组，作废票下钻到缴款码/缴款日/收入项目",
+      "time_window": "无时间过滤（全量数据范围）",
+      "values": {
+        "作废票明细": 1,
+        "作废票缴款书": 1,
+        "amt口径金额": 1.0,
+        "entered_amt口径": null,
+        "结论": "不构成计入收入金额偏差"
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "作废票计入收入排查",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "datus 超时无效；cube 作答完整：全库仅 1 笔作废（state=2）缴款 1 元且资金未到账（entered_amt=null），结论'不构成作废票计入收入的金额偏差'。附口径分歧提示：cube 以 fstate=2 判'作废'，而 datus q08 的口径称电子票据无作废态（作废仅纸质/库存号段）——state=2 的业务语义需拍板核对。"
+      }
+    ],
+    "summary": "datus 超时（188.3s>180s），cube 单侧作答：仅 1 笔 1 元作废票且未到账，不构成偏差；'作废=fstate=2'的语义与 datus q08 口径存在分歧，复验时一并核对。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "datus",
+      "type": "修bug",
+      "target": "作答超时：188.3s 超出 180s 墙钟，两次超时后拆小查询仍未收敛",
+      "suggest": "复验重跑；异常校验类题需控制查询规模与调用次数"
+    },
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'票据作废'的判定字段（cube=缴款书 fstate='2'；datus q08 口径称电子票据无作废态）",
+      "suggest": "核对 fstate=2 的业务含义并统一'作废'口径写双侧 ai_context 后复验"
+    }
+  ],
+  "corrected": {
+    "answer": "未发现作废票对应缴款被计入收入的金额偏差：全库仅 1 笔缴款书处于作废状态（fstate=2，1 条明细行），缴款金额 1 元，资金从未到账（到账口径 entered_amt 为空），即该作废票未产生实际到账收入。",
+    "basis": "倾向采纳 cube 作答卡（state=2 作废口径 + amt/entered_amt 双口径并列，全量查询无截断）；datus 侧超时无对照；fstate=2='作废'的语义建议复验时与 datus 侧核对（其 q08 口径称电子票据无作废态）"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q25.json",
+    "rounds/round-02/answers/cube/q25.json"
+  ]
+}

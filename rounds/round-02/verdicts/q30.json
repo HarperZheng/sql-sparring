@@ -1,0 +1,55 @@
+{
+  "id": "q30",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "直缴/汇缴两路缴款→缴入国库环节耗时对比（明确拒答，仅给业务量级）",
+      "caliber": "自述无法作答：目录无环节耗时类指标；trans_date 划转日仅 2/1,281 行有值、enter_date 到账/入库日仅 1 行有值（环节日期差不可算）；缴库金额锚报文日期与开票 cohort 不同轴；缴库侧（treasury_transfer_dedup）无 fbustype 维度，无法按直缴/汇缴拆分缴库时效。仅给量级参考：汇缴 17 笔 1,496.76 万元、直缴 45 笔 1.77 万元（金额上汇缴占 99.9%）",
+      "dimensions": "量级按 fbustype（1=直缴/2=汇缴）切片",
+      "time_window": "2026-01-01 ~ 2026-10-23（量级口径）",
+      "values": {
+        "汇缴": "17 笔 / 1,496.76 万元",
+        "直缴": "45 笔 / 1.77 万元",
+        "耗时对比": "拒答（关键字段缺失无法计算）"
+      }
+    },
+    "cube": {
+      "metric": "直缴/汇缴两路缴款→缴入国库环节耗时对比",
+      "caliber": "cube 侧 nomatch：语义层无环节耗时类口径（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（无作答）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "直缴/汇缴环节耗时对比",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "两侧均无有效作答：datus 明确拒答（自述字段级原因：trans_date 仅 2/1,281 行、enter_date 仅 1 行、缴库侧无 fbustype 维度），仅给直缴/汇缴业务量级；cube nomatch（32.5s）。注意：datus status='answer'（拒答也计为作答），round.py 的共同缺口检测基于 nomatch/failed 状态，本题不会被其捕获，需人工跟进——这是该检测机制的已知盲区实例。"
+      }
+    ],
+    "summary": "双侧均未真正作答（datus 拒答仅给量级、cube nomatch），但 datus status=answer 使轮报共同缺口检测不触发；待人工跟进字段回填后复验。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "补指标",
+      "target": "环节耗时类指标（缴款→到账→清分→划拨→缴库间隔天数，按 fbustype 切片）+ trans_date/enter_date 字段回填（当前近全空）",
+      "suggest": "先回填划转/到账日期字段，再双侧建耗时指标；否则新建指标也无数据可算（datus 已给出此判断）"
+    },
+    {
+      "side": "datus",
+      "type": "补维度",
+      "target": "缴库侧 fbustype（缴款方式）维度（treasury_transfer_dedup 无该维度，无法按直缴/汇缴拆分缴库时效）",
+      "suggest": "缴库侧补缴款方式维度或建立缴款书↔缴库批次关联，使末端环节可按直缴/汇缴对比"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q30.json",
+    "rounds/round-02/answers/cube/q30.json"
+  ]
+}

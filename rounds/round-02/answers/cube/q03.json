@@ -1,0 +1,13 @@
+{
+  "id": "q03",
+  "question": "财政系统里的财政用户和单位用户，分别负责哪些业务？",
+  "status": "nomatch",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "",
+  "errors": [],
+  "elapsed_s": 14.6,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q03.raw.json"
+}

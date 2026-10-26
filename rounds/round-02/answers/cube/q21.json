@@ -1,30 +1,13 @@
 {
   "id": "q21",
-  "question": "执收单位和预算单位是一回事吗？",
-  "status": "answer",
-  "metrics_hit": [
-    {
-      "measures": [
-        "fiscal_collection_view.count"
-      ],
-      "dimensions": [
-        "fiscal_collection_view.chg_agency_code"
-      ]
-    },
-    {
-      "measures": [
-        "fiscal_collection_view.count"
-      ],
-      "dimensions": [
-        "fiscal_collection_view.rec_bgt_agen_code"
-      ]
-    }
-  ],
-  "sql": "SELECT `fiscal_collection`.`fchgagencode` `fiscal_collection_view__chg_agency_code`, count(*) `fiscal_collection_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nGROUP BY 1\nORDER BY  2  DESC\nLIMIT 100",
-  "sql_count": 2,
-  "answer": "不是一回事。口径声明（依据 fiscal_collection_view 成员面）：\"执收单位\"对应缴款侧的 chg_agency_code/chg_agency_name（缴款书票面执收单位，folders 归 paybook_side 侧）；模型中\"预算单位\"语义落在收入侧的 rec_bgt_agen_code/rec_bgt_agen_name（title=收入方预算归类），另有收入单位 rec_agency_code——三者是不同成员、不同侧，不可混用。实测验证（缴款全量 1281 行）：执收单位有 36 个编码取值，而收入方预算归类当前全部为空（无值），进一步说明两者不是同一字段/同一实体。另注：口径词典中\"执收单位\"词条为 legacy（指向 2026-10 重建前的 daybook，映射同为缴款侧 chg_agen），与新模型 chg_agency 同侧一致；\"预算单位\"无词条。数据范围：fiscal_collection_view 全量（按 pay_date 无时间过滤），无截断。",
+  "question": "今年从缴款到资金缴入国库，各笔缴款的全程耗时按时间区间分档后，各档的笔数分布如何？",
+  "status": "nomatch",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "",
   "errors": [],
-  "elapsed_s": 38.5,
+  "elapsed_s": 18.8,
   "arbiter": null,
   "raw_path": "rounds/round-02/runs/cube/q21.raw.json"
 }

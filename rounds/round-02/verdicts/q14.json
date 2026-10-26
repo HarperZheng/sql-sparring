@@ -1,0 +1,58 @@
+{
+  "id": "q14",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "缴款金额前十的缴款人（实际以执收单位近似）",
+      "caliber": "自述'现有指标体系无缴款人（付款方）维度，已用执收单位（fchgagenname）口径近似'：sum(famt) 按 JOIN fab_agen 后的单位名分组，锚点=开票日 fill_date；2026 年有缴款执收单位 9 个（不足 10），榜首 '001' 约 1,491.67 万元，多含测试字样",
+      "dimensions": "按执收单位（fchgagenname，经 fab_agen 主档）分组 Top10",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "榜首(测试云南测试环境)": 14916711.37,
+        "有缴款单位数": 9
+      }
+    },
+    "cube": {
+      "metric": "缴款金额前十的缴款人（payer_name）",
+      "caliber": "sum(amt) 按 payer_name 分组 Top10，锚点=缴款日期 pay_date；实测 payer_name 经 access_policy 脱敏，2026 年该列无有效缴款人名称，仅 1 组且名称为 null，无法给出前十名单；自述替代口径（执收单位 chg_agency_code 或缴款码 pay_code）需用户拍板后另查",
+      "dimensions": "按缴款人 payer_name 分组（脱敏全空）",
+      "time_window": "锚点=缴款日期 pay_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "缴款人名单": null,
+        "期内缴款合计": 14985270.13,
+        "缴款书": 56
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "前十缴款人名单",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "双侧均未能按缴款人口径作答（客观记录）：datus 无缴款人维度，改用执收单位近似（答的是'执收单位前十'，非原问）；cube 有 payer_name 维度但脱敏全空，无法给名单。两侧缺口性质不同（缺建模 vs 数据脱敏），无法互证。"
+      }
+    ],
+    "summary": "缴款人口径双侧均答不出：datus 缺维度（用执收单位近似属口径偷换），cube 维度被脱敏全空；待人工确认处理方向（补建模/调整脱敏/改用替代口径）。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "datus",
+      "type": "补维度",
+      "target": "缴款人（付款方）维度",
+      "suggest": "语义层补缴款人维度（票面缴款人字段），使'缴款人'类问题按原问作答；近似口径（执收单位）仅应在自述说明下使用"
+    },
+    {
+      "side": "cube",
+      "type": "补维度",
+      "target": "payer_name 全列脱敏为空（access_policy）",
+      "suggest": "与数据管理员确认脱敏策略：开放可用缴款人标识或提供替代键（缴款码 pay_code），并写入 ai_context；否则缴款人类问题需明示不可答"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q14.json",
+    "rounds/round-02/answers/cube/q14.json"
+  ]
+}

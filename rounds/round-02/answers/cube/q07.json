@@ -1,0 +1,13 @@
+{
+  "id": "q07",
+  "question": "统计一笔缴款收了多少钱时，应该按缴款通知书票面的总金额算，还是按各征收项目的金额明细算？",
+  "status": "answer",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "口径声明：按各征收项目的金额明细算——明细金额用 fiscal_collection_view.amt，按缴款通知书（paybook）分组或直接汇总即得一笔缴款收到的钱。缴款通知书票面的总金额 fiscal_collection_view.total_amt 是整票金额复印在每一条项目明细行上的冗余列，禁止 sum（一票多项目行会把整票金额重复计入多次），只能用于单票抽查或展示。该口径为 ai_context 唯一约定，无歧义分叉，未启用词典。",
+  "errors": [],
+  "elapsed_s": 35.5,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q07.raw.json"
+}

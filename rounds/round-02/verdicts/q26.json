@@ -1,0 +1,56 @@
+{
+  "id": "q26",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "'票已开、款未缴'情况排查（全量，按开票年分组）",
+      "caliber": "'缴款完成'以资金到账判定（is_received='0' 即缴款未完成），笔数 fid 去重；结论'有，且规模不小'：2026 年开票 62 笔中 21 笔（1,496.82 万元）资金未到账，全量 382 笔约 160.79 亿元（2022 年 139 笔 159.86 亿为绝对大头）；自述时间锚若按 pay_date 会略有差异，is_cleared（清分）未计入本口径",
+      "dimensions": "按开票年分组；另按执收单位下钻（31 个单位，含测试单位）",
+      "time_window": "锚点=开票日 fill_date；全量 2021–2026（按年分组）",
+      "values": {
+        "2026年未缴款笔数": 21,
+        "2026年未缴款金额(万元)": 1496.82,
+        "全量未缴款笔数": 382,
+        "全量未缴款金额": "约160.79亿元",
+        "2022年未缴款": "139 笔 / 159.86 亿元"
+      }
+    },
+    "cube": {
+      "metric": "'票已开、款未缴'情况排查（fiscal_collection_view 全量）",
+      "caliber": "'缴款未完成'=缴款书状态 state='1'（待缴款，meta ai_context：1=正常/待缴款、2=作废、3=已缴款确认）；实测全量仅 1 张缴款书（1 条明细行）待缴款，票面 120.8 元；其余 965 张已缴款确认（183.31 亿元）、8 张状态为空（115.66 万元）、1 张已作废",
+      "dimensions": "按缴款书状态分组",
+      "time_window": "无时间过滤（全量数据范围）",
+      "values": {
+        "待缴款(state=1)缴款书": 1,
+        "待缴款票面金额(元)": 120.8,
+        "已缴款确认缴款书": 965,
+        "状态为空缴款书": 8
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "票先开款未缴排查",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "'缴款未完成'判定字段两侧不同（datus=is_received='0' 资金未到账；cube=state='1' 待缴款状态，与 q22 同根因），结果量级悬殊：datus 2026 年 21 笔 1,496.82 万元 vs cube 全量仅 1 张 120.8 元。定性结论两侧一致（都答'存在'），但规模判定完全相反；cube 那 1 张待缴款是否包含于 datus 的未到账集合内未验证。"
+      }
+    ],
+    "summary": "两侧均有作答但'缴款未完成'判定字段不同（is_received vs state='1'，q22 同根因）：21 笔 1,496.82 万元 vs 1 张 120.8 元，判建模差异，待拍板字段后复验。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'缴款未完成'的判定字段（datus=is_received='0' 资金未到账；cube=state='1' 待缴款状态；q22 同根因）",
+      "suggest": "与 q22 一并拍板：数据核查 datus 21 笔未到账记录的 fstate 实际取值、cube 1 张 state='1' 记录的 is_received 取值，统一判定字段写双侧 ai_context 后复验"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q26.json",
+    "rounds/round-02/answers/cube/q26.json"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "q22",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "已开具未缴款缴款通知书按未缴时长分档（2026 年）",
+      "caliber": "自述'本轮对已缓存的天粒度查询结果逐笔复核（未缴天数=2026-10-23−开票日），数据与上轮更正版一致'（复用历史答案，本轮无新鲜 SQL）；口径=欠缴过滤 is_received='0'（资金未到账，语义层声明的欠缴字段），笔数=fid 去重，快照时点 2026-10-23；自述 is_received='0' 不排除个别已缴未到账",
+      "dimensions": "按未缴时长档分组（≤1月/1–2月/2–3月/3–6月/6–9月）",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2026-10-23]，快照 2026-10-23",
+      "values": {
+        "≤1个月": 9,
+        "1–2个月": 0,
+        "2–3个月": 1,
+        "3–6个月": 9,
+        "6–9个月": 2,
+        "合计": 21
+      }
+    },
+    "cube": {
+      "metric": "已开具未缴款缴款通知书按未缴时长分档（2026 年）",
+      "caliber": "'已开具但一直未缴款'=缴款书状态 state='1'（待缴款，meta ai_context：1=正常/待缴款、2=作废、3=已缴款确认）；paybook_count 缴款书笔数；实测查询空集（2026 年开具的缴款书中不存在 state='1'），各档（≤7天/8–30天/31–60天/>60天，边界系拍板假设）均 0 笔",
+      "dimensions": "按未缴时长档分组（≤7天/8–30天/31–60天/>60天）",
+      "time_window": "锚点=开具日期 ffilldate 经 toTimeZone UTC；窗口 [2026-01-01, 2026-10-23]",
+      "values": {
+        "各档": 0,
+        "合计": 0
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "未缴款缴款通知书分档",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "直接矛盾：datus 按 is_received='0'（资金未到账）得 21 笔，cube 按 state='1'（待缴款状态）得 0 笔——'未缴款'判定字段两侧不同且结果互斥。cube 的空集意味着 datus 的 21 笔欠缴 fstate 均非 '1'（可能已确认但资金未到账，恰与 datus 自述'不排除已缴未到账'相合），需先做数据核查再拍板判定字段。另 datus 本轮复用历史答案无新鲜 SQL（复用答案特例，证据不足）；分档边界两侧亦不同。"
+      }
+    ],
+    "summary": "21 笔 vs 0 笔直接矛盾：'未缴款'判定字段不同（资金未到账 is_received vs 待缴款状态 state='1'）；需先核查 21 笔的 fstate 实际取值，再拍板字段与分档边界后复验。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'未缴款/欠缴'的判定字段（datus=is_received='0' 资金未到账；cube=state='1' 待缴款状态；q26 同根因）",
+      "suggest": "先数据核查 datus 21 笔欠缴明细的 fstate 实际取值，再拍板'未缴款'与'未到账'两概念的判定字段并写双侧 ai_context；分档边界一并对齐后复验"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q22.json",
+    "rounds/round-02/answers/cube/q22.json"
+  ]
+}

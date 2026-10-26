@@ -1,0 +1,38 @@
+{
+  "id": "q01",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "非税收入收缴业务的起点与终点（业务流程概念题）",
+      "caliber": "起点=执收单位发起缴款通知书（缴款人票面信息在主表 FNE_PAYBOOK，征收项目与金额在明细表 FNE_PAYBOOK_ITEM）；终点=资金缴入国库（缴库，FNE_TREASURY_TRANSFER）。补充：对账/财政记账环节当前库无落地表；票据流与资金流并行，不是资金链起终点",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "非税收入收缴业务的起点与终点（业务流程概念题）",
+      "caliber": "起点=执收单位开具缴款书/待缴款（fill_date 票面填开日期，state=1 待缴款为业务起点状态）；中间环节=资金到账（received_date）→按 calc_source 分成/提留清分→确定收入归属；终点=缴库入国库（fiscal_treasury_view：缴库单→缴库回执 status='9'→已入国库 enter_status）；专户管理资金（bgt_style=2）以划入专户为终点",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "业务起点与终点",
+        "caliber_same": true,
+        "value_same": null,
+        "note": "双侧一致：起点=执收单位开具缴款通知书，终点=资金缴入国库（缴库）。cube 侧补充'专户管理资金以划入专户为终点'（bgt_style=2），datus 侧 q04/q05 同样记录资金可划入国库或财政专户，属一致扩展，非分歧。"
+      }
+    ],
+    "summary": "概念题双侧结论一致：起点=开具缴款书，终点=缴库入国库；对账/记账环节 datus 明示当前库无落地表。"
+  },
+  "verdict": "互证通过",
+  "verdict_detail": [],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q01.json",
+    "rounds/round-02/answers/cube/q01.json"
+  ]
+}

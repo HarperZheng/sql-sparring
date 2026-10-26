@@ -1,0 +1,34 @@
+{
+  "id": "q15",
+  "question": "今年各代理银行代收的非税收入金额排名情况怎么样？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.rec_bank_code",
+        "fiscal_collection_view.rec_bank_name"
+      ]
+    },
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.paybook_count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.acc_agen_code",
+        "fiscal_collection_view.acc_agen_name"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_collection`.`frecbankcode` `fiscal_collection_view__rec_bank_code`, `fiscal_collection`.`frecbankname` `fiscal_collection_view__rec_bank_name`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, COUNT(DISTINCT `fiscal_collection`.`fpaycode`) `fiscal_collection_view__paybook_count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1, 2\nORDER BY  3  DESC\nLIMIT 1002026-01-01T00:00:00.000Z2026-12-31T23:59:59.999Z",
+  "sql_count": 2,
+  "answer": "口径声明：主题 fiscal_collection_view（缴款全景）；「今年」= pay_date 在 2026-01-01 至 2026-12-31；金额用 amt（缴款明细金额），笔数用 paybook_count（缴款书笔数，count 为明细行数勿混用）；「非税收入」在本数据集即全部缴款口径（本环境收入类别均为非税类，未按 income_sort 再过滤）。「代理银行」存在两种成员口径且词典无该词条：收款银行（rec_bank_code）与代理单位（acc_agen_code），两表并出、未静默择一。数据范围：2026 年共 9 个代理单位 / 5 个收款银行，全量合计 14,985,270.13 元、56 笔缴款书；两表均未截断（limit 100，行数 9/5 全量返回）。按收款银行口径，工行以 1491.32 万元居首（占全量 99.52%），其后为人民银行 51,157 元、建行 18,948.44 元；名称列含脏数据（一码多名/尾部空格）仅跟随展示。",
+  "errors": [],
+  "elapsed_s": 62.0,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q15.raw.json"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "q11",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "已缴入国库的非税资金总额",
+      "caliber": "缴库金额指标：fne_treasury_transfer_new 按 fid 去重，过滤 缴库状态 fstatus='9'，时间锚=报文日期 fmsgdate ∈ [2026-01-01, 2026-10-24)；结果 33,306.09 元（其中国库确认入库 income_status='1' 仅 100.00 元，其余 33,206.09 元为'已缴库待国库确认'中间态）",
+      "dimensions": "按国库入库确认状态（income_status）细分",
+      "time_window": "锚点=报文日期 fmsgdate；窗口 [2026-01-01, 2026-10-24)",
+      "values": {
+        "合计": 33306.09,
+        "国库已确认": 100.0,
+        "已缴库待确认": 33206.09
+      }
+    },
+    "cube": {
+      "metric": "已缴入国库的非税资金总额（fiscal_treasury_view 缴库入库视图）",
+      "caliber": "sum(amt) 明细按 fid 去重后可加，过滤 入库状态 enter_status='1'（已入国库），时间锚=入国库日期 enter_date；口径声明自称'已入国库'最严格口径",
+      "dimensions": null,
+      "time_window": "锚点=入国库日期 fenterdate；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "合计": 33306.09,
+        "缴库明细": 2,
+        "缴库单": 2
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "已缴入国库的资金总额",
+        "caliber_same": false,
+        "value_same": true,
+        "note": "数值巧合一致（33,306.09 元），但口径字段与语义不同（客观记录）：①状态判定——datus 按缴库单状态 fstatus='9' 并把 33,206.09 元标为'已缴库待国库确认'（income_status=0），cube 按 fenterstatus='1' 把同一批资金计入'已入国库'——对'是否已缴入国库'两层的回答相反；②时间锚——datus 用报文日期 fmsgdate，cube 用入国库日期 fenterdate。数值一致系两套过滤恰好覆盖同一 2 行明细（未验证其恒成立）。"
+      }
+    ],
+    "summary": "总额巧合一致（33,306.09 元），但'已缴入国库'的状态字段与语义两侧相反（datus：33,206.09 元待国库确认；cube：同批已入国库），时间锚也不同（报文日 vs 入库日）——属建模差异，需拍板'已缴入国库'的 canonical 定义。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'已缴入国库'的状态判定与时间锚（datus：fstatus='9'+income_status 分层、锚 fmsgdate；cube：fenterstatus='1'、锚 fenterdate）",
+      "suggest": "拍板'已缴入国库'以哪个状态为准（缴库单状态 fstatus=9，或国库确认入库 income_status/enter 回执），两侧语义层对齐状态字段与时间锚；拍板前本题数值一致不可视为口径互证"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q11.json",
+    "rounds/round-02/answers/cube/q11.json"
+  ]
+}

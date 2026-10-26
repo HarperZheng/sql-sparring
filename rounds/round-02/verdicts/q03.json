@@ -1,0 +1,48 @@
+{
+  "id": "q03",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "财政用户与单位用户的职责划分（系统角色概念题）",
+      "caliber": "财政用户=资金收上来之后的管理与监督：清分（FNE_FUNDDIVIDE）、汇总（FNE_COLLECT_TO_TRANSFER）、划拨（FNE_CAPITAL_TRANSFER）、缴库（FNE_TREASURY_TRANSFER）、对账/财政记账（当前库无落地表）、催缴；单位用户=资金入口处：开单（FNE_PAYBOOK+ITEM）、缴款（直缴）、汇缴（UNE_PAYBOOK+ITEM+CONFIRM，汇缴通知书=划款指令）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "财政用户与单位用户的职责划分（系统角色概念题）",
+      "caliber": "cube 侧 nomatch：语义层无系统用户角色知识（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "角色职责划分",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 nomatch，无口径可比；datus 依据业务文档'系统用户角色'节作答完整并落到 FNE_*/UNE_* 表。"
+      }
+    ],
+    "summary": "单侧作答（cube nomatch），无法互证，待人工确认 datus 答案作为回归基准。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "语义层 ai_context/词典缺'财政用户/单位用户'系统角色知识",
+      "suggest": "ai_context 增补两类用户职责（财政用户管钱的去向：清分/汇总/划拨/缴库；单位用户管钱的来源：开单/缴款/汇缴），复验时该题应可作答"
+    }
+  ],
+  "corrected": {
+    "answer": "财政用户负责资金收上来之后的管理监督：清分、汇总、划拨、缴库、对账记账、催缴（管钱的去向）；单位用户负责资金入口处：开具缴款通知书开单、直缴缴款、定期汇缴上缴（管钱的来源）；两类用户以缴款通知书衔接。",
+    "basis": "倾向采纳 datus 作答卡（基于 01-非税业务说明'系统用户角色'节，并落到 FNE_*/UNE_* 落地表）；cube 侧 nomatch，无对照证据"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q03.json",
+    "rounds/round-02/answers/cube/q03.json"
+  ]
+}

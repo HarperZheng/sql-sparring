@@ -1,0 +1,216 @@
+{
+  "id": "q24",
+  "question": "今年已下达划拨指令但资金尚未划转到账的部分，按滞留时长分档，各档金额有多大？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨完成金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "划拨金额",
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2020-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.is_received"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.received_date"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.is_received"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.received_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "metric_time"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "汇总批次数",
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.received_date"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.fill_date",
+        "paybook_full_high.received_date"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.fill_date",
+        "paybook_full_high.received_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ],
+      "dimensions": [
+        "paybook_full_high.received_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ],
+      "dimensions": [
+        "paybook_full_high.received_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "未划拨金额",
+        "汇总批次数"
+      ]
+    }
+  ],
+  "sql": "SELECT sum(CASE WHEN funddivide_transfer.fistransfer <> '1' THEN funddivide_transfer.ftransamt END) AS \"未划拨金额\", COUNT(DISTINCT funddivide_transfer.fcollectid) AS \"汇总批次数\" FROM yunnan0508.fne_funddivide_transfer AS funddivide_transfer LEFT JOIN yunnan0508.fne_paybook_full_high AS paybook_full_high ON funddivide_transfer.fpaybooksubid = paybook_full_high.fid WHERE paybook_full_high.fisreceived = '1' AND toDate(nullIf(paybook_full_high.freceiveddate, '')) >= '2023-11-08' AND toDate(nullIf(paybook_full_high.freceiveddate, '')) < '2024-11-02' SETTINGS join_use_nulls = 1",
+  "sql_count": 14,
+  "answer": "明细确认 fill_date 与 received_date 基本同日。现在按滞留时长（到账日距今 2026-10-23）分 6 档并行查询各档金额。",
+  "errors": [],
+  "elapsed_s": 150.3,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q24.payload.jsonl"
+}

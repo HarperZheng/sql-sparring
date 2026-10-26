@@ -1,0 +1,38 @@
+{
+  "id": "q06",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "执收单位与预算单位的辨析（概念辨析题）",
+      "caliber": "不是一回事：同一'单位'在两条业务线上的两种身份。预算单位=单位主档 fab_agen 的预算管理身份属性（fisbgtagen，295 个单位中 252 个纳入预算管理）及归口关系（fbgtagencode 指向归口预算单位）；执收单位=缴款流水内联字段 fchgagencode/fchgagenname（27 个执收单位编码）。两字段体系独立，fchgagencode 与 fbgtagencode 不可互等",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "执收单位与预算单位的辨析（概念辨析题）",
+      "caliber": "不是一回事：执收单位=缴款书执收方（fiscal_collection_view.chg_agency_code/chg_agency_name，实测 36 个非空编码，词典'执收单位'词条映射执收侧）；预算单位=当前模型无此成员，语义最接近'收入方预算归类' rec_bgt_agen_code/rec_bgt_agen_name，实测 1281 行全空，按'预算单位'查不出数据；两者侧别不同不可互替",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "辨析结论（是否同一概念）",
+        "caliber_same": true,
+        "value_same": null,
+        "note": "双侧结论一致：不是一回事——执收单位=收缴侧主体（谁执收），预算单位=预算管理/归属侧主体；均指出不能互等/互替。附客观差异（不影响本题判定）：预算单位的建模落点两侧不同——datus 用主档 fab_agen.fisbgtagen/fbgtagencode（252/295 有数），cube 无'预算单位'成员、rec_bgt_agen_code 全空；未来'按预算单位统计'类问题两侧将给出不同结果。"
+      }
+    ],
+    "summary": "辨析结论互证一致（不是一回事）；预算单位的建模落点两侧不同（datus 主档身份字段 vs cube 无成员、归属列全空），已客观记录供后续建模参考。"
+  },
+  "verdict": "互证通过",
+  "verdict_detail": [],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q06.json",
+    "rounds/round-02/answers/cube/q06.json"
+  ]
+}

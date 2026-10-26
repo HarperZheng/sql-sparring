@@ -1,0 +1,58 @@
+{
+  "id": "q19",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "单笔缴款金额分档的笔数分布（2026 年）",
+      "caliber": "自述'该问题与前两轮完全相同……无需重新查询，直接汇报'（复用历史答案，本轮无新鲜 SQL）；口径=单笔按明细行 famt 分档（档位分析自定：<1万/1–10万/10–50万/50–100万/≥100万），笔数=非税缴款笔数 fid 去重，锚点=开票日 fill_date",
+      "dimensions": "按金额档位分组（自定 5 档）",
+      "time_window": "锚点=开票日 fill_date；窗口 2026 年（自述数据截至 2026-10-07）",
+      "values": {
+        "<1万": 0,
+        "1万~10万": 3,
+        "10万~50万": 0,
+        "50万~100万": 0,
+        "≥100万": 59,
+        "合计": 62
+      }
+    },
+    "cube": {
+      "metric": "单笔缴款金额分档的笔数分布（2026 年）",
+      "caliber": "ask 分档口径（缴款书粒度 + 档位选项）→ 自动拍板 option-1 后追加重放遇 502 Bad Gateway，failed，无作答",
+      "dimensions": null,
+      "time_window": "不适用（无作答）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "金额分档笔数分布",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 failed（502 网关瞬时故障）无效；datus 侧复用历史答案、本轮无 SQL 执行证据（复用答案特例，证据不足）——双侧均不足以互证。另分档档位标准两侧本就不同（datus 自定 5 档；cube ask 选项以 100元/1万/10万/100万 为界），复验前需拍板统一。"
+      }
+    ],
+    "summary": "双侧均无法互证：cube 502 failed 无作答；datus 复用历史答案无本轮 SQL 证据；且分档档位标准两侧不一致，复验前需拍板。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "修bug",
+      "target": "复验链路：自动拍板后的追加重放遇 502 Bad Gateway",
+      "suggest": "网关瞬时故障，复验重跑即可；分档档位标准需先拍板（cube ask 已列 4 个选项）"
+    },
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "金额分档档位标准（datus 自定 <1万/1–10万/10–50万/50–100万/≥100万；cube ask 选项 100元以下/100–1万/1–10万/10–100万/100万以上）",
+      "suggest": "拍板统一档位边界并写入双侧 ai_context 后复验，避免分档题各答各档"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q19.json",
+    "rounds/round-02/answers/cube/q19.json"
+  ]
+}

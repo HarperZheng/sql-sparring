@@ -1,0 +1,26 @@
+{
+  "id": "q20",
+  "question": "今年完成清分的资金，按中央、省、市、县四级归属的金额占比是怎样的？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "清分金额"
+      ],
+      "dimensions": [
+        "paybook_full_high.frecrgncode"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    }
+  ],
+  "sql": "SELECT paybook_full_high.frecrgncode AS frecrgncode, sum(paybook_full_high.fimamt) AS \"清分金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE paybook_full_high.fisclear = '1' AND toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY paybook_full_high.frecrgncode SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 查询结果\n\n**问题**：今年（2026 年，2026-01-01 ~ 2026-12-31）已清分资金（`is_cleared='1'`）按中央、省、市、县四级归属的金额占比。\n\n**使用指标**：清分金额（`paybook_full_high.fimamt` 直 SUM，明细行口径，单位：元）\n\n**结果**（2026 年已清分金额合计 **13,248.86 元**）：\n\n| 归属级次 | 区划代码 | 清分金额（元） | 占比 |\n|---|---|---|---|\n| 中央 | 000000 | 0（无记录） | 0% |\n| 省 | 530000（云南省本级） | 12,753.53 | **96.26%** |\n| 市 | —（无记录） | 0 | 0% |\n| 县 | 530102（五华区） | 495.33 | **3.74%** |\n\n**说明**：\n- 今年已清分资金呈“省级为主、县级为辅，中央/市两级空缺”的分布：省级约 96.26%，县级（五华区）约 3.74%。\n- 四级映射口径：`frecrgncode` = 000000 为中央、530000 为省、后两位 00（非 000000）为市、非 00 结尾为县。\n- 结果中另有一小部分 `frecrgncode` 为空串的行，其清分金额为 NULL（空归属区划行不计金额），对占比无影响。",
+  "errors": [],
+  "elapsed_s": 8.2,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q20.payload.jsonl"
+}

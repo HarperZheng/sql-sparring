@@ -1,0 +1,54 @@
+{
+  "id": "q24",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "已下达划拨指令未划转到账资金按滞留时长分档（2026 年）",
+      "caliber": "卡内无最终分档结果：150.3s 内 14 次 query_metrics 探索（get_metric×4 + query_metrics×10），卡内容止于中间过程播报'明细确认 fill_date 与 received_date 基本同日。现在按滞留时长（到账日距今 2026-10-23）分 6 档并行查询各档金额'，最终 SQL 仍为探索性窗口（received_date ∈ [2023-11-08, 2024-11-02)），未交付分档表",
+      "dimensions": null,
+      "time_window": "不适用（未交付结果）",
+      "values": null
+    },
+    "cube": {
+      "metric": "已下达划拨指令未划转到账资金按滞留时长分档（2026 年，自动拍板口径）",
+      "caliber": "ask（未到账范围与滞留档均无固化口径）→ 自动拍板 option-1：未到账=划转状态 trans_stats='1'（仅已发在途，不含 7 失败/14 校验不通过，已回写口径词典），滞留档=最近一轮划转日期 trans_date 按月分组近似（模型无滞留天数成员）；实测 2026 年该口径 0 笔 0 元",
+      "dimensions": "按划转月份（trans_date）分组近似滞留档",
+      "time_window": "锚点=划转日期 trans_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "各档": 0,
+        "合计": 0
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "划拨在途滞留分档",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "datus 侧证据不足（卡内无最终分档结果，150.3s 用满止于中间播报）；cube 侧按自动拍板口径作答完整（trans_stats=1 → 0 笔 0 元，并自述口径替代关系）。两侧口径不可比：cube 的'已发在途'与 datus 探索的'未划拨（fistransfer≠1）'是不同概念，且 cube 拍板口径不含失败(7)/校验不通过(14)。"
+      }
+    ],
+    "summary": "datus 未交付分档结果（150s 未收敛），cube 自动拍板口径答各档 0；两侧口径不可比，待人工拍板'指令已下达/未到账'判定字段后复验。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "datus",
+      "type": "修bug",
+      "target": "作答未收敛：150.3s 内 14 次指标调用未交付最终分档表，卡内止于中间过程播报",
+      "suggest": "复验时收敛查询计划、确保最终报告落卡；滞留档口径先与 cube 拍板对齐"
+    },
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'已下达划拨指令未到账'的判定（cube=trans_stats='1' 已发在途；datus 探索的是未划拨 fistransfer≠1 口径）",
+      "suggest": "拍板'指令已下达'与'未到账'的判定字段并写双侧 ai_context；明确 trans_stats（1 在途/7 失败/14 校验不通过）各态是否计入'未到账'"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q24.json",
+    "rounds/round-02/answers/cube/q24.json"
+  ]
+}

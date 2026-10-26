@@ -1,0 +1,128 @@
+{
+  "id": "q16",
+  "question": "今年按收入项目汇总的待划拨金额，排名前五的收入项目是哪些？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.trans_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": [
+        "fiscal_allocation_view.item_code",
+        "fiscal_allocation_view.item_name"
+      ]
+    }
+  ],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "口径声明：模型无\"待划拨金额\"度量（fiscal_allocation_view 划转状态 trans_stats 2026 年全空、词典亦无约定），经用户拍板改查已划拨口径——2026 年（pay_date 2026-01-01~12-31）按收入项目汇总划拨金额 trans_amt，降序取前五。数据范围：2026 年清分记录共 64 笔、划拨金额合计 424 元，其中仅 1 个项目（高等学校住宿费 103042758，2 笔 424 元）有划拨金额，其余 4 个上榜项目划拨金额为空（有清分记录但金额为 null）。结果仅前 5 组（limit=5 截断），但全年有划拨金额的项目实际仅 1 个，排名实质完整。",
+  "errors": [],
+  "elapsed_s": 61.0,
+  "arbiter": {
+    "mode": "auto",
+    "policy": "option-1",
+    "first_type": "ask",
+    "ask_question": "模型里没有「待划拨金额」口径，无法直接按待划拨汇总收入项目。核实过：清分视图（fiscal_allocation_view）只有「划拨金额 trans_amt」（已划拨）和「分入金额 im_amt」两个金额度量，划转状态字段 trans_stats 在 2026 年全部为空、无法筛出\"待划拨\"；词典中也无\"待划拨\"约定；fiscal_allocation/fiscal_collection 两个主题均未做未建模盘点。要怎么处理？",
+    "options": [
+      "改查「划拨金额 trans_amt」：今年按收入项目（item_code）汇总、金额降序取前五（口径为已划拨，非待划拨）",
+      "改查「分入金额 im_amt」按收入项目汇总前五",
+      "确认不了待划拨口径，放弃本次查询，先补建模/盘点再说"
+    ],
+    "followups": [
+      {
+        "question": "就按第一个选项的口径来（改查「划拨金额 trans_amt」：今年按收入项目（item_code）汇总、金额降序取前五（口径为已划拨，非待划拨）），直接出答案。",
+        "response_type": "answer",
+        "response": {
+          "type": "answer",
+          "title": "2026年划拨金额按收入项目Top5（已划拨口径）",
+          "plan": [
+            [
+              "用户原问\"待划拨金额\"，模型无此口径，经用户拍板改用已划拨口径",
+              "fiscal_allocation_view.trans_amt",
+              "ai_context：分入金额用 im_amt，划拨金额用 trans_amt；无待划拨度量"
+            ],
+            [
+              "按收入项目分组",
+              "fiscal_allocation_view.item_code / item_name",
+              "ai_context：分组必须用 *_code，*_name 为别名拼接展示、不作准"
+            ],
+            [
+              "今年=2026全年，按缴款日期过滤",
+              "fiscal_allocation_view.pay_date",
+              "ai_context：时间过滤用 pay_date（fdate）"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "2026年划拨金额（已划拨口径）按收入项目Top5",
+              "query": {
+                "measures": [
+                  "fiscal_allocation_view.trans_amt",
+                  "fiscal_allocation_view.count"
+                ],
+                "dimensions": [
+                  "fiscal_allocation_view.item_code",
+                  "fiscal_allocation_view.item_name"
+                ],
+                "filters": [],
+                "timeDimensions": [
+                  {
+                    "dimension": "fiscal_allocation_view.pay_date",
+                    "dateRange": [
+                      "2026-01-01",
+                      "2026-12-31"
+                    ]
+                  }
+                ],
+                "order": {
+                  "fiscal_allocation_view.trans_amt": "desc"
+                },
+                "limit": 5
+              },
+              "rows": [
+                {
+                  "fiscal_allocation_view.item_code": "103042758",
+                  "fiscal_allocation_view.item_name": "高等学校住宿费",
+                  "fiscal_allocation_view.trans_amt": 424,
+                  "fiscal_allocation_view.count": 2
+                },
+                {
+                  "fiscal_allocation_view.item_code": "1030115001",
+                  "fiscal_allocation_view.item_name": "港口建设费收入",
+                  "fiscal_allocation_view.trans_amt": null,
+                  "fiscal_allocation_view.count": 42
+                },
+                {
+                  "fiscal_allocation_view.item_code": "1030102010011",
+                  "fiscal_allocation_view.item_name": "农网还贷资金收入a",
+                  "fiscal_allocation_view.trans_amt": null,
+                  "fiscal_allocation_view.count": 6
+                },
+                {
+                  "fiscal_allocation_view.item_code": "103010201004",
+                  "fiscal_allocation_view.item_name": "乡村农网还贷资金收入",
+                  "fiscal_allocation_view.trans_amt": null,
+                  "fiscal_allocation_view.count": 3
+                },
+                {
+                  "fiscal_allocation_view.item_code": "1030129001",
+                  "fiscal_allocation_view.item_name": "国家电影事业发展专项资金收入",
+                  "fiscal_allocation_view.trans_amt": null,
+                  "fiscal_allocation_view.count": 2
+                }
+              ],
+              "total": 424
+            }
+          ],
+          "answer": "口径声明：模型无\"待划拨金额\"度量（fiscal_allocation_view 划转状态 trans_stats 2026 年全空、词典亦无约定），经用户拍板改查已划拨口径——2026 年（pay_date 2026-01-01~12-31）按收入项目汇总划拨金额 trans_amt，降序取前五。数据范围：2026 年清分记录共 64 笔、划拨金额合计 424 元，其中仅 1 个项目（高等学校住宿费 103042758，2 笔 424 元）有划拨金额，其余 4 个上榜项目划拨金额为空（有清分记录但金额为 null）。结果仅前 5 组（limit=5 截断），但全年有划拨金额的项目实际仅 1 个，排名实质完整。",
+          "assumption": "\"待划拨\"无模型口径，用户拍板：改用已划拨口径（trans_amt），按收入项目（item_code）汇总、金额降序取前五",
+          "truncated": true,
+          "rows": 5,
+          "hitPreAgg": null
+        }
+      }
+    ]
+  },
+  "raw_path": "rounds/round-02/runs/cube/q16.raw.json"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "q17",
+  "question": "今年各家执收单位经手的收入金额排下来，前十名是哪些单位？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_collection_view.amt",
+        "fiscal_collection_view.count"
+      ],
+      "dimensions": [
+        "fiscal_collection_view.chg_agency_code"
+      ]
+    }
+  ],
+  "sql": "SELECT `fiscal_collection`.`fchgagencode` `fiscal_collection_view__chg_agency_code`, sum(`fiscal_collection`.`famt`) `fiscal_collection_view__amt`, count(*) `fiscal_collection_view__count` \nFROM  (SELECT * FROM (\n  SELECT * FROM (\n    SELECT * FROM (\n      SELECT * FROM (\n        SELECT t.*, c.chg_agency_name_canon FROM fne_paybook_full_high t\n        LEFT JOIN (SELECT fchgagencode,\n                          arrayStringConcat(arraySort(groupUniqArray(fchgagenname)), ' / ') AS chg_agency_name_canon\n                   FROM fne_paybook_full_high GROUP BY fchgagencode) c ON t.fchgagencode = c.fchgagencode\n      ) x1\n      LEFT JOIN (SELECT frecrgncode,\n                        arrayStringConcat(arraySort(groupUniqArray(frecrgnname)), ' / ') AS rec_rgn_name_canon\n                 FROM fne_paybook_full_high WHERE frecrgncode != '' GROUP BY frecrgncode) r ON x1.frecrgncode = r.frecrgncode\n    ) x2\n    LEFT JOIN (SELECT fitemcode,\n                      arrayStringConcat(arraySort(groupUniqArray(fitemname)), ' / ') AS item_name_canon\n               FROM fne_paybook_full_high WHERE fitemcode != '' GROUP BY fitemcode) i ON x2.fitemcode = i.fitemcode\n  ) x3\n  LEFT JOIN (SELECT fsubcode,\n                    arrayStringConcat(arraySort(groupUniqArray(fsubname)), ' / ') AS sub_name_canon\n             FROM fne_paybook_full_high WHERE fsubcode != '' GROUP BY fsubcode) s ON x3.fsubcode = s.fsubcode\n) x4\nLEFT JOIN (SELECT frecsubcode,\n                  arrayStringConcat(arraySort(groupUniqArray(frecsubname)), ' / ') AS rec_sub_name_canon\n           FROM fne_paybook_full_high WHERE frecsubcode != '' GROUP BY frecsubcode) rs ON x4.frecsubcode = rs.frecsubcode\n)  AS `fiscal_collection`\nWHERE (toDateOrNull(`fiscal_collection`.`fdate`) >= parseDateTimeBestEffort(?) AND toDateOrNull(`fiscal_collection`.`fdate`) <= parseDateTimeBestEffort(?))\nGROUP BY 1\nORDER BY  2  DESC\nLIMIT 102026-01-01T00:00:00.000Z2026-12-31T23:59:59.999Z",
+  "sql_count": 1,
+  "answer": "口径声明：按视图 ai_context，分组用执收单位编码 chg_agency_code（对应 *_name 是别名拼接、不作分组依据，故此处以编码呈现）；金额为缴款金额 amt（元），时间范围 pay_date 2026-01-01 至 2026-12-31（今年），按金额降序取前 10。歧义拍板：「经手的收入金额」取唯一口径缴款金额 amt，无多口径分叉。数据范围：实际仅 9 个执收单位在 2026 年有缴款记录（不足 10 名，全量列出），第 1 名单位 124045 缴款 14,916,711.37 元（29 笔），与其余单位差距显著。",
+  "errors": [],
+  "elapsed_s": 27.9,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q17.raw.json"
+}

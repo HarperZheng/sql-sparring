@@ -1,0 +1,34 @@
+{
+  "id": "q19",
+  "question": "今年单笔缴款按金额大小分档后，各档的缴款笔数分布是怎样的？",
+  "status": "failed",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "",
+  "errors": [],
+  "elapsed_s": 36.5,
+  "arbiter": {
+    "mode": "auto",
+    "policy": "option-1",
+    "first_type": "ask",
+    "ask_question": "「单笔缴款按金额分档」需要先定两件事：① 单笔的粒度——按缴款书（一张缴款书=一笔，金额=其下明细行 amt 合计）还是按明细行？② 分档的金额区间标准——模型 ai_context 未提供任何分档口径，且 filters 只支持成员值过滤、无自定义分桶成员。请拍板分档标准。",
+    "options": [
+      "按缴款书粒度，档位取 100元以下 / 100–1万 / 1万–10万 / 10万–100万 / 100万以上",
+      "按缴款书粒度，档位取 1万以下 / 1万–10万 / 10万–50万 / 50万以上",
+      "按明细行粒度分档（amt 单列直接分桶）",
+      "其他区间（请直接给出各档边界）"
+    ],
+    "followups": [
+      {
+        "question": "就按第一个选项的口径来（按缴款书粒度，档位取 100元以下 / 100–1万 / 1万–10万 / 10万–100万 / 100万以上），直接出答案。",
+        "response_type": "exception",
+        "response": {
+          "type": "error",
+          "error": "Server error '502 Bad Gateway' for url 'http://localhost:4100/chat'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502"
+        }
+      }
+    ]
+  },
+  "raw_path": "rounds/round-02/runs/cube/q19.raw.json"
+}

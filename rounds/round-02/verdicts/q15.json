@@ -1,0 +1,58 @@
+{
+  "id": "q15",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "各代理银行代收非税收入金额排名（2026 年）",
+      "caliber": "非税缴款金额指标：sum(famt) 按 收款银行名称 frecbankname 分组降序；自述银行名称源数据带尾部空格已整理",
+      "dimensions": "按收款银行（frecbankname）分组排名",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "中国工商银行": 14913182.37,
+        "人民银行": 51157.0,
+        "中国建设银行": 18948.44,
+        "中国邮政储蓄银行": 1981.32,
+        "支付宝": 1.0,
+        "合计": 14985270.13
+      }
+    },
+    "cube": {
+      "metric": "各代理银行代收非税收入金额排名（2026 年，fiscal_collection_view）",
+      "caliber": "sum(amt) 按 收款银行 rec_bank_code/rec_bank_name 分组降序；'代理银行'存在两种成员口径（收款银行 rec_bank 与代理单位 acc_agen）且词典无该词条，两表并出未静默择一；'非税收入'在本数据集即全部缴款口径",
+      "dimensions": "按收款银行（rec_bank_code）分组排名，另出代理单位（acc_agen_code）口径",
+      "time_window": "锚点=缴款日期 pay_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "工商银行": 14913200.0,
+        "人民银行": 51157.0,
+        "中国建设银行": 18948.44,
+        "合计": 14985270.13,
+        "缴款书": 56
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "代理银行代收金额排名",
+        "caliber_same": false,
+        "value_same": true,
+        "note": "排名与数值抽查一致：合计 14,985,270.13 元、工行 99.52% 居首、人民银行 51,157、建行 18,948.44 全同。但'今年'锚点不同（同 q10 根因）：datus=开票日 fill_date，cube=缴款日期 pay_date——当前数据下未造成差异（未验证其恒成立）。另 cube 额外并出'代理单位 acc_agen'口径（9 个），datus 仅收款银行口径，属覆盖差异非冲突。"
+      }
+    ],
+    "summary": "排名与数值全同（合计 14,985,270.13、工行 99.52% 居首）；唯'今年'锚点不同（同 q10 根因），随该拍板一并对齐；cube 侧多并出代理单位口径供参考。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "缴款类问题'今年'的时间锚点（同 q10 根因：datus 主时间轴 fill_date；cube pay_date）",
+      "suggest": "随 q10 的锚点拍板一并对齐，无需单独修法；对齐后本题进复验集确认排名仍一致"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q15.json",
+    "rounds/round-02/answers/cube/q15.json"
+  ]
+}

@@ -1,13 +1,100 @@
 {
   "id": "q21",
-  "question": "执收单位和预算单位是一回事吗？",
+  "question": "今年从缴款到资金缴入国库，各笔缴款的全程耗时按时间区间分档后，各档的笔数分布如何？",
   "status": "answer",
-  "metrics_hit": [],
-  "sql": "SELECT\n  fagenidcode,\n  fagenname,\n  fbgtagenname,\n  fisbgtagen\nFROM yunnan0508.fab_agen\nWHERE fisbgtagen = '1' AND fbgtagenname != '' AND fbgtagenname != fagenname\nLIMIT 5",
-  "sql_count": 2,
-  "answer": "# 不是一回事\n\n这是本项目文档里明确定义过的一对**易混概念**（`development_process_record/non_tax/01-非税业务说明.md` §“执收单位 vs 预算单位”），两者按不同维度划分：\n\n| | **执收单位** | **预算单位** |\n| :--- | :--- | :--- |\n| 划分标准 | **是否依法收非税收入**（业务起点，发起缴款通知书） | **是否纳入部门预算管理、独立编制并执行预算**（经费主要靠财政拨款） |\n| 角色定位 | 资金流向中的业务发起方 | 管理主体（非资金流向角色） |\n\n## 三者的集合关系（文档结论）\n\n- **交集但不重合**：公立学校既是预算单位（领财政拨款）又是执收单位（收学费）；\n- **不是子集**：存在不收非税收入的预算单位（纯财政拨款）；也存在不属于预算单位的执收情形（如代行政府职能的社会团体）；\n- **不是互斥**：同一单位可同时具备双重身份。\n\n## 数据层面印证\n\n在 `fab_agen` 单位表里两者就是**两个独立字段**，且实测存在不一致：\n\n- `fagenname` = 单位自身名称（执收身份），`fagenidcode` 为被各事实表引用的执收单位编码；\n- `fbgtagencode` / `fbgtagenname` = 该单位挂靠的**预算单位**（主管预算单位），`fisbgtagen` 标记其是否自身为预算单位；\n- 实测：295 行（218 个执收单位）中，有 251 行填了预算单位信息，其中**存在执收单位名 ≠ 预算单位名**的记录——即下属执收单位向上归口到主管预算单位。\n\n事实表（如 `fne_paybook_full_high`）同样成对携带：`fchgagenidcode + fchgagenname`（执收单位）与 `fchgbgtagenname`（执收预算单位）。\n\n## 查询时的落点\n\n- 问“谁收的钱” → 用**执收单位**字段（`fchgagen*`，分组必须用 `*_code`）；\n- 问“预算归口/主管部门” → 用**预算单位**字段（`fbgtagen*` / `fchgbgtagen*`）；\n- 两者不可互相替换，此前实测（09-cube 记录 q08）已按此口径拍板过。",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ],
+      "dimensions": [
+        "metric_time",
+        "treasury_dedup_to_funddivide_pid__funddivide_to_paybook__fill_date"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ],
+      "dimensions": [
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "paybook_full_high.clear_date"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库批次数"
+      ],
+      "dimensions": [
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "paybook_full_high.clear_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "paybook_full_high.clear_date"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款笔数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "paybook_full_high.clear_date"
+      ]
+    }
+  ],
+  "sql": "SELECT toDate(paybook_full_high.ffilldate) AS metric_time, toDate(nullIf(paybook_full_high.fcleardate, '')) AS clear_date, COUNT(DISTINCT paybook_full_high.fid) AS \"非税缴款笔数\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= '2026-01-01' AND toDate(nullIf(paybook_full_high.fcleardate, '')) IS NOT NULL GROUP BY toDate(paybook_full_high.ffilldate), toDate(nullIf(paybook_full_high.fcleardate, '')) SETTINGS join_use_nulls = 1",
+  "sql_count": 4,
+  "answer": "## 结果报告\n\n**解读的问题**：2026 年（1月1日—至今）各笔缴款从「缴款」到「资金缴入国库」的全程耗时，按时间区间分档后的笔数分布。\n\n**方法说明**：指标目录中无现成「耗时分档」指标（上轮已确认）。本次改用指标侧可行的**日期配对分组**逼近——把 非税缴款笔数 按「缴款日 × 清分日」双时间轴分组，由日期对推算各笔耗时；缴库↔缴款的跨链配对维度被语义模型拒绝（`funddivide_to_paybook__fill_date` 不是可查询字段），故国库端只能给出闭环规模，无法逐笔配对分档。\n\n### 一、全程「缴款 → 缴入国库」分档分布（直接回答）\n\n用 缴库金额/缴库批次数 按 `income_status`（国库入库确认）切片，2026 年：\n\n| 到达状态 | 笔数/批次数 | 金额 |\n|---|---|---|\n| 已确认缴入国库（fstatus=9, income_status='1'） | **1 批次** | 100.00 元 |\n| 已缴库、待国库确认（9, '0'） | 1 批次 | 33,206.09 元 |\n| 报文已生成、未缴库（0, '0'） | 15 批次 | 29,338,928.45 元 |\n\n**即：真正走到国库的全程闭环仅 1 笔，全程耗时分档结果为——当日（1/28 缴款→当日闭环）1 笔，其余 61 笔（占 98.4%）尚未到达国库终点，无耗时可分档。** 该分布只有 n=1，不具统计意义。\n\n### 二、最近似可分档环节：「缴款 → 清分」耗时分布（2026 年 38 笔已清分）\n\n| 耗时档 | 笔数 | 占比 |\n|---|---|---|\n| 当日（0 天） | 30 | 78.9% |\n| 1 天 | 1 | 2.6% |\n| 2~7 天 | 3 | 7.9%（均为 6 天） |\n| 8~15 天 | 2 | 5.3%（均为 9 天） |\n| 16~30 天 | 1 | 2.6%（22 天） |\n| 30 天以上 | 2 | 5.3%（43 天、47 天各 1） |\n| **合计已清分** | **38** | — |\n\n另有 **24 笔**（62 笔缴款 cohort 中）尚未清分，无耗时终点，不在分档内。\n\n### 局限与口径披露\n\n1. **瓶颈在清分之后的环节**：缴款→清分 78.9% 当日完成，但清分→划拨→缴库报文→国库确认链条上，2026 年仅 1 笔闭环确认——全程耗时分档实际只对这 1 笔成立。\n2. 缴库↔缴款的逐笔跨链时间配对被语义模型拒绝，上表「缴款→清分」分档由日期对分组推算；如需全程逐笔分档，需在语义模型为缴库侧补建缴款日期时间轴后新增「全程耗时分档」指标。\n3. 未清分 24 笔与未到达国库 61 笔均为「流程未走完」，不是数据缺失。",
   "errors": [],
-  "elapsed_s": 1321.1,
+  "elapsed_s": 103.5,
   "arbiter": null,
   "raw_path": "rounds/round-02/runs/datus/q21.payload.jsonl"
 }

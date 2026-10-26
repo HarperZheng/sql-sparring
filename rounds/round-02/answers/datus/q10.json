@@ -1,0 +1,21 @@
+{
+  "id": "q10",
+  "question": "今年各月的缴款金额走势怎么样？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    }
+  ],
+  "sql": "SELECT dateTrunc('MONTH', toDate(paybook_full_high.ffilldate)) AS metric_time__month, sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY dateTrunc('MONTH', toDate(paybook_full_high.ffilldate)) SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 2026 年各月非税缴款金额走势\n\n**问题解读**：统计 2026 年 1–10 月各月缴款金额，按月汇总展示走势（查询结果与此前一致）。\n\n**使用指标**：`非税缴款金额`（缴款通知书明细口径，paybook_full_high.famt 直 SUM，单位：元；默认按开票日 fill_date 锚定）\n\n### 各月明细\n\n| 月份 | 缴款金额（元） |\n|---|---:|\n| 2026-01 | 4,632.00 |\n| 2026-02 | —（无缴款记录） |\n| 2026-03 | —（无缴款记录） |\n| 2026-04 | 1,982.32 |\n| 2026-05 | 7,222.00 |\n| 2026-06 | **14,909,895.85** |\n| 2026-07 | 752.52 |\n| 2026-08 | 700.66 |\n| 2026-09 | 9,372.78 |\n| 2026-10 | 50,712.00（截至 10-23，非完整月） |\n| **合计** | **14,985,270.13** |\n\n### 走势解读\n\n- **6 月一枝独秀**：单月 1,490.99 万元，占全年累计的约 **99.5%**，与其余月份（几百至几万元量级）相差 3 个数量级，全年呈“单月尖峰、其余低位”形态。\n- **2–3 月无缴款记录**；1 月、4–5 月仅有零星小额缴款。\n- **7–8 月为最低谷**（均不足千元），9 月起回升，10 月前 23 天达 5.07 万元，为除 6 月外最高月份。\n- 整体判断：全年金额高度集中于 6 月的少数大额缴款，其余月份为零星缴款。\n\n**可延伸分析**：如需拆解 6 月尖峰构成（按执收单位/收入项目/业务类型归因）、查看各月环比（`非税缴款金额_环比`）或改按实际缴款日（pay_date）口径统计，请告知。",
+  "errors": [],
+  "elapsed_s": 6.5,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q10.payload.jsonl"
+}

@@ -1,0 +1,123 @@
+{
+  "id": "q29",
+  "question": "今年从形成待划拨批次到资金缴入国库、再完成对账记账，各环节的耗时分别是多少？瓶颈在哪一环？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "汇总批次数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "划拨完成金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "未划拨金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库批次数"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "缴库金额"
+      ]
+    },
+    {
+      "tool": "get_metric",
+      "depth": 0,
+      "names": [
+        "清分金额"
+      ]
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "划拨金额",
+        "划拨完成金额",
+        "未划拨金额",
+        "汇总批次数"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库批次数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ],
+      "time_start": "2026-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "划拨金额",
+        "划拨完成金额",
+        "未划拨金额",
+        "汇总批次数"
+      ],
+      "dimensions": [
+        "metric_time"
+      ],
+      "time_start": "2021-01-01",
+      "time_end": "2027-01-01"
+    },
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "缴库金额",
+        "缴库批次数"
+      ],
+      "dimensions": [
+        "metric_time",
+        "treasury_transfer_dedup.fstatus",
+        "treasury_transfer_dedup.income_status"
+      ],
+      "time_start": "2021-01-01",
+      "time_end": "2027-01-01"
+    }
+  ],
+  "sql": "SELECT dateTrunc('YEAR', toDate(treasury_transfer_dedup.fmsgdate)) AS metric_time__year, treasury_transfer_dedup.fstatus AS fstatus, toString(treasury_transfer_dedup.fincomestatus) AS income_status, sum(treasury_transfer_dedup.ftotalamt) AS \"缴库金额\", COUNT(DISTINCT treasury_transfer_dedup.ftransno) AS \"缴库批次数\" FROM (SELECT * FROM (SELECT *, row_number() OVER (PARTITION BY fid) AS _rn FROM yunnan0508.fne_treasury_transfer_new) WHERE _rn = 1) AS treasury_transfer_dedup WHERE toDate(treasury_transfer_dedup.fmsgdate) >= CAST('2021-01-01' AS DATE) AND toDate(treasury_transfer_dedup.fmsgdate) < CAST('2027-01-01' AS DATE) GROUP BY dateTrunc('YEAR', toDate(treasury_transfer_dedup.fmsgdate)), treasury_transfer_dedup.fstatus, toString(treasury_transfer_dedup.fincomestatus) SETTINGS join_use_nulls = 1",
+  "sql_count": 4,
+  "answer": "# 资金链各环节时效与瓶颈分析（2026-01-01 ~ 2026-10-23）\n\n## 问题理解\n\n您问的是：**2026 年**从\"形成待划拨批次（清分汇总批次）→ 资金缴入国库（缴库报文）→ 完成对账记账（国库入库确认）\"三个环节各耗时多久、哪一环最慢。\n\n## 使用指标\n\n| 环节 | 指标 | 时间轴 |\n|---|---|---|\n| 待划拨批次 | 汇总批次数、划拨金额、划拨完成金额、未划拨金额 | 清分批次日期 |\n| 缴入国库 | 缴库金额、缴库批次数 ×（缴库状态×入库确认状态） | 缴库报文日期 |\n\n## 各环节耗时（2026 年）\n\n**说明**：目录中没有\"环节间隔天数\"类时效指标，以下用**各环节状态积压的金额/笔数分布**近似回答——某环节积压金额占比越大、滞留越久，该环节耗时越长。\n\n| 环节 | 2026 年状态 | 结果 | 判断 |\n|---|---|---|---|\n| ① 形成待划拨批次 | 27 个批次已形成（1 月 19 个，5/6/7/8 月各 1/1/5/1 个） | 划拨完成 324 元 / 未划拨 100 元 | 批次**当月形成、当月清零**，此环节不构成瓶颈 |\n| ② 批次 → 缴入国库 | **fstatus=0（未缴库）2,933.89 万元 / 15 个批次**，全部滞留在 1 月报文 | 已缴库仅 3.33 万元（占比 **0.11%**） | **≈99.9% 资金卡在此环节 9 个月以上**，且 2 月起缴库报文断流 |\n| ③ 缴入国库 → 对账记账 | 已缴库 3 笔中 **2 笔（3.32 万元）停在\"待国库确认\"（income_status=0）**，仅 1 笔 100 元确认入库 | 已确认占比仅 **0.3%** | 次级瓶颈，确认记账几乎不动 |\n\n## 瓶颈结论\n\n1. **首要瓶颈：待划拨批次 → 缴入国库**。2,933.89 万元（15 个批次）自 1 月起未缴库，1 月后缴库动作完全停滞；全库口径看，2022–2026 五年仅确认入库 1.11 万元，其余年份（2023/2024/2025）连缴库报文都没有。\n2. **次级瓶颈：国库确认记账**。已缴库的 3 笔中 99.7% 的金额停在\"待国库确认\"，2026 年仅 100 元完成记账。\n\n## 局限\n\n- 各环节**精确耗时（天数）无法计算**：划拨实际执行日期（trans_date 仅 2 行有值）与国库确认日期均未建模为指标时间轴，只能以状态积压金额近似瓶颈定位。\n- 缴库指标锚定报文日期，与清分批次开立时点属不同 cohort，两者金额不直接对账（100 元 vs 324 元完成划拨的口径差异即源于此）。",
+  "errors": [],
+  "elapsed_s": 93.9,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q29.payload.jsonl"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "q20",
+  "question": "今年完成清分的资金，按中央、省、市、县四级归属的金额占比是怎样的？",
+  "status": "nomatch",
+  "metrics_hit": [],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "",
+  "errors": [],
+  "elapsed_s": 19.0,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/cube/q20.raw.json"
+}

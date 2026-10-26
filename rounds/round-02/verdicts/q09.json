@@ -1,0 +1,38 @@
+{
+  "id": "q09",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "票据冲红后冲减收入的会计期间归属（业务边界题）",
+      "caliber": "冲减的收入记在冲红发生当期（红字发票开具/退付办理的会计期间），不追溯调整原收入期间。证据链：①票据侧 une_cbill_new 红票（ftotalamt<0）开票月份与原票月份大量跨期；②收入侧 fne_stats_income：2026-01-28 一次性冲红 40 笔（fincometype='2'），原缴款日跨 2024-12~2026-01 共 13 个月，fincomedate 全部=2026-01-28；③流水侧 fne_income_daybook：fiodirection='-1' 冲减流水按办理日（freceiveddate）记账；④月度收入物化视图按 fincomedate 归期，原月份不重述",
+      "dimensions": null,
+      "time_window": "不适用（口径辨析题；证据覆盖 2022-12~2026-01）",
+      "values": null
+    },
+    "cube": {
+      "metric": "票据冲红后冲减收入的会计期间归属（业务边界题）",
+      "caliber": "冲减的收入记在红字票据自身缴款日期 pay_date（fdate）所属会计期间，不追溯原开票期间。模型无独立'红字'标记成员，按词典词条 bus_type=2=退付识别（216 笔明细、26 个缴款月 2022-11~2026-10）。关键证据：fill_date=2022-11 的红票 eff_date 迟至 2025-08，金额仍按 pay_date 记 2022-11 所属期间；模型金额默认时间轴=pay_date",
+      "dimensions": null,
+      "time_window": "不适用（口径辨析题）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "冲减收入的期间归属",
+        "caliber_same": true,
+        "value_same": null,
+        "note": "双侧结论一致：记冲红当期、不追溯原收入期间。附客观差异（不影响本题判定）：证据字段不同——datus 用收入侧 fincomedate（冲红办理日）+流水侧，cube 用缴款侧 pay_date（红字票据自身缴款日）；两字段是否恒同月未验证（未验证，依据=双侧卡内证据无同月对照），如未来按月对账出现分歧再行归因。"
+      }
+    ],
+    "summary": "口径一致：冲减收入记冲红当期、不追溯原期间；证据落点两侧不同（收入侧办理日 vs 缴款侧红票缴款日），已客观记录。"
+  },
+  "verdict": "互证通过",
+  "verdict_detail": [],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q09.json",
+    "rounds/round-02/answers/cube/q09.json"
+  ]
+}

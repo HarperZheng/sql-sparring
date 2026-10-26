@@ -1,0 +1,56 @@
+{
+  "id": "q23",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "已收未汇缴上缴资金按滞留时长分档（快照 2026-10-23）",
+      "caliber": "未划拨金额指标（fistransfer!='1'）叠加已到账约束 is_received=1（'已收上来'），滞留起点=资金到账日 received_date 距快照日天数分档；自述 trans_date 几乎未回填、无法按'应划拨日'精确计逾期，部分无明细金额记录不可计量",
+      "dimensions": "按滞留时长档分组（≤15天/16–30天/31–90天/91–180天/>180天）",
+      "time_window": "锚点=到账日 received_date；快照 2026-10-23",
+      "values": {
+        "≤15天": 0,
+        "16–30天": 0,
+        "31–90天": 0,
+        "91–180天": 0,
+        ">180天": 56117.26,
+        "合计": 56117.26,
+        ">180天中超2年": 55877.26
+      }
+    },
+    "cube": {
+      "metric": "已收未汇缴上缴资金按滞留时长分档（快照 2026-10-23）",
+      "caliber": "cube 侧 nomatch：语义层无'已收未汇缴滞留'类口径（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（无作答）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "已收未汇缴分档金额",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 nomatch，无口径可比；datus 以未划拨+已到账口径作答完整（56,117.26 元全部滞留超 180 天，99.6% 超 2 年），口径自述清晰。"
+      }
+    ],
+    "summary": "单侧作答（cube nomatch）：datus 答 56,117.26 元全部滞留超 180 天（近半年到账无未划拨记录）；待人工确认作为回归基准。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "'已收未汇缴/已收未划拨滞留'口径（未划拨金额×到账约束+滞留分档）",
+      "suggest": "清分/划拨主题补'已收未划拨'口径与滞留时长分档路径，复验时该题应可作答"
+    }
+  ],
+  "corrected": {
+    "answer": "执收单位已收未汇缴上缴的资金共 56,117.26 元，全部滞留超过 180 天：其中 0.5–1 年 100 元、1–2 年 140 元、2 年以上 55,877.26 元（占 99.6%，主要系 2022 年到账老批次）；近半年（≤180 天）到账的资金没有未划拨记录。",
+    "basis": "倾向采纳 datus 作答卡（未划拨金额×is_received=1 口径，滞留按到账日距 2026-10-23 快照，SQL 有执行记录取证；trans_date 未回填的局限已自述）；cube 侧 nomatch，无对照证据"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q23.json",
+    "rounds/round-02/answers/cube/q23.json"
+  ]
+}

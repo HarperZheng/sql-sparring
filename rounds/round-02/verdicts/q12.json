@@ -1,0 +1,49 @@
+{
+  "id": "q12",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "直缴方式缴款资金总额（2026 年）",
+      "caliber": "非税缴款金额指标：sum(fne_paybook_full_high.famt)，直缴按 fbustype='1' 收窄（指标元数据要求），无去重",
+      "dimensions": "按年聚年（dateTrunc('YEAR')）",
+      "time_window": "锚点=开票日 fill_date=toDate(ffilldate)；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "2026": 17689.82
+      }
+    },
+    "cube": {
+      "metric": "直缴方式缴款资金总额（2026 年，fiscal_collection_view.amt）",
+      "caliber": "sum(famt)，直缴=bus_type '1'（口径词典 2026-10-22 用户拍板，非静默选择）",
+      "dimensions": null,
+      "time_window": "锚点=缴款日期 pay_date=toDateOrNull(fdate)；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "2026": 17689.82
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "直缴缴款总额",
+        "caliber_same": false,
+        "value_same": true,
+        "note": "直缴过滤双侧一致（fbustype='1'，cube 侧系词典拍板）。数值巧合一致（17,689.82 元）。但'今年'的时间锚不同（同 q10 根因）：datus=开票日 ffilldate，cube=缴款日期 fdate——年度窗口的行圈定字段不同，当前数据下未造成差异（未验证其恒成立）。"
+      }
+    ],
+    "summary": "直缴过滤一致、数值巧合一致（17,689.82 元）；唯'今年'锚点不同（开票日 vs 缴款日期），同 q10 根因，随该拍板一并对齐。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "缴款类问题'今年'的时间锚点（同 q10 根因：datus 主时间轴 fill_date；cube pay_date）",
+      "suggest": "随 q10 的锚点拍板一并对齐，无需单独修法；对齐后本题进复验集确认年度总额仍一致"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q12.json",
+    "rounds/round-02/answers/cube/q12.json"
+  ]
+}

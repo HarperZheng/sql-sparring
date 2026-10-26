@@ -1,0 +1,67 @@
+{
+  "id": "q13",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "近 3 个月每月新开具票据张数（以非税缴款笔数近似）",
+      "caliber": "非税缴款笔数指标：COUNT(DISTINCT fid)，自述'目录中无 une_cbill_high 票据链的财政电子票据开具张数指标'，以缴款书口径近似并主动列出可选替代口径",
+      "dimensions": "按月聚月（dateTrunc('MONTH')），开票月份",
+      "time_window": "锚点=开票日 fill_date=toDate(ffilldate)；窗口 [2026-08-01, 2026-11-01) 自然月",
+      "values": {
+        "2026-08": 6,
+        "2026-09": 6,
+        "2026-10(截至10-23)": 3,
+        "合计": 15
+      }
+    },
+    "cube": {
+      "metric": "近 3 个月每月新开具票据张数（paybook_count，缴款书口径拍板）",
+      "caliber": "paybook_count=COUNT(DISTINCT fpaycode)（缴款书张数，count 为明细行数会因一票多项目行重复计）；'财政电子票据'按缴款书口径拍板（模型内票据流=缴款书 fpaycode 桥）；'新开具'按开票节点 fill_date",
+      "dimensions": "按月聚月（toStartOfMonth），开票月份",
+      "time_window": "锚点=开票日 ffilldate 经 toTimeZone UTC；窗口 [2026-08-01, 2026-10-23]（10 月为当月部分）",
+      "values": {
+        "2026-08": 6,
+        "2026-09": 4,
+        "2026-10": 3,
+        "合计": 13
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "每月新开具票据张数",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "数值不同：2026-09 双侧 6 vs 4、合计 15 vs 13（8 月、10 月一致）。根因是笔数去重键不同：datus 按 fid 去重（其语义层口径），cube 按 fpaycode（缴款书码）去重——一票多项目行在 datus 口径下被重复计入。窗口差异（datus 到 11-01 全月、cube 到 10-23）对 10 月无实值影响（双侧均 3）。"
+      },
+      {
+        "name": "'财政电子票据'的口径替代",
+        "caliber_same": true,
+        "value_same": null,
+        "note": "双侧语义层均无票据链（une_cbill 电子票据）指标，均以缴款书口径近似作答（cube 侧系拍板口径），替代方式一致。"
+      }
+    ],
+    "summary": "同用缴款书口径近似'财政电子票据'，但笔数去重键不同（fid vs fpaycode）导致 9 月 6 vs 4、合计 15 vs 13；另双侧都缺票据链'开票张数'真口径。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "'笔数/张数'的去重粒度（datus 非税缴款笔数按 fid；cube paybook_count 按 fpaycode）",
+      "suggest": "拍板'一笔缴款/一张票据'的粒度定义（缴款书 or 明细行），两侧笔数类指标按同一键对齐；对齐后本题复验"
+    },
+    {
+      "side": "both",
+      "type": "补指标",
+      "target": "财政电子票据开具张数（票据链 une_cbill 体系）",
+      "suggest": "双侧均无票据链指标，本题双方都用缴款书口径近似；补建票据链'开票张数'指标后按真口径复验"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q13.json",
+    "rounds/round-02/answers/cube/q13.json"
+  ]
+}

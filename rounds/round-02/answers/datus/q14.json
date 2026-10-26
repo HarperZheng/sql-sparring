@@ -1,0 +1,31 @@
+{
+  "id": "q14",
+  "question": "今年缴款金额排名前十的缴款人有哪些？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    },
+    {
+      "tool": "search_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额_同比",
+        "非税缴款金额_环比",
+        "非税缴款金额",
+        "非税缴款笔数"
+      ]
+    }
+  ],
+  "sql": "SELECT paybook_full_high.fchgagenname AS fchgagenname, sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY paybook_full_high.fchgagenname ORDER BY \"非税缴款金额\" DESC LIMIT 10 SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "报告已给出，要点回顾：现有指标体系无“缴款人（付款方）”维度，已用执收单位（fchgagenname）口径近似；2026 年有缴款的执收单位共 9 个（不足 10 家），排名第一的\"001\"为 1,491.67 万元，其余单位金额均在 5 万元以下且多含“测试”字样，解读时请注意测试数据污染。",
+  "errors": [],
+  "elapsed_s": 16.4,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q14.payload.jsonl"
+}

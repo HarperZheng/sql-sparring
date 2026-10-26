@@ -1,0 +1,63 @@
+{
+  "id": "q18",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "直缴/汇缴缴款笔数与占比（2026 年）",
+      "caliber": "非税缴款笔数指标：COUNT(DISTINCT fid) 按 fbustype 切片（1=直缴，2=汇缴）；'完成的缴款'未按缴款状态过滤（全部缴款书计入）",
+      "dimensions": "按缴款方式（fbustype）分组",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "直缴": 45,
+        "汇缴": 17,
+        "合计": 62,
+        "直缴占比": "72.6%",
+        "汇缴占比": "27.4%"
+      }
+    },
+    "cube": {
+      "metric": "直缴/汇缴缴款笔数与占比（2026 年，paybook_count）",
+      "caliber": "paybook_count=COUNT(DISTINCT fpaycode)（缴款书笔数）；'完成'=缴款书状态 state='3'（已缴款确认）；bus_type 1=直缴、2=汇缴（ask 后自动拍板 option-1，已回写口径词典'直缴汇缴'）",
+      "dimensions": "按缴款方式（bus_type）分组，state='3' 过滤",
+      "time_window": "锚点=缴款日期 pay_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "直缴": 44,
+        "汇缴": 12,
+        "合计": 56,
+        "直缴占比": "78.57%",
+        "汇缴占比": "21.43%"
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "'完成的缴款'界定",
+        "caliber_same": false,
+        "value_same": null,
+        "note": "cube 按 缴款书状态 state='3'（已缴款确认）过滤；datus 未按状态过滤（全部缴款书计入）——'完成'语义两侧处理不同。"
+      },
+      {
+        "name": "直缴/汇缴笔数与占比",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "数值不同：直缴 45 vs 44、汇缴 17 vs 12、合计 62 vs 56（占比 72.6/27.4 vs 78.57/21.43）。来源有二：①'完成'界定不同（见上）；②笔数去重键不同（datus 按 fid，cube 按 fpaycode 缴款书——同 q13 根因）；另'今年'锚点亦不同（同 q10 根因）。bus_type 映射双侧一致（1=直缴，2=汇缴）。"
+      }
+    ],
+    "summary": "同问不同数（62 vs 56 笔）：'完成'界定（是否按 state='3' 过滤）、笔数去重键（fid vs fpaycode）、时间锚（fill_date vs pay_date）三处口径不同；bus_type 映射一致。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "datus",
+      "type": "改口径",
+      "target": "'完成的缴款'界定与笔数粒度（未过滤缴款状态；笔数按 fid 去重）",
+      "suggest": "对'完成'类问题补缴款状态过滤（如已缴款确认 state='3'），并按拍板后的缴款书粒度去重（同 q13 笔数粒度拍板）；对齐后复验"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q18.json",
+    "rounds/round-02/answers/cube/q18.json"
+  ]
+}

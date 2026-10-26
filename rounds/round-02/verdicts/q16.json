@@ -1,0 +1,57 @@
+{
+  "id": "q16",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "按收入项目汇总的待划拨金额 Top5（未划拨金额口径）",
+      "caliber": "未划拨金额指标：划拨金额按 fistransfer != '1' 收窄（尚未完成划拨），sum(ftransamt) 按 fitemname 分组降序；交叉核验 划拨金额 424 = 已划拨 324 + 未划拨 100 勾稽一致；空值组如实返回（无未划拨事实，非零）",
+      "dimensions": "按收入项目（fitemname）分组 Top5",
+      "time_window": "锚点=清分日期 fcleardate；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "高等学校住宿费": 100.0,
+        "其余项目": null
+      }
+    },
+    "cube": {
+      "metric": "按收入项目汇总的划拨金额 Top5（已划拨口径，自动拍板替代）",
+      "caliber": "模型无'待划拨金额'度量（fiscal_allocation_view 划转状态 trans_stats 2026 年全空、词典无约定）→ ask → 自动拍板 option-1 改查 已划拨 trans_amt，sum 按 item_code 分组降序；2026 年仅 1 个项目有划拨金额",
+      "dimensions": "按收入项目（item_code/item_name）分组 Top5",
+      "time_window": "锚点=缴款日期 pay_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "高等学校住宿费": 424.0,
+        "其余项目": null
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "待划拨金额（原问口径）",
+        "caliber_same": false,
+        "value_same": false,
+        "note": "答的不是同一口径：datus 按原问以'未划拨金额'作答（住宿费 100.00 元）；cube 模型无'待划拨'度量，自动拍板改答'已划拨 trans_amt'（住宿费 424 元）——口径被替换，与原问不符（R1：ask 态按拍板后口径作答成立，但两答不可互证）。"
+      },
+      {
+        "name": "划拨金额交叉对照",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube trans_amt=424 与 datus 划拨金额（含未完成 324+100）一致，与 cube 自称的'已划拨'名称存在错位嫌疑（未验证，依据=双侧卡内数值；datus 已划拨完成口径为 324）。"
+      }
+    ],
+    "summary": "datus 答原问（未划拨 100.00 元），cube 因缺'待划拨'度量自动拍板改答已划拨（trans_amt 424 元）——答非原问，不可互证；cube 需补待划拨口径后复验。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "'待划拨金额'度量（fiscal_allocation_view 无待划拨口径，trans_stats 2026 年全空）",
+      "suggest": "补建待划拨口径（如按 trans_stats 非空或 trans_amt−已划拨推导）并写入 ai_context；复验时按原问作答，不再自动改答已划拨"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q16.json",
+    "rounds/round-02/answers/cube/q16.json"
+  ]
+}

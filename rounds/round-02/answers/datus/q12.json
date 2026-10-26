@@ -1,0 +1,21 @@
+{
+  "id": "q12",
+  "question": "今年通过直缴方式缴款的资金总额是多少？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "tool": "query_metrics",
+      "depth": 0,
+      "names": [
+        "非税缴款金额"
+      ]
+    }
+  ],
+  "sql": "SELECT dateTrunc('YEAR', toDate(paybook_full_high.ffilldate)) AS metric_time__year, sum(paybook_full_high.famt) AS \"非税缴款金额\" FROM yunnan0508.fne_paybook_full_high AS paybook_full_high WHERE paybook_full_high.fbustype = '1' AND toDate(paybook_full_high.ffilldate) >= CAST('2026-01-01' AS DATE) AND toDate(paybook_full_high.ffilldate) < CAST('2027-01-01' AS DATE) GROUP BY dateTrunc('YEAR', toDate(paybook_full_high.ffilldate)) SETTINGS join_use_nulls = 1",
+  "sql_count": 1,
+  "answer": "## 查询结果\n\n**问题解读**：2026 年（今年）通过**直缴**方式缴款的资金总额。\n\n**使用的指标**：`非税缴款金额`（路径：非税收入/资金链/缴款，缴款通知书明细口径，`paybook_full_high.famt` 直接 SUM，单位：元）\n\n**口径设置**：\n- 直缴口径 = 按 `fbustype = '1'` 过滤（1=直缴，2=汇缴，指标元数据明确要求直缴必须按该字段切片）\n- 时间范围 = 2026-01-01 ~ 2026-12-31（锚定开票日 `fill_date` 年度，指标默认口径）\n- 时间粒度：年\n\n| 年份 | 直缴缴款金额 |\n|---|---|\n| 2026 | **17,689.82 元** |\n\n**说明与限制**：\n- 以上为**开票日（fill_date）口径**；若需按实际缴款日期（`pay_date`）口径统计，结果可能略有差异，可另行查询。\n- 该数据集含测试环境数据（约 16% 行为“测试”字样单位），金额为测试数据口径，非生产实收金额。",
+  "errors": [],
+  "elapsed_s": 6.6,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q12.payload.jsonl"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "q09",
+  "question": "票据冲红开具红字发票后，冲减的收入记在哪个会计期间？",
+  "status": "answer",
+  "metrics_hit": [],
+  "sql": "SELECT substring(r.fdate,1,7) AS chg_month, substring(o.fdate,1,7) AS orig_month,\n       count() AS cnt\nFROM une_cbill_new r\nINNER JOIN une_cbill_new o\n  ON r.frelatedbillno = o.fbillno\nWHERE r.ftotalamt < 0\nGROUP BY chg_month, orig_month\nORDER BY chg_month, orig_month\nLIMIT 30",
+  "sql_count": 2,
+  "answer": "票据侧证据同样闭合了。两条证据链合并，给出最终结论：\n\n## 结论\n\n**冲减的收入记在「冲红发生当期」——即红字发票开具/退付办理的那个会计期间，不追溯调整原收入期间。**\n\n## 完整证据链（票据侧 + 收入侧 + 流水侧）\n\n**① 票据侧 `une_cbill_new`：红字票的开票月份与原票月份脱钩**\n\n按 `frelatedbillno = 原票.fbillno` 关联红票（`ftotalamt < 0`）与原票，冲红月份与原票月份大量跨期，例如：\n\n| 红票开票月 | 原票开票月 | 笔数 |\n|---|---|---|\n| 2022-12 | 2022-11 / 2022-12 / 2023-03 / 2023-05…2024-07 | 25 |\n| 2023-05 | 2023-06 / 2023-08 / 2023-11 / 2024-02…2025-01 | 18 |\n\n原票收入早在其开票/缴款期间确认，红票落在自己的开票月份——票据系统不回写原期间。\n\n**② 收入侧 `fne_stats_income`：负收入随冲红办理日入账（决定性）**\n\n2026-01-28 一次性冲红的 40 笔负收入（`fincometype='2'`），原缴款日 `fpaydate` 跨 2024-12 至 2026-01 共 13 个月，但 `fincomedate` 全部 = `2026-01-28`，冲减额全部计入 **2026 年 1 月**，无一笔回溯到 2024-12 或 2025 年。\n\n**③ 流水侧 `fne_income_daybook`：冲减方向流水同样按办理日记账**\n\n`fiodirection = '-1'` 的冲减流水，`fsrcpaycode` 指向原缴款单，`freceiveddate`（记账/到账日）= 冲红办理当日。\n\n**④ 汇总口径**\n\n月度收入物化视图 `fne_stats_income_mv` 按 `substring(fincomedate,1,7)` 归期，负收入随冲红当月进入月报，体现为\"当月收入净减少\"，原月份历史数据不重述。\n\n复验 SQL：\n\n```sql\n-- 票据侧：红票月份 vs 原票月份的跨期分布\nSELECT substring(r.fdate,1,7) AS chg_month,\n       substring(o.fdate,1,7) AS orig_month,\n       count() AS cnt\nFROM une_cbill_new r\nINNER JOIN une_cbill_new o ON r.frelatedbillno = o.fbillno\nWHERE r.ftotalamt < 0\nGROUP BY 1, 2\nORDER BY 1, 2;\n```\n\n## 报表使用提醒\n\n- **单月异常负值** = 当月发生大额冲红/退付，应按 `fincomedate` 当月 + `famt < 0` 溯源，而不是怀疑原期间数据；\n- **环比/同比分析**：冲红把减收一次性砸在冲红当月，做趋势分析时建议剔除冲红扰动（`famt < 0` 单独标记）后再看净额与毛额两条线。",
+  "errors": [],
+  "elapsed_s": 22.2,
+  "arbiter": null,
+  "raw_path": "rounds/round-02/runs/datus/q09.payload.jsonl"
+}

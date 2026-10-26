@@ -1,13 +1,13 @@
 {
   "id": "q01",
-  "question": "非税收入收缴业务涉及哪几方参与？",
+  "question": "非税收入收缴业务的起点和终点分别是什么？",
   "status": "answer",
   "metrics_hit": [],
   "sql": "",
   "sql_count": 0,
-  "answer": "本问题为业务参与方语义问题，直接依据 /agent/meta/fiscal_collection_view 透出的 ai_context 与成员 description 作答（无数据聚合、故无结果表）。非税收入收缴业务涉及六类参与方：①缴款人（payer_name，付款义务方，数据已脱敏）；②执收单位及其执收区划（chg_agency_code/chg_rgn_code，开具缴款书的执收方）；③代理代收机构（acc_agen_code，bgt_style='3' 代收场景，本库实测无代收数据）；④收款银行/账户（rec_bank、rec_acct_bank/rec_acct_name/rec_acct_type，含财政专户、汇缴专户、国库等账户类型）；⑤收入归属方（rec_agency_code 收入单位、rec_rgn_code 收入区划、rec_bgt_agen 收入方预算归类、chgfin_dept_id 归口业务处室——由清分/分成 calc_source 决定，且 rec_agency 名称列暂缺只出编码）；⑥财政端资金归集方（按 bgt_style 资金管理方式分国库/专户两条去向：缴库入库环节见 fiscal_treasury_view，清分划拨环节见 fiscal_allocation_view）。注意 ai_context 声明：名称列存在一码多名脏数据仅展示不作准，分组须用编码列。",
+  "answer": "本问题为业务流程语义问题，依据 /agent/meta 三个视图的 ai_context 作答（无数据聚合、无结果表）。起点：执收单位开具缴款书（fill_date，票面填开日期；缴款书 state=1 待缴款为业务起点状态），缴款人完成缴款（pay_date 缴款日期）。中间环节：资金到账（received_date）、按 calc_source 分成/提留清分、确定收入归属（rec_* 侧）。终点：资金按 bgt_style 归集——进国库或财政专户；终点以缴库入库为准（fiscal_treasury_view，缴库单→缴库回执 status='9'→已入国库 enter_status），清分划拨过程见 fiscal_allocation_view（enter_date 划拨到账）。即：起点=开具缴款书/待缴款，终点=缴库入国库（专户管理资金则以划入专户为终点）。",
   "errors": [],
-  "elapsed_s": 20.5,
+  "elapsed_s": 7.7,
   "arbiter": null,
   "raw_path": "rounds/round-02/runs/cube/q01.raw.json"
 }

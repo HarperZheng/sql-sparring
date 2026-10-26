@@ -1,0 +1,48 @@
+{
+  "id": "q04",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "缴款通知书与汇缴通知书的适用场景及资金方向（业务概念题）",
+      "caliber": "缴款通知书用在直缴场景：票面缴款人=外部缴款人，资金方向=缴款人→代理银行指定账户（银行代收→过渡户→再行缴库）；汇缴通知书用在汇缴场景：本质是执收单位定期汇总上缴的划款指令，票面缴款人=执收单位自己，资金方向=单位账户→国库/财政专户；落地 FNE_PAYBOOK+ITEM vs UNE_PAYBOOK+ITEM+CONFIRM。库内实测佐证（une_paybook_new fbustype：直缴 5,487 笔收款人集中于国库账户/收缴专户，汇缴 1,801 笔集中于财政专户/国库账号）",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    },
+    "cube": {
+      "metric": "缴款通知书与汇缴通知书的适用场景及资金方向（业务概念题）",
+      "caliber": "cube 侧 nomatch：语义层无两种通知书的场景与资金方向知识（未建模），无作答",
+      "dimensions": null,
+      "time_window": "不适用（概念题，无时间窗口）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "通知书场景与资金方向",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 侧 nomatch，无口径可比；datus 依据业务文档§二/§六作答并经 une_paybook_new fbustype 库内实测佐证。"
+      }
+    ],
+    "summary": "单侧作答（cube nomatch），无法互证，待人工确认 datus 答案作为回归基准。"
+  },
+  "verdict": "待人工",
+  "verdict_detail": [
+    {
+      "side": "cube",
+      "type": "补指标",
+      "target": "语义层缺汇缴通知书（UNE_PAYBOOK 体系）与直缴/汇缴资金方向知识",
+      "suggest": "ai_context 增补两种通知书的适用场景与资金方向；注意缴款人口径分表规则（缴款通知书票面=外部缴款人，汇缴通知书票面=执收单位自己），按缴款人统计需分表取数"
+    }
+  ],
+  "corrected": {
+    "answer": "缴款通知书用在直缴场景：开给外部缴款人，资金方向为缴款人→代理银行指定账户（银行代收后过渡户→再行缴库）；汇缴通知书用在汇缴场景：本质是执收单位把已收资金定期汇总上缴的划款指令，资金方向为单位账户→国库/财政专户；两票面缴款人不同（外部缴款人 vs 执收单位自己），按缴款人统计需分表取数。",
+    "basis": "倾向采纳 datus 作答卡（业务文档§二/§六 + une_paybook_new fbustype 库内实测佐证）；cube 侧 nomatch，无对照证据"
+  },
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q04.json",
+    "rounds/round-02/answers/cube/q04.json"
+  ]
+}

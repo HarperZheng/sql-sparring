@@ -1,0 +1,52 @@
+{
+  "id": "q17",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "执收单位经手收入金额排名前十（2026 年）",
+      "caliber": "非税缴款金额指标：sum(famt) 按 执收单位 dim_agen.fagenname（JOIN fab_agen 主档取 fchgagenidcode）分组降序 Top10；自述测试数据污染明显（榜首即测试单位）",
+      "dimensions": "按执收单位（主档单位名 fagenname）分组 Top10",
+      "time_window": "锚点=开票日 fill_date；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "榜首(测试云南测试环境)": 14916711.37,
+        "有缴款单位数": 9,
+        "未匹配行金额": 805.28
+      }
+    },
+    "cube": {
+      "metric": "执收单位经手收入金额排名前十（2026 年，fiscal_collection_view）",
+      "caliber": "sum(amt) 按 执收单位编码 chg_agency_code 分组降序 Top10（ai_context：分组必须用 *_code，*_name 是别名拼接不作准）；'经手的收入金额'取唯一口径缴款金额 amt",
+      "dimensions": "按执收单位编码（chg_agency_code）分组 Top10",
+      "time_window": "锚点=缴款日期 pay_date；窗口 [2026-01-01, 2026-12-31]",
+      "values": {
+        "榜首(编码124045)": 14916711.37,
+        "有缴款单位数": 9
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "执收单位收入金额排名",
+        "caliber_same": false,
+        "value_same": true,
+        "note": "数值抽查一致：榜首金额 14,916,711.37 元全同（datus 名'测试云南测试环境'，cube 出编码 124045，同一路径不同呈现），有缴款单位数均 9。但'今年'锚点不同（同 q10 根因）：datus=开票日 fill_date，cube=缴款日期 pay_date——当前数据下未造成差异（未验证其恒成立）。分组呈现不同（主档单位名 vs 单位编码）属展示差异，指向同一 fchgagen 路径。"
+      }
+    ],
+    "summary": "榜首金额与单位数全同（14,916,711.37 元 / 9 家）；唯'今年'锚点不同（同 q10 根因），随该拍板一并对齐。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "缴款类问题'今年'的时间锚点（同 q10 根因：datus 主时间轴 fill_date；cube pay_date）",
+      "suggest": "随 q10 的锚点拍板一并对齐，无需单独修法；对齐后本题进复验集确认排名仍一致"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q17.json",
+    "rounds/round-02/answers/cube/q17.json"
+  ]
+}

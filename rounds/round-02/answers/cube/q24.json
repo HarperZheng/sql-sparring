@@ -1,0 +1,101 @@
+{
+  "id": "q24",
+  "question": "今年已下达划拨指令但资金尚未划转到账的部分，按滞留时长分档，各档金额有多大？",
+  "status": "answer",
+  "metrics_hit": [
+    {
+      "measures": [
+        "fiscal_allocation_view.trans_amt",
+        "fiscal_allocation_view.count"
+      ],
+      "dimensions": []
+    }
+  ],
+  "sql": "",
+  "sql_count": 0,
+  "answer": "口径声明：已下达划拨指令未到账=划转状态 trans_stats=1（仅已发在途，不含 7 失败/14 校验不通过），金额用划拨金额 trans_amt，按最近一轮划转日期 trans_date 月分组近似滞留档（该拍板口径已回写口径词典）。数据范围：2026-01-01 至 2026-12-31（今年）划转日期范围内，未到账在途划拨查询结果为 0 笔、金额合计 0 元——即今年已发指令的划拨均已不在\"已发在途\"状态（或该状态下今年无划转记录），各滞留档金额均为 0。如需把划转失败（7）或校验不通过（14）也算作\"未到账\"，或放宽到往年下达的存量在途，请另行拍板后重查。",
+  "errors": [],
+  "elapsed_s": 46.7,
+  "arbiter": {
+    "mode": "auto",
+    "policy": "option-1",
+    "first_type": "ask",
+    "ask_question": "「已下达划拨指令但尚未划转到账」与「滞留时长分档」在模型里均无固化口径，需拍板两点：①未到账范围按哪个划转状态算（trans_stats：1已发在途；还是 1+7失败+14校验不通过 都算未到账）；②模型无「滞留天数」成员、无法按任意天距分档，只能用最近一轮划转日期 trans_date 按月分组近似滞留档（如 2026-09 发出的≈滞留1个月内），是否接受该近似口径？",
+    "options": [
+      "trans_stats=1（仅已发在途）+ trans_date 按月分档",
+      "trans_stats in (1,7,14)（含失败/校验不通过）+ trans_date 按月分档",
+      "trans_stats=1 + 改看明细行（划拨凭证号+划转日期+金额，滞留档自算）",
+      "口径都不合适，放弃本次查询"
+    ],
+    "followups": [
+      {
+        "question": "就按第一个选项的口径来（trans_stats=1（仅已发在途）+ trans_date 按月分档），直接出答案。",
+        "response_type": "answer",
+        "response": {
+          "type": "answer",
+          "title": "2026年已发在途划拨按划转月分档：各档均为0",
+          "plan": [
+            [
+              "已下达划拨指令未到账（仅已发在途 trans_stats=1）",
+              "fiscal_allocation_view.trans_stats",
+              "用户拍板口径，已回写口径词典"
+            ],
+            [
+              "按滞留时长分档→最近一轮划转日期 trans_date 月分组近似",
+              "fiscal_allocation_view.trans_date",
+              "模型无滞留天数成员，meta ai_context 确认 trans_date 为最近一轮划转日期"
+            ],
+            [
+              "金额",
+              "fiscal_allocation_view.trans_amt",
+              "划拨金额口径（ftransamt 合计）"
+            ]
+          ],
+          "tables": [
+            {
+              "title": "口径A：2026年已发在途划拨（trans_stats=1）按划转月份分档",
+              "query": {
+                "measures": [
+                  "fiscal_allocation_view.trans_amt",
+                  "fiscal_allocation_view.count"
+                ],
+                "dimensions": [],
+                "filters": [
+                  {
+                    "member": "fiscal_allocation_view.trans_stats",
+                    "operator": "equals",
+                    "values": [
+                      "1"
+                    ]
+                  }
+                ],
+                "timeDimensions": [
+                  {
+                    "dimension": "fiscal_allocation_view.trans_date",
+                    "granularity": "month",
+                    "dateRange": [
+                      "2026-01-01",
+                      "2026-12-31"
+                    ]
+                  }
+                ],
+                "order": {
+                  "fiscal_allocation_view.trans_date": "asc"
+                },
+                "limit": 100
+              },
+              "rows": [],
+              "total": null
+            }
+          ],
+          "answer": "口径声明：已下达划拨指令未到账=划转状态 trans_stats=1（仅已发在途，不含 7 失败/14 校验不通过），金额用划拨金额 trans_amt，按最近一轮划转日期 trans_date 月分组近似滞留档（该拍板口径已回写口径词典）。数据范围：2026-01-01 至 2026-12-31（今年）划转日期范围内，未到账在途划拨查询结果为 0 笔、金额合计 0 元——即今年已发指令的划拨均已不在\"已发在途\"状态（或该状态下今年无划转记录），各滞留档金额均为 0。如需把划转失败（7）或校验不通过（14）也算作\"未到账\"，或放宽到往年下达的存量在途，请另行拍板后重查。",
+          "assumption": "未到账=trans_stats 仅取 1（已发在途）；滞留档用 trans_date 月分组近似（无滞留天数成员）；时间范围=2026 年划转日期",
+          "truncated": false,
+          "rows": 0,
+          "hitPreAgg": false
+        }
+      }
+    ]
+  },
+  "raw_path": "rounds/round-02/runs/cube/q24.raw.json"
+}

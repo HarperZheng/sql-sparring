@@ -1,0 +1,67 @@
+{
+  "id": "q10",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "非税缴款金额（分月）",
+      "caliber": "sum(fne_paybook_full_high.famt) 全量直加：无行级过滤、无去重键；语义层注明直缴收窄条件 fbustype='1' 未启用（按全量口径作答）",
+      "dimensions": "按月聚月（dateTrunc('MONTH')）；仅金额一列",
+      "time_window": "锚点=开票日 fill_date=toDate(ffilldate)；窗口 [2026-01-01, 2027-01-01)",
+      "values": {
+        "2026-01": 4632.0,
+        "2026-02": null,
+        "2026-03": null,
+        "2026-04": 1982.32,
+        "2026-05": 7222.0,
+        "2026-06": 14909895.85,
+        "2026-07": 752.52,
+        "2026-08": 700.66,
+        "2026-09": 9372.78,
+        "2026-10": 50712.0
+      }
+    },
+    "cube": {
+      "metric": "缴款金额 fiscal_collection_view.amt（分月，另附笔数）",
+      "caliber": "sum(famt) 全量直加 + COUNT(DISTINCT fpaycode) 笔数：无行级过滤；SQL 含维度补全 JOIN（机构/地区/项目等，不影响金额）",
+      "dimensions": "按月聚月（toStartOfMonth）；金额+笔数两列",
+      "time_window": "锚点=缴款日期 pay_date=toDateOrNull(fdate) 经 toTimeZone UTC；窗口 [2026-01-01, 2026-12-31] 全年",
+      "values": {
+        "2026-01": 4632.0,
+        "2026-06": 14909895.85,
+        "2026-08": 700.66,
+        "2026-10": 50712.0
+      }
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "非税缴款金额（分月）",
+        "caliber_same": false,
+        "value_same": true,
+        "note": "指标同=sum(famt) 全量月聚。时间锚不同：datus=开票日 ffilldate（其语义层默认'某日缴款按开票口径'），cube=缴款日期 fdate（同表另一列，datus 语义层记录 2026 年有 61 行开票与缴款非同日），cube 另含 UTC 时区换算。抽查可比月份（01/06/08/10）数值全同；因锚点不同，个别月份分桶差异不能排除。datus 本轮有新鲜执行 SQL（执行记录取证，sql_source=datus-log），非沿用历史。"
+      },
+      {
+        "name": "缴款笔数",
+        "caliber_same": null,
+        "value_same": null,
+        "note": "cube 附加输出 paybook_count（6月 21 笔）；datus 未输出，无比对面，不影响本题（月度金额走势）结论。"
+      }
+    ],
+    "summary": "同指标、同全量口径、数值抽查一致；唯时间锚点两侧各执一列（开票日 vs 缴款日期），属业务口径取舍，待拍板。"
+  },
+  "verdict": "建模差异",
+  "verdict_detail": [
+    {
+      "side": "both",
+      "type": "改口径",
+      "target": "缴款金额的时间锚点（datus 非税缴款金额主时间轴 fill_date；cube fiscal_collection_view.pay_date）",
+      "suggest": "对'缴款金额按月'的锚点二选一（开票日或缴款日期），以课本'已裁定口径'拍板后回写双侧语义层；datus 侧已有 pay_date 维度可切换，cube 侧在 schema 内调整 fdate/ffilldate 映射"
+    }
+  ],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q10.json",
+    "rounds/round-02/answers/cube/q10.json"
+  ]
+}

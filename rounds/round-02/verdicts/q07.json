@@ -1,0 +1,38 @@
+{
+  "id": "q07",
+  "round": "round-02",
+  "cards": {
+    "datus": {
+      "metric": "一笔缴款的金额口径（票面总额 vs 征收项目明细合计）",
+      "caliber": "以征收项目明细 famt 合计为准（按 (fpid,fid) 去重并取 argMax(fupdatetime) 最新版本）；票面总额 ftotalamt 仅用于单票展示与对账校验。库内实测：99.9% 实缴票据两口径一致，明细口径才能暴露重复版本、脏数据导致的金额虚增",
+      "dimensions": "按缴款书（fpid）分组",
+      "time_window": "不适用（口径辨析题）",
+      "values": null
+    },
+    "cube": {
+      "metric": "一笔缴款的金额口径（票面总额 vs 征收项目明细合计）",
+      "caliber": "按各征收项目的金额明细算：明细金额=fiscal_collection_view.amt，按缴款书分组或直接汇总即得一笔缴款收到的钱；票面总额 total_amt 是整票金额复印在每条明细行上的冗余列，禁止 sum（一票多项目行会把整票金额重复计入多次），只能用于单票抽查或展示；ai_context 唯一约定，无歧义分叉",
+      "dimensions": "按缴款通知书（paybook）分组",
+      "time_window": "不适用（口径辨析题）",
+      "values": null
+    }
+  },
+  "comparison": {
+    "metrics": [
+      {
+        "name": "金额口径（明细合计为准，票面总额禁止加总）",
+        "caliber_same": true,
+        "value_same": null,
+        "note": "双侧独立得出同一口径：明细合计为准、票面总额只能展示/对账不能直接加总。附客观差异（不影响本题判定）：datus 额外强调明细表存在多版本，需按 (fpid,fid) 去重取最新版本；cube 口径声明未展开版本去重——客观记录，不判对错。"
+      }
+    ],
+    "summary": "口径一致：按征收项目明细合计，票面总额仅展示/对账用；datus 侧补充了版本去重要求。"
+  },
+  "verdict": "互证通过",
+  "verdict_detail": [],
+  "corrected": null,
+  "evidence_refs": [
+    "rounds/round-02/answers/datus/q07.json",
+    "rounds/round-02/answers/cube/q07.json"
+  ]
+}
