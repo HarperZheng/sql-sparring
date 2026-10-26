@@ -93,7 +93,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 ### ask_datus 要点
 
 - **chat API 通道（与 ask_cube 同构）**：adapter 直接 `POST http://localhost:8501/api/v1/chat/stream`（datus --web 常驻服务，SSE 流）——agent 配置/语义模型只在服务启动时装一次，每题新 `session_id` 保证题间零污染；message 事件内层 payload 即 MessagePayload，提取器（extractor.py）按 §2.2 规格解析。单题读超时（默认 900s）按超时截断落卡、保留部分输出；网络类失败换新 session 重试（3 次，与 cube 同款）。前置：`datus --web` 在跑（preflight 第 2 项查）。
-- 提取规格 = 设计文档 §2.2 表格（SQL←execute_sql toolParams；命中指标←query_metrics/search_metrics/get_metric；**值行←提取步 LLM 结构化 depth-0 散文**（`adapters/value_extract.py`，模型走 `conf/models.json` extractor 节）——散文仅 runs 留痕，只抄数不推算，指标名优先取命中指标原词、不贴切标 `未登记:<名>`，D14；真实错误←FuncToolResult `error` 字段，**正文 "Code NNN" 是 KB 文本，勿扫全文**）。
+- 提取规格 = 设计文档 §2.2 表格（SQL←execute_sql toolParams；命中指标←query_metrics/search_metrics/get_metric；**值行←提取步 LLM 结构化 depth-0 散文**（`adapters/value_extract.py`，模型走 `conf/models.json` extractor 节）——散文仅 runs 留痕，只抄数不推算，题目未问的附加指标行不抄（即使出现在查询返回的表格行里；2026-10-26 拍板，round-03 q11/q20 附加行实测驱动），指标名优先取命中指标原词、不贴切标 `未登记:<名>`，D14；真实错误←FuncToolResult `error` 字段，**正文 "Code NNN" 是 KB 文本，勿扫全文**）。
 - 已知坑内置：深度>0 子代理的调用也要收（v0 教训）；超时题保留部分输出。
 - **验收标准**：提取规格 §2.2 逐条在活跑留痕上有实测例证（rounds/m0/runs/datus/）；作答卡字段与 §三 ask 契约一致；值行验收=round-02 实测（2026-10-26）：30 卡迁移值行、提取步活跑 q15 散文→5 行逐行吻合；q15 工行分项两侧差 17.63 记入明细供回改①（成员名两侧表述不同，别名归一随指标登记表沉淀）；引擎判定按 D14 两级判定改写后复跑为准（推演：一致=q12，1/15，待复核 0——未验证）。
 
@@ -115,7 +115,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 - 裁决四态：`互证通过`（口径同+值同）/ `建模差异`（口径不同→差距单）/ `执行事故`（口径同+值不同→bug 单）/ `待人工`。
 - **裁判输入=两侧作答卡**：四态判定只靠两卡（sql 文本 + metrics_hit + 值行已足够，SQL 里去重键/时间轴一眼可见；散文不落卡，D14）；仅 nomatch 归因时现查语义层相关条目（datus=YAML、cube=词典）。
 - **M4 固化**为 judge 服务（另一接口 DeepSeek，接口与 key 走 `conf/models.json` judge 节），以 round-02/03 的人工裁决为回归基准。
-- **共同缺口（进回改单主表）**：同一题两侧均 nomatch/failed → 判双侧共同缺口，修改对象记双侧，进回改单主表（被动统计，只覆盖被问到的题）；轮报四指标：一致率 / 分歧分布 / 差距数 / 闭环率。
+- **共同缺口（进回改单主表）**：同一题两侧均 nomatch/failed → 判双侧共同缺口，修改对象记双侧，进回改单主表（被动统计，只覆盖被问到的题）；轮报四指标：一致率（裁决口径：互证通过数 ÷ 题数，2026-10-26 拍板改版）/ 分歧分布 / 差距数 / 闭环率。
 
 ### 值行一致率引擎：两级判定（D14，2026-10-26 拍板）
 
@@ -127,7 +127,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | ② 键比对 | 只对过了①的题：按（指标，维度）同名行逐行比数值 | 全部行同名同值 → 判「一致」；同名行缺行/值异 → 判「不一致」 |
 | ③ 待复核 | ②中键名对不上（数列相等但名字对不齐——错位嫌疑或异名同义） | 标「待复核」：AI 提议别名→人审定→指标登记表→重算翻案；审定为错位则改判不一致 |
 
-- **一致率 = ②判「一致」的题数 ÷ 轮题库题数**（剔除题已物理删除）；待复核不计分子，翻案后重算计入。
+- **机械一致率 = ②判「一致」的题数 ÷ 轮题库题数**（剔除题已物理删除）；待复核不计分子，翻案后重算计入。轮报四指标之一致率自 2026-10-26 二次拍板起改用**裁决口径：互证通过数 ÷ 题数**（互证通过即一致），机械一致率退居轮报诊断参考行与 valuecmp CLI——两层并存：判定看裁决，机械层供查证。
 - 依据：键比对一致 ⟹ 数列必然相等，逆否即数列不等 ⟹ 不一致恒真——①判「不一致」零误判；数列相等的题不允许跳过②直接判一致（堵住成员贴反被数列规则误判一致的盲区）。
 - 细则：null=null 算同名同值；一侧有 null 行另一侧没有 → 缺行判不一致；双侧都无数列 → 判不一致；换算只对金额，笔/张/% 等原样比。
 - **展示与判定分层**：轮报分歧明细「值行比对」列与引擎 `join_rows` 走**明细口径**（共有键计数：值同/值异/不一致 + 单侧行清单，含导出量行），只供回改①查证哪个指标/维度/筛选错，不参与题级判定；题级结论只认两级判定。别名登记表 `conf/metrics.json` 只服务③的翻案重算（AI 提议工具随 M4 裁判固化落地，此前待复核由人审登记）。
@@ -137,19 +137,22 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 
 **系统边界止于轮报（决策点 D6，用户拍板）**：round.py 出轮报后本轮系统段结束；回改单不是系统产物——回改①由人看过轮报分歧明细后调起智能体，codeqa 逐题查证后由智能体创建 feedback.md；审定、施工、复验、闭环按回改五步走（不叫回灌）。每个语义层 diff 都有人背书——语义层是生产资产（改动牵动 P0/P1 基准与已发布查询），agent 自动改等于绕过工程评审；口径取舍是业务决策，系统只能并列双方证据，不能代拍。
 
-回改单 = `rounds/<轮>/feedback.md` 单文件，三部分：文件头（回改契约：五步+状态机+冲突规则+全局拍板）+ 主表（每行 id/问题/修改对象/codeqa拍板结论/状态）+ 回改卡（每题一节：证据/双侧改法/前置验证/记忆清理/验收）。由回改①的智能体创建（未查完的行登记状态=待查证），内容按回改五步推进：
+回改单 = `rounds/<轮>/feedback.md` 单文件，三部分：文件头（回改契约：五步+状态机+冲突规则+全局拍板）+ 主表（每行 id/问题/修改对象/codeqa拍板结论/状态）+ 回改卡（每题一节：证据/双侧改法/前置验证/记忆清理/验收）。由回改①的智能体创建（未查完的行登记状态=待查证；执行契约=`feedback/SKILL.md`），内容按回改五步推进：
 
 | 步 | 谁 | 做什么 | 状态流转 | 产出物 |
 |---|---|---|---|---|
-| ① 查证起草 | 智能体（人调起） | 读轮报分歧明细，用 codeqa 逐题查真实字段解法（过滤器+指标+维度+时间锚），创建回改单 feedback.md | 待查证→草案 | 回改单（新建）：各行拍板结论+回改卡 |
+| ① 查证起草 | 智能体（人调起） | 读轮报分歧明细，用 codeqa 逐题查真实字段解法（过滤器+指标+维度+时间锚，统一以 CK 宽表字段落单），并向 codeqa ETL 抽取代码仓（「财政V3抽取-全国通用版」）逐字段核宽表存在性（三态记前置验证），创建回改单 feedback.md | 待查证→草案 | 回改单（新建）：各行拍板结论+回改卡 |
 | ② 审定 | 人 | 逐行审定拍板结论与双侧改法 | 草案→已审定 | — |
 | ③ 施工 | 人 | 按回改卡改双侧语义层（datus dosi YAML / cube schema+词典；cube 侧"记忆清理"=拍板口径落词典，属施工） | 已审定→已施工 | 语义层 diff |
-| ④ 复验 | 系统 | `uv run python bin/round.py --round <新轮> --retest <上轮>` 一条命令自动：**清 datus chat memory（全量清空，不可逆、不做备份，用户拍板 2026-10-26）** → **自动重启两服务**（datus：WSL 停旧进程拉起 `datus --web`，轮询 :8501 就绪；cube：`docker compose restart cube` 强制重载 schema + agent-svc 探 :4100、缺则 `D:\develop\cube\start.cmd` 补启；任一未就绪停机退出码≠0）→ 复验集=上轮 report 复验集 ∩ feedback 非剔除行，**原题原 ID 复制**进新轮（不重新出题，盲考不变）→ 双侧作答+提取作答卡 → 裁决关口（AI 初步裁决+人确认，缺单停机）→ 轮报（闭环率=复验集互证通过数/复验集总数） | 已施工→（挂：回③；口径错：回①） | 新轮完整记录（questions/answers/verdicts/report） |
+| ④ 复验 | 系统 | `uv run python bin/round.py --round <新轮> --retest <上轮>` 一条命令自动：**清 datus chat memory（全量清空，不可逆、不做备份，用户拍板 2026-10-26）** → **datus KB 重投影**（命令与根因见下方注记；③手工改 YAML 后 KB 索引静默过期，不重投影则复验作答仍拿旧元数据）→ **自动重启两服务**（datus：WSL 停旧进程拉起 `datus --web`，轮询 :8501 就绪；cube：`docker compose restart cube` 强制重载 schema + agent-svc 探 :4100、缺则 `D:\develop\cube\start.cmd` 补启；任一未就绪停机退出码≠0）→ 复验集=上轮 report 复验集 ∩ feedback 非剔除行，**原题原 ID 复制**进新轮（不重新出题，盲考不变）→ 双侧作答+提取作答卡 → 裁决关口（AI 初步裁决+人确认，缺单停机）→ 轮报（闭环率=复验集互证通过数/复验集总数） | 已施工→（挂：回③；口径错：回①） | 新轮完整记录（questions/answers/verdicts/report） |
 | ⑤ 闭环 | 人 | 复验通过且人工确认后，feedback.md 行状态改"闭环"（**无独立套件文件——feedback.md 即闭环账本**） | 已施工→闭环 | feedback.md 状态列 |
 
 - 状态机：待查证→草案→已审定→已施工→闭环；终态另有剔除（本轮不做的题——如题型撤销类，不进五步与闭环统计）。
 - 冲突规则：回改单与裁决书冲突以回改单为准（回改单产生于 codeqa 查证之后）；与课本「已裁定口径」冲突以课本为准（课本是下一轮出题依据）；全局拍板写在文件头，逐行拍板不得与之相悖。
 - 记忆清理：回改卡每条建模差异附**记忆清理条目**（受影响 chat memory 的定位，cube 侧=拍板口径落词典属③施工）；datus 侧清理由④复验开跑**代码自动执行**——全量清空 chat memory，**不可逆、不做备份**（用户拍板 2026-10-26；datus 实例为互搏专用，全量清最彻底）；不清则旧口径复活（v0 已验证的坑）。
+- **KB 重投影（datus 侧，③→④ 之间，④开跑自动执行）**：datus 语义 KB（`.datus/data/{project}/datus_db/` 的 LanceDB：metrics.lance/semantic_dataset.lance 等）是 `subject/semantic_models/{datasource}/*.yml` 的投影，但**查询路径不校验过期**——dosi 引擎（get_metric/query_metrics）直读 YAML 永远新鲜，agent 聊天选指标/维度走 KB 向量检索，内容=上次显式同步时刻；③手工/IDE 改 YAML 后 KB 静默过期，agent 拿旧指标元数据作答（2026-10-26 实证：2026-10-20 的旧索引让 round-02 施工后的查询继续以 fill_date 为时间轴、绕过语义路径直写 SQL）。重投影命令（无 LLM、不联网、幂等，embedding 走本地 fastembed）：
+  `wsl -e bash -ic "conda activate datus && cd /mnt/d/develop/datus/Datus-agent && uv run datus bootstrap-kb --datasource yunnan0508 --components semantic_model --kb_update_strategy sync-yaml"`
+  编入 --retest 时置于清记忆之后、拉起 datus 服务之前；web UI 内保存 YAML 会自动同步（保存路径内置 sync_osi_to_db），不经过 UI 的施工必须显式重投影。
 - 闭环率是**跨轮指标**（上轮分歧题在本轮复验集的通过率）——它测的是"人拿着回改单修完语义层后问题是否真消失"，中间隔着完整的工程过程，比系统自改自测可信。
 
 ### 记忆隔离（变量控制）
@@ -191,7 +194,7 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | **M1 契约定稿** | 三个 JSON Schema（question / answer_card / verdict）+ questions.jsonl 格式定稿；answer_card 以 M0 实卡为底定稿（status 六值、arbiter 全字段；口径卡只在裁决书，D10），适配器写卡前内联 schema 校验 + `bin/validate.py` 全量校验器；`conf/models.json` 骨架落盘（examiner/judge 两节，key 只存环境变量名）；M4-值行增量（D14）见决策点台账 | 适配器全量输出过 schema 校验 | `schemas/` + `bin/validate.py` + `conf/models.json` |
 | **M2 出题人启动** | 业务课本（`business.md` 收编业务知识+剥离数据落地+知识点编号，D11）+ SKILL.md + `bin/examine.py`（LLM 调用接入 `conf/models.json` examiner 节，缺省本机 claude 现配）+ `bin/preflight.py` 开跑前健康检查（单次执行） | business.md 剥题检查通过；题库覆盖矩阵无漏项；冒烟试答两侧出卡；首个机器题库诞生 | `syllabus/` + `examiner/` + round-02 题库 |
 | **M3 首个自动轮** | `bin/round.py` 跑 round-02 全流程（出题→双侧作答→提取）；裁决人工在环 | 一轮完整记录落盘 + 轮报四指标（一致率/分歧分布/差距数/闭环率） | `rounds/round-02/` + report |
-| **M4 复验轮与固化** | 回改五步跑通：①智能体起草②人审定③按回改卡修双侧语义层 → ④`--retest` 复验一条命令自动（清记忆[全量不可逆无备份]→重启两服务→原题重跑→裁决→轮报，复验集=上轮分歧题∩非剔除行）→ ⑤人工置 feedback.md 行状态=闭环；回改单格式定稿；裁判固化 judge 服务（模型/接口接 `conf/models.json` judge 节） | 回改五步至少跑通一次且闭环率>0；judge 以人工裁决为回归基准 | 复验轮记录 + 回改单模板 |
+| **M4 复验轮与固化** | 回改五步跑通：①智能体起草②人审定③按回改卡修双侧语义层 → ④`--retest` 复验一条命令自动（清记忆[全量不可逆无备份]→datus KB 重投影[见 §四注记]→重启两服务→原题重跑→裁决→轮报，复验集=上轮分歧题∩非剔除行）→ ⑤人工置 feedback.md 行状态=闭环；回改单格式定稿；裁判固化 judge 服务（模型/接口接 `conf/models.json` judge 节） | 回改五步至少跑通一次且闭环率>0；judge 以人工裁决为回归基准 | 复验轮记录 + 回改单模板 |
 
 顺序依赖：M0（链路可行性）→ M1（契约定稿）→ M2 → M3 → M4。**M0 先行的理由**：两条答题链路是全系统最大的外部依赖风险（WSL 桥、:4100 活服务、提取规格），先证明"可调用、能答数"，再冻结契约——契约没有跳过，只是延后到有真实输出为底时才定稿。M0 只依赖 §2.2 提取规格与最小作答卡结构，不依赖完整 schema；datus 侧与 cube 侧可并行，datus 侧提取器可对 v0 留痕离线开发调试。
 

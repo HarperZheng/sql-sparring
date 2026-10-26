@@ -13,6 +13,8 @@ from .card import build_card
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+_ROW_CAP = 50  # 单表喂提取的行数上限（超出截断并注明；全量行永远在 raw 留痕可回查）
+
 
 def _archive_existing(path: Path):
     if not path.exists():
@@ -21,6 +23,27 @@ def _archive_existing(path: Path):
     archived = path.with_name(f"{path.stem}.{stamp}{path.suffix}")
     shutil.move(str(path), str(archived))
     return archived.name
+
+
+def _tables_rows_text(tables: list) -> str:
+    """tables[*].rows → 提取器可抄的结构化文本段（value=null 原样保留）。
+
+    round-03 q16 实测：cube 答案散文只写口径与结论、数据行仅存 tables.rows，
+    只喂散文提取会丢行（5 行丢 4）——故表格行随散文一并进提取输入，仍只抄数不推算。
+    """
+    parts = []
+    for i, t in enumerate(tables or []):
+        rows = t.get("rows") or []
+        if not rows:
+            continue
+        note = f"（超{_ROW_CAP}行截断，仅前{_ROW_CAP}行）" if len(rows) > _ROW_CAP else ""
+        title = t.get("title") or f"table[{i}]"
+        parts.append(f"[查询返回表格·{title}·共{len(rows)}行{note}]\n"
+                     + json.dumps(rows[:_ROW_CAP], ensure_ascii=False))
+    if not parts:
+        return ""
+    return ("\n\n以下为查询实际返回的结构化行（与散文冲突时以行数据为准；只抄数不推算，"
+            "value=null 表示该行无数）：\n" + "\n".join(parts))
 
 
 def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -> dict:
@@ -68,15 +91,17 @@ def run_question(qid: str, question: str, session_prefix: str, runs_dir: Path) -
     first_type = (first or {}).get("type", "error") if first else "error"
     final_resp = first if first_type != "ask" else (followups[-1]["response"] if followups else None)
 
-    # 值行提取步（D14）：终答散文（全文已留 raw.json）交 LLM 结构化为值行
+    # 值行提取步（D14）：终答散文＋查询返回表格行（全文已留 raw.json）交 LLM 结构化为值行
     # （adapters/value_extract.py，模型走 conf/models.json extractor 节）；提取问题
     # 清单追加进卡 errors；失败降级 values=[]，不影响作答状态。
     values, vprobs = [], []
-    if (final_resp or {}).get("type") == "answer" and ((final_resp or {}).get("answer") or "").strip():
+    if (final_resp or {}).get("type") == "answer":
         names = [m for t in final_resp.get("tables") or []
                  for m in ((t.get("query") or {}).get("measures") or [])]
-        from ..value_extract import extract_values
-        values, vprobs = extract_values(question, final_resp["answer"], names)
+        prose = (final_resp.get("answer") or "") + _tables_rows_text(final_resp.get("tables"))
+        if prose.strip():
+            from ..value_extract import extract_values
+            values, vprobs = extract_values(question, prose, names)
 
     card = build_card(
         qid, question, first_type, first or {}, followups, final_resp or {},
@@ -119,3 +144,41 @@ def _ask_with_retry(question: str, session_id: str, attempts: int = 3, backoff_s
             followups.append({"question": msg, "response_type": "exception",
                               "response": {"type": "error", "error": str(e)[:300]}})
     return first, followups, err
+
+
+def reextract_question(qid: str, runs_dir: Path, answers_dir: Path) -> dict:
+    """raw 留痕重产值行（不重答、不重问智能体）：散文＋表格行新提取输入，覆盖写卡。
+
+    幂等与回退：旧卡先按时间戳归档再覆盖（回退=取归档文件）；status≠answer 跳过。
+    """
+    runs_dir, answers_dir = Path(runs_dir), Path(answers_dir)
+    raw_path = runs_dir / f"{qid}.raw.json"
+    card_path = answers_dir / f"{qid}.json"
+    if not raw_path.exists() or not card_path.exists():
+        return {"id": qid, "skipped": "缺 raw 或卡"}
+    raw = json.loads(raw_path.read_text(encoding="utf-8"))
+    card = json.loads(card_path.read_text(encoding="utf-8"))
+    if card.get("status") != "answer":
+        return {"id": qid, "skipped": f"status={card.get('status')}"}
+    first = raw.get("first") or {}
+    first_resp = first.get("response") or {}
+    followups = raw.get("followups") or []
+    final_resp = first_resp if first_resp.get("type") != "ask" \
+        else (followups[-1].get("response") if followups else None)
+    if not final_resp or final_resp.get("type") != "answer":
+        return {"id": qid, "skipped": "raw 无 answer 终答"}
+    names = [m for t in final_resp.get("tables") or []
+             for m in ((t.get("query") or {}).get("measures") or [])]
+    prose = (final_resp.get("answer") or "") + _tables_rows_text(final_resp.get("tables"))
+    if not prose.strip():
+        return {"id": qid, "skipped": "散文与表格行皆空"}
+    from ..value_extract import extract_values
+    values, vprobs = extract_values(card["question"], prose, names)
+    archived = _archive_existing(card_path)
+    card["values"] = values
+    if vprobs:
+        card["errors"] = list(card.get("errors") or []) + vprobs
+    from schemas.validator import validate_card
+    validate_card(card, where="（ask_cube 重提取写卡前）")
+    card_path.write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"id": qid, "values": len(values), "archived": archived, "problems": vprobs}

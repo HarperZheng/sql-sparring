@@ -31,8 +31,8 @@
 
 | 层 | 文件 | 产出物 | 产出物说明 |
 |---|---|---|---|
-| 主入口 | `bin/round.py` | `rounds/<轮>/report.md` | 轮报：双侧状态、四指标、分歧明细、下轮复验集，一页看懂本轮 |
-| 回改①（人调起智能体） | | `rounds/<轮>/feedback.md` | 回改单：文件头（契约+状态机+冲突规则+全局拍板）+主表（id/问题/修改对象/codeqa拍板结论/状态）+回改卡（证据/双侧改法/前置验证/记忆清理/验收）；人看过轮报后由智能体创建，非 round.py 产物 |
+| 主入口 | `bin/round.py` | `rounds/<轮>/report.md` | 轮报：双侧状态、四指标、分歧明细、互证通过明细、下轮复验集，一页看懂本轮 |
+| 回改①（人调起智能体） | `feedback/SKILL.md` | `rounds/<轮>/feedback.md` | 回改单：文件头（契约+状态机+冲突规则+全局拍板）+主表（id/问题/修改对象/codeqa拍板结论/状态）+回改卡（证据/双侧改法/前置验证/记忆清理/验收）；人看过轮报后按查证契约调起智能体创建，非 round.py 产物 |
 | 组件入口 | `bin/examine.py` | `rounds/<轮>/questions.jsonl` | 题库，每行一题：`id`/`question`/`syllabus_ref`（回指课本知识点），不含预期答案字段（盲考） |
 | 组件入口 | `adapters/ask_datus` | `rounds/<轮>/answers/datus/qNN.json`（×30） | datus 作答卡：status/metrics_hit/sql/sql_count/values（值行，答案唯一载体 D14，适配器提取步直产）/errors/elapsed_s/arbiter/raw_path 等机器提取字段；answer 字段已自契约删除（m0 存档卡原样保留） |
 | | | `rounds/<轮>/runs/datus/qNN.payload.jsonl` | 该题 datus agent 循环的原始报文流，一字不改存档，一级证据 |
