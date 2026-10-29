@@ -19,7 +19,8 @@
 
 | 层 | 文件 | 环节 | 职责 |
 |---|---|---|---|
-| 主入口 | `bin/round.py` | ①–⑤ 串联 | 一轮全流程：①出题→②双侧作答→③提取→④裁决关口→⑤轮报，到轮报即停；`--retest` 复验模式：清记忆+自动重启两服务+重跑上轮分歧题到轮报（回改④）；人日常只碰这一个 |
+| 总控技能 | `.claude/skills/run-round/SKILL.md` | ①–⑤＋回改段 | 人一句话总控（`/run-round`）：串联 round.py 全链路与回改五步，G1–G6 人工闸口停下等人，复验/闭环同步亦由它受命执行（2026-10-27 建，术语见 docs/glossary.md） |
+| 主入口 | `bin/round.py` | ①–⑤ 串联 | 一轮全流程：①出题→②双侧作答→③提取→④裁决关口→⑤轮报，到轮报即停；`--retest <上轮>` 复验模式：清记忆+自动重启两服务+重跑上轮分歧题到轮报（回改④），产物自动落 `retest-rounds/round-<上轮>-r<K>` 复验轮目录、不占轮号（2026-10-29 拍板）；人日常只碰这一个（或经总控技能 `/run-round` 一句话调起） |
 | 组件入口 | `bin/examine.py` | ① 出题 | 只出题（读考纲→出题→schema/覆盖矩阵校验→落盘题库）；round.py 内部也调它 |
 | 组件入口 | `adapters/ask_datus` | ②③ datus 侧 | 逐题驱动 datus（:8501 chat API，全题指标优先 D13）+ 提取出作答卡（值行为答案载体，D14）+ SQL 执行记录取证；可单跑 `--only qNN` |
 | 组件入口 | `adapters/ask_cube` | ②③ cube 侧 | 逐题驱动 cube（:4100/chat，三态分流 + ask 自动拍板）+ 提取出作答卡（值行为答案载体，D14）；可单跑 `--only qNN` |
@@ -31,7 +32,7 @@
 
 | 层 | 文件 | 产出物 | 产出物说明 |
 |---|---|---|---|
-| 主入口 | `bin/round.py` | `rounds/<轮>/report.md` | 轮报：双侧状态、四指标、分歧明细、互证通过明细、下轮复验集，一页看懂本轮 |
+| 主入口 | `bin/round.py` | `rounds/<轮>/report.md`（复验另产 `retest-rounds/round-<源轮>-r<K>/report.md`） | 轮报：双侧状态、四指标、分歧明细、互证通过明细、复验集，一页看懂本轮；复验轮轮报同构，多一行"复验自"与闭环率 |
 | 回改①（人调起智能体） | `feedback/SKILL.md` | `rounds/<轮>/feedback.md` | 回改单：文件头（契约+状态机+冲突规则+全局拍板）+主表（id/问题/修改对象/codeqa拍板结论/状态）+回改卡（证据/双侧改法/前置验证/记忆清理/验收）；人看过轮报后按查证契约调起智能体创建，非 round.py 产物 |
 | 组件入口 | `bin/examine.py` | `rounds/<轮>/questions.jsonl` | 题库，每行一题：`id`/`question`/`syllabus_ref`（回指课本知识点），不含预期答案字段（盲考） |
 | 组件入口 | `adapters/ask_datus` | `rounds/<轮>/answers/datus/qNN.json`（×30） | datus 作答卡：status/metrics_hit/sql/sql_count/values（值行，答案唯一载体 D14，适配器提取步直产）/errors/elapsed_s/arbiter/raw_path 等机器提取字段；answer 字段已自契约删除（m0 存档卡原样保留） |

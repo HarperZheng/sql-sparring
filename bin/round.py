@@ -16,14 +16,17 @@
   ③ 施工     人按回改卡改双侧语义层（cube 拍板口径落词典属施工；→已施工）
   ④ 复验     本脚本 --retest 一条命令自动：清 datus chat memory（全量，不可逆、不做备份，用户拍板
               2026-10-26）→ 自动重启两服务 → 复验集=上轮分歧∩非剔除行、原题原 ID 重跑 → 裁决关口
-              → 轮报（挂→回③，口径错→回①）
+              → 轮报（挂→回③，口径错→回①）。产物独立落 retest-rounds/round-<上轮>-r<K>，
+              不占轮号（2026-10-29 拍板）；最新尝试已出轮报（完结）才开 r+1，未完结目录续用；
+              无 --no-wipe——续跑=重跑同一条命令，再次清记忆并复位服务（2026-10-29 拍板取消）
   ⑤ 闭环     人复验通过且确认后置 feedback.md 行状态=闭环（无独立套件文件——
               feedback.md 即闭环账本，用户拍板 2026-10-26）
 
 用法（Windows 侧 uv 环境）：
   uv run python bin/round.py --round round-02                 # 全流程（①–⑤）
   uv run python bin/round.py --round round-02 --only q01 q21  # 小样/子集（不产轮报）
-  uv run python bin/round.py --round round-03 --retest round-02   # ④ 复验（M4 实现）
+  uv run python bin/round.py --retest round-02                # ④ 复验（M4 实现）：产物自动落
+                                                              # retest-rounds/round-02-r<K>，不占轮号
 """
 
 import argparse
@@ -169,7 +172,8 @@ def load_verdicts(round_dir: Path, todo: list[str]) -> dict[str, dict]:
         print(f"[④裁决] 裁决未完成：缺 {len(missing)} 份（{' '.join(missing)}）")
         print("[④裁决] 人工在环：对照 answers/<侧>/<id>.json 双侧卡逐题写 verdicts/<id>.json"
               "（Schema schemas/verdict.schema.json；D12：问题单 verdict_detail 数组记谁补建模/修bug）")
-        print("[④裁决] 续跑：补齐裁决书后重跑本命令（复验模式加 --no-wipe，跳过清记忆与服务重启）")
+        print("[④裁决] 续跑：补齐裁决书后重跑本命令（复验模式会再次清记忆并复位服务，"
+              "产物续用同一未完结目录——2026-10-29 拍板取消 --no-wipe）")
         sys.exit(2)
     extra = [f.stem for f in verdicts_dir.glob("*.json") if f.stem not in todo]
     if extra:
@@ -203,7 +207,12 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
         status_lines.append(f"| {side} | " + " / ".join(f"{k} {v}" for k, v in sorted(sc.items())) + " |")
 
     divergent = [qid for qid in todo if verdicts[qid]["verdict"] != "互证通过"]
-    retest_round = f"round-{int(name.split('-')[1]) + 1:02d}"
+    if retest_of:  # 复验轮自身仍有分歧：源轮不变（feedback.md 在源轮），继续对源轮复验
+        retest_hint = (f"仍挂题回③施工后继续：uv run python bin/round.py --retest {retest_of}，"
+                       f"产物 retest-rounds/{retest_of}-r<K+1>")
+    else:
+        retest_hint = (f"④复验：uv run python bin/round.py --retest {name}，"
+                       f"产物自动落 retest-rounds/{name}-r1 起，不占轮号")
 
     if retest_of:  # 闭环率=复验集互证通过数/复验集总数（implementation §四）
         passed = sum(1 for qid in todo if verdicts[qid]["verdict"] == "互证通过")
@@ -276,8 +285,10 @@ def render_report(round_dir: Path, name: str, questions: dict, todo: list[str],
     else:
         lines += ["（无——全部题存在分歧，见分歧明细）"]
 
-    lines += ["", f"## 复验集（默认进 {retest_round}）", "",
-              "、".join(divergent) if divergent else "（无——全部互证通过）", ""]
+    # 复验集 ids 必须是节标题后的首个非空行（parse_report_retest_ids 按此解析），提示语放在 ids 之后
+    lines += ["", "## 复验集", "",
+              "、".join(divergent) if divergent else "（无——全部互证通过）", "",
+              f"（{retest_hint}）", ""]
     out = round_dir / "report.md"
     out.write_text("\n".join(lines), encoding="utf-8")
     return out
@@ -324,7 +335,7 @@ def parse_feedback_main_ids(feedback_path: Path) -> set[str]:
 
 
 def step_retest_setup(name: str, prev: str, qpath: Path) -> list[str]:
-    """复验集=上轮轮报复验集 ∩ 回改单主表（非剔除行）；原题原 ID 复制进新轮题库（盲考不变）。"""
+    """复验集=上轮轮报复验集 ∩ 回改单主表（非剔除行）；原题原 ID 复制进复验轮目录题库（盲考不变）。"""
     prev_dir = REPO_ROOT / "rounds" / prev
     prev_questions = prev_dir / "questions.jsonl"
     for must in (prev_questions, prev_dir / "report.md", prev_dir / "feedback.md"):
@@ -398,7 +409,8 @@ def retest_services_reset(round_dir: Path) -> None:
         wsl_bash("pkill -9 -f 'datus --web' || true")
         _poll_port(8501, want_open=False, timeout_s=30)
 
-    # ② 全量清 chat memory（不可逆！前置校验=盘点留痕；回退=无，用户拍板不做备份）
+    # ② 全量清 chat memory（不可逆！前置校验=盘点留痕；回退=无，用户拍板不做备份；
+    #    2026-10-29 拍板取消 --no-wipe：复验续跑重跑本命令即再次全量清，无跳过模式）
     inv = wsl_bash(f"ls -la {DATUS_CHAT_MEMORY} 2>/dev/null; "
                    f"echo COUNT=$(ls {DATUS_CHAT_MEMORY} 2>/dev/null | wc -l)")
     alog("② 全量清 datus chat memory（不可逆、无备份）——删除前盘点：")
@@ -456,34 +468,41 @@ def retest_services_reset(round_dir: Path) -> None:
 
 def main():
     ap = argparse.ArgumentParser(prog="round", description="一轮互搏编排器（SOP ①–⑤，D6 到轮报即停）")
-    ap.add_argument("--round", default=None, help="轮号，如 round-02")
+    ap.add_argument("--round", default=None, help="轮号，如 round-02（复验模式不需要，产物自动命名）")
     ap.add_argument("--only", nargs="*", default=None, help="只跑这些 id（小样/子集；不产轮报）")
     ap.add_argument("--retest", default=None,
-                    help="（M4）复验上轮：清记忆+重启两服务+原题重跑到轮报；闭环=人置 feedback.md 行状态")
-    ap.add_argument("--no-wipe", action="store_true",
-                    help="复验续跑：跳过清记忆与服务重启（补裁决书后重跑渲染轮报用）")
+                    help="（M4）复验上轮：产物自动落 retest-rounds/round-<上轮>-r<K> 不占轮号；"
+                         "清记忆+重启两服务+原题重跑到轮报；闭环=人置 feedback.md 行状态")
     args = ap.parse_args()
-    if not args.round:
-        ap.error("--round 必填")
-    if not re.match(r"round-\d+$", args.round):
-        ap.error("--round 形如 round-02")
-
-    name = args.round
-    round_dir = REPO_ROOT / "rounds" / name
-    round_dir.mkdir(parents=True, exist_ok=True)
-    qpath = round_dir / "questions.jsonl"
 
     if args.retest:
         if not re.match(r"round-\d+$", args.retest):
             ap.error("--retest 形如 round-02")
-        if args.retest == name:
-            ap.error("--retest 上轮号不能与 --round 相同")
+        if args.round:
+            ap.error("--retest 模式产物自动命名（retest-rounds/round-<上轮>-r<K>），不需要 --round")
+        # 产物目录自动命名（2026-10-29 拍板）：最新尝试已出轮报（完结）才开下一号 r+1；
+        # 未完结目录续用（断点续跑不换目录）。弃用未完结目录=人手动删除，重跑即重开该号
+        base = f"round-{int(args.retest.split('-')[1]):02d}"
+        retest_root = REPO_ROOT / "retest-rounds"
+        k = 1
+        while (retest_root / f"{base}-r{k}" / "report.md").exists():
+            k += 1
+        name = f"{base}-r{k}"
+        round_dir = retest_root / name
+        qpath = round_dir / "questions.jsonl"
+        # 先校验上轮三件套（缺即退出），再落目录——不产残缺空目录
         step_retest_setup(name, args.retest, qpath)
-        if args.no_wipe:
-            print("[④复验] --no-wipe：续跑模式，跳过清记忆与服务重启")
-        else:
-            retest_services_reset(round_dir)
+        round_dir.mkdir(parents=True, exist_ok=True)
+        retest_services_reset(round_dir)
     else:
+        if not args.round:
+            ap.error("--round 必填（跑复验用 --retest <上轮>，产物自动命名）")
+        if not re.match(r"round-\d+$", args.round):
+            ap.error("--round 形如 round-02")
+        name = args.round
+        round_dir = REPO_ROOT / "rounds" / name
+        round_dir.mkdir(parents=True, exist_ok=True)
+        qpath = round_dir / "questions.jsonl"
         step_examine(round_dir, qpath, name)
     questions = load_questions(qpath)
     todo = [qid for qid in questions if not args.only or qid in args.only]

@@ -25,7 +25,7 @@
 | 答题人·datus | `adapters/ask_datus/` | 逐题驱动 datus 并提取作答卡 | `questions.jsonl` → `answers/datus/qNN.json` + 原始留痕 | HTTP chat API（POST :8501/api/v1/chat/stream，datus --web 常驻服务）；全题指标优先 D13（每题先走 ask_metrics 节点，无最终答案降级默认节点） | GLM-5.3-Flash（生产现配，不动） |
 | 答题人·cube | `adapters/ask_cube/` | 逐题驱动 cube 服务并提取作答卡 | `questions.jsonl` → `answers/cube/qNN.json` + 原始留痕 | HTTP `:4100/chat` | Claude Agent SDK（生产现配，不动） |
 | 裁判 | `judge/`（v1 人工在环 → M4 固化服务） | 逐题对出裁决书 + 修正答案 | 双侧作答卡 + 两侧语义层定义切片 → `verdicts/qNN.json` | v1：人 + DeepSeek 辅助；M4：judge 服务（另一接口 DeepSeek） | 可配置（`conf/models.json` judge 节） |
-| 编排器 | `bin/round.py` | 按一轮 SOP 顺序调用上述组件；`--retest` 复验模式：清记忆+自动重启两服务+重跑上轮分歧题到轮报 | 轮号 → 本轮全部记录 | Windows Python | 无 LLM，纯流程 |
+| 编排器 | `bin/round.py` | 按一轮 SOP 顺序调用上述组件；`--retest <上轮>` 复验模式：清记忆+自动重启两服务+重跑上轮分歧题到轮报，产物自动落复验轮目录 | 轮号（或 `--retest <上轮>`）→ 本轮全部记录 | Windows Python | 无 LLM，纯流程 |
 
 组件化边界的三条纪律：
 
@@ -144,11 +144,12 @@ uv run python bin/examine.py --syllabus syllabus/ --out rounds/round-02/question
 | ① 查证起草 | 智能体（人调起） | 读轮报分歧明细，用 codeqa 逐题查真实字段解法（过滤器+指标+维度+时间锚，统一以 CK 宽表字段落单），并向 codeqa ETL 抽取代码仓（「财政V3抽取-全国通用版」）逐字段核宽表存在性（三态记前置验证），创建回改单 feedback.md | 待查证→草案 | 回改单（新建）：各行拍板结论+回改卡 |
 | ② 审定 | 人 | 逐行审定拍板结论与双侧改法 | 草案→已审定 | — |
 | ③ 施工 | 人 | 按回改卡改双侧语义层（datus dosi YAML / cube schema+词典；cube 侧"记忆清理"=拍板口径落词典，属施工） | 已审定→已施工 | 语义层 diff |
-| ④ 复验 | 系统 | `uv run python bin/round.py --round <新轮> --retest <上轮>` 一条命令自动：**清 datus chat memory（全量清空，不可逆、不做备份，用户拍板 2026-10-26）** → **datus KB 重投影**（命令与根因见下方注记；③手工改 YAML 后 KB 索引静默过期，不重投影则复验作答仍拿旧元数据）→ **自动重启两服务**（datus：WSL 停旧进程拉起 `datus --web`，轮询 :8501 就绪；cube：`docker compose restart cube` 强制重载 schema + agent-svc 探 :4100、缺则 `D:\develop\cube\start.cmd` 补启；任一未就绪停机退出码≠0）→ 复验集=上轮 report 复验集 ∩ feedback 非剔除行，**原题原 ID 复制**进新轮（不重新出题，盲考不变）→ 双侧作答+提取作答卡 → 裁决关口（AI 初步裁决+人确认，缺单停机）→ 轮报（闭环率=复验集互证通过数/复验集总数） | 已施工→（挂：回③；口径错：回①） | 新轮完整记录（questions/answers/verdicts/report） |
+| ④ 复验 | 系统 | `uv run python bin/round.py --retest <上轮>` 一条命令自动（产物自动落复验轮目录 `retest-rounds/round-<上轮>-r<K>`，不占轮号、不接受 `--round`，见下方"复验轮目录"注记）：**清 datus chat memory（全量清空，不可逆、不做备份，用户拍板 2026-10-26）** → **datus KB 重投影**（命令与根因见下方注记；③手工改 YAML 后 KB 索引静默过期，不重投影则复验作答仍拿旧元数据）→ **自动重启两服务**（datus：WSL 停旧进程拉起 `datus --web`，轮询 :8501 就绪；cube：`docker compose restart cube` 强制重载 schema + agent-svc 探 :4100、缺则 `D:\develop\cube\start.cmd` 补启；任一未就绪停机退出码≠0）→ 复验集=上轮 report 复验集 ∩ feedback 非剔除行，**原题原 ID 复制**进复验轮目录（不重新出题，盲考不变）→ 双侧作答+提取作答卡 → 裁决关口（AI 初步裁决+人确认，缺单停机）→ 轮报（闭环率=复验集互证通过数/复验集总数） | 已施工→（挂：回③；口径错：回①） | 复验轮完整记录（questions/answers/verdicts/report） |
 | ⑤ 闭环 | 人 | 复验通过且人工确认后，feedback.md 行状态改"闭环"（**无独立套件文件——feedback.md 即闭环账本**） | 已施工→闭环 | feedback.md 状态列 |
 
 - 状态机：待查证→草案→已审定→已施工→闭环；终态另有剔除（本轮不做的题——如题型撤销类，不进五步与闭环统计）。
 - 冲突规则：回改单与裁决书冲突以回改单为准（回改单产生于 codeqa 查证之后）；与课本「已裁定口径」冲突以课本为准（课本是下一轮出题依据）；全局拍板写在文件头，逐行拍板不得与之相悖。
+- **复验轮目录（2026-10-29 拍板）**：④复验产物独立落 `retest-rounds/round-<源轮>-r<K>/`（术语"复验轮"），**不占轮号**——轮号只表示出题考试轮次，`rounds/` 下永远只有考试轮，重测与考试从目录上即可区分（旧方案重测占下一个轮号，round-03 的重测产物曾占 round-05，轮号序列被复验穿插无法一眼分辨，故改；该存量 2026-10-29 迁为 `retest-rounds/round-03-r1`，搬迁前后 56 文件/332,395 字节核对一致）。目录**自动命名**，命令不传也不接受 `--round`：最新尝试已出轮报（=该次尝试完结）才开下一号 r+1；未完结目录续用——断点续跑不换目录，补齐裁决书后重跑同一条命令即续。源轮永远是 `rounds/` 下的出题轮（feedback.md 回改单在源轮），复验轮自身再挂仍对源轮跑 `--retest <源轮>` 开新尝试号。弃用未完结的复验轮目录=人手动删除该目录（**不可逆**，无回退），删除后重跑即重开该号。**`--no-wipe` 续跑模式同日拍板取消**：续跑重跑同一命令会再次全量清记忆并复位服务——清的是旧残留与复验当次作答重建的记忆，作答卡已落盘不受影响、已答题自动跳过，代价是几分钟服务重启，换来命令唯一、无模式分叉。
 - 记忆清理：回改卡每条建模差异附**记忆清理条目**（受影响 chat memory 的定位，cube 侧=拍板口径落词典属③施工）；datus 侧清理由④复验开跑**代码自动执行**——全量清空 chat memory，**不可逆、不做备份**（用户拍板 2026-10-26；datus 实例为互搏专用，全量清最彻底）；不清则旧口径复活（v0 已验证的坑）。
 - **KB 重投影（datus 侧，③→④ 之间，④开跑自动执行）**：datus 语义 KB（`.datus/data/{project}/datus_db/` 的 LanceDB：metrics.lance/semantic_dataset.lance 等）是 `subject/semantic_models/{datasource}/*.yml` 的投影，但**查询路径不校验过期**——dosi 引擎（get_metric/query_metrics）直读 YAML 永远新鲜，agent 聊天选指标/维度走 KB 向量检索，内容=上次显式同步时刻；③手工/IDE 改 YAML 后 KB 静默过期，agent 拿旧指标元数据作答（2026-10-26 实证：2026-10-20 的旧索引让 round-02 施工后的查询继续以 fill_date 为时间轴、绕过语义路径直写 SQL）。重投影命令（无 LLM、不联网、幂等，embedding 走本地 fastembed）：
   `wsl -e bash -ic "conda activate datus && cd /mnt/d/develop/datus/Datus-agent && uv run datus bootstrap-kb --datasource yunnan0508 --components semantic_model --kb_update_strategy sync-yaml"`

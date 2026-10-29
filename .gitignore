@@ -15,4 +15,9 @@ tmp/
 rounds/*/runs/
 
 # round-03 整轮产物暂不入库，先留本地（round 完结后再决定是否入库）
-rounds/round-03/
+rounds/round-*/
+
+# 复验轮（④复验产物 retest-rounds/round-<源轮>-r<K>，2026-10-29 拍板独立目录不占轮号）：
+# 与 rounds 同策略，runs 只留本地、整轮产物暂不入库
+retest-rounds/*/runs/
+retest-rounds/*/
